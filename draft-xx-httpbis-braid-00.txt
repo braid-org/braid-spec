@@ -75,6 +75,24 @@ Table of Contents
 
 
 
+1.  Introduction
+
+  HTTP is designed to transfer static pages.  If a page changes, it is
+  the client's responsibility to issue another GET request.  This made
+  sense when pages were static and written by hand.  However, today's
+  websites are dynamic, generated from databases, and continuously
+  mutate as their state changes.  Now we need state *synchronization*,
+  not just state *transfer*.
+
+  Unfortunately, there is no standard way to synchronize.  Instead,
+  programmers write non-standard code; wiring together custom protocols
+  over WebSockets and long-polling XMLHTTPrequests with stacks of
+  Javascript frameworks.  The task of connecting a UI with data is one
+  that every dynamic website has to do, but there is no standard way to
+  do it.
+
+ 
+
 5.  Related Work
 
 - WebDAV
