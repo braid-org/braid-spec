@@ -1,0 +1,75 @@
+Internet-Draft                                                 M. Toomim
+Expires: Mar 8, 2020                                   Invisible College
+Intended status: Proposed Standard                             N. Youtoo
+                                                        Your Affiliation
+                                                             Nov 4, 2019
+
+        :::::::::  :::::::::      :::     ::::::::::: :::::::::  
+        :+:    :+: :+:    :+:   :+: :+:       :+:     :+:    :+: 
+        +:+    +:+ +:+    +:+  +:+   +:+      +:+     +:+    +:+ 
+        +#++:++#+  +#++:++#:  +#++:++#++:     +#+     +#+    +:+ 
+        +#+    +#+ +#+    +#+ +#+     +#+     +#+     +#+    +#+ 
+        #+#    #+# #+#    #+# #+#     #+#     #+#     #+#    #+# 
+        #########  ###    ### ###     ### ########### ######### 
+
+                    Braid: Synchronization for HTTP
+                       draft-ietf-httbis-braid-00
+
+Abstract
+
+  Braid is a set of extensions to HTTP that transform it from a state
+  *transfer* protocol into a state *synchronization* protocol.
+
+  Braid adds to HTTP:
+
+     (1) *Subscriptions* to GET requests
+     (2) *Versioning* to resources
+     (3) *Merge semantics* for PATCH requests
+
+  These extensions enable a web resource to synchronize automatically,
+  across multiple clients and servers, and guarantee consistency using a
+  OT or CRDT algorithm.
+
+
+
+
+Status of this Memo
+
+  This Internet-Draft is submitted in full conformance with the
+  provisions of BCP 78 and BCP 79.
+  
+  Internet-Drafts are working documents of the Internet Engineering Task
+  Force (IETF), its areas, and its working groups.  Note that other
+  groups may also distribute working documents as Internet-Drafts.  The
+  list of current Internet-Drafts is at
+  http://datatracker.ietf.org/drafts/current/.
+
+  Internet-Drafts are draft documents valid for a maximum of six months
+  and may be updated, replaced, or obsoleted by other documents at any
+  time.  It is inappropriate to use Internet-Drafts as reference
+  material or to cite them other than as "work in progress."
+
+  The list of current Internet-Drafts can be accessed at
+  https://www.ietf.org/1id-abstracts.html
+
+  The list of Internet-Draft Shadow Directories can be accessed at
+  https://www.ietf.org/shadow.html
+
+
+
+Table of Contents
+
+   1.  Introduction  . . . . . . . . . . . . . . . . . . . . . . . . . 3
+   2.  Proposed Changes to HTTP. . . . . . . . . . . . . . . . . . .  11
+   2.1.  Subscriptions   . . . . . . . . . . . . . . . . . . . . . .  14
+   2.2.  Versions    . . . . . . . . . . . . . . . . . . . . . . . .  15
+   2.3.  Patches     . . . . . . . . . . . . . . . . . . . . . . . .  17
+   2.3.1.  A general patch format
+   2.4.  Merge Types   . . . . . . . . . . . . . . . . . . . . . . .  18
+   2.3.  Cache-Control
+   4.4.4.  Acknowledgements  . . . . . . . . . . . . . . . . . . . .  19
+   6.  Security Considerations . . . . . . . . . . . . . . . . . . .  23
+   7.  IANA Considerations . . . . . . . . . . . . . . . . . . . . .  23
+   8.  Copyright Notice  . . . . . . . . . . . . . . . . . . . . . .  23
+   9.  Author's Address  . . . . . . . . . . . . . . . . . . . . . .  23
+

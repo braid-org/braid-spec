@@ -9,9 +9,8 @@ Intended status: Proposed Standard                           Nov 4, 2019
 
 Abstract
 
-  Linked JSON is a format, written in JSON, that extends JSON with a new
-  datatype: the "link".  A link has a URL, and may also contain
-  metadata.
+  Linked JSON is an extension to JSON that defines a new datatype: a
+  "Link".  A Link has a URL, and may have metadata.
 
 
 
@@ -48,37 +47,32 @@ Status of this Memo
 
 2.  Introduction
 
+  It is useful to distinguish which strings in a JSON document represent
+  a URL.  That way, software can automatically fetch them and include
+  their contents, and can translate relative to absolute URLs.
+
   Linked JSON adds a "Link" datatype to JSON.  A Link is encoded as an
   object with a field named "link":
 
      { "link": "/david-macaulay" }
 
-  The the value of the "link" field MUST be a string containing a URI
-  [RFC3986].
-
-  Links MAY be embedded within JSON:
+  Links MAY be embedded in other JSON:
 
      {
        "book-name": "The way things work",
        "author": { "link": "/david-macaulay" }
      }
 
-  Software MAY interpret embedded links as objects to be transcluded:
+  The the value of the "link" field MUST be a string containing a URI
+  [RFC3986].
 
-     {
-       "book-name": "The way things work",
-       "author": {
-         "name": "David Macaulay",
-         "website": "https://davidmacaulay.com",
-         ...
-       }
-     }
+
 
 2.1.  Escaping
 
   Any object with a field named "link" is special, and interpreted as a
-  Link.  To encode an actual field named "link", you prefix it with an
-  underscore, like:
+  Link.  To encode an actual field named "link", one SHOULD prefix it
+  with an underscore, like:
 
      {"_link": "this is not a link"}
 
@@ -86,6 +80,14 @@ Status of this Memo
   "__link".  To encode "__link", you use "___link", and so on.
 
 2.2.  Metadata
+
+  The metadata in https://tools.ietf.org/html/rfc5988 could be expressed.
+
+  Or a graphql query:
+
+    {"link": "/foo", "slice": "(bar:9)[3,4]"}
+
+  But we do not define any such formats here.
 
 3.  Related Standards
 
@@ -103,6 +105,7 @@ Status of this Memo
   transclude the author object into the book object, for instance, or
   transform the relative link to absolute.
        
+
 ------
 
 2. Syntax
@@ -155,9 +158,13 @@ Status of this Memo
 
 5.  Media Type
 
-   Linked JSON resources SHOULD include a media type parameter:
-   application/json; profile=http://json-schema.org/linked-json or refer to
-   a schema that extends http://json-schema.org/linked-json.
+   Linked JSON resources SHOULD include a parameter in the HTTP Header:
+
+      JSON-Extensions: Link
+
+   This signals that links can be interpreted according to this
+   internet-draft.
+
 
 
 6. Security Considerations
