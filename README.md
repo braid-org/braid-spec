@@ -25,7 +25,7 @@ It uses a uniform syntax that is easy to read.
 ### Linked JSON — `draft-xx-httpbis-linkedjson-00.txt`
 
 Linked JSON is an extension to JSON that defines a new datatype: a "Link".
-This allows a JSON objects to compose across websites.
+This allows JSON objects to compose across websites.
 
 ## Contributing
 
