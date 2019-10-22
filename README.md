@@ -1,18 +1,39 @@
 # Braid: Adding Synchronization to HTTP
 
-This is the working area for the specification for the
-[Braid](https://braid.news) protocol extensions to HTTP, which add
-Synchronization.
+This is the working area for the Braid [Braid](https://braid.news) extensions
+for HTTP in the [IETF HTTP Working Group](https://httpwg.org/).
+
+These extensions adds Synchronization to HTTP.
+
+## Specifications
+
+#### draft-xx-httpbis-braid-00.txt
+Extends HTTP with three core features:
+
+1. *Subscriptions* to GET requests
+2. *Versioning* to resources
+3. *Merge semantics* for PATCH requests
+
+
+#### draft-xx-httpbis-braidpatch-00.txt
+
+A general patch format
+ - Can apply a variety of Merge-Types (ie. CRDT and OT merge algorithms)
+ - To a variety of Content-Types (ie. data formats)
+
+#### draft-xx-httpbis-linkedjson-00.txt
+
+Linked JSON is an extension to JSON that defines a new datatype: a "Link".
 
 ## Contributing
 
-Discussion of this work will occur on the
-[IETF HTTPWG mailing list](https://lists.w3.org/Archives/Public/ietf-http-wg/)
-and the [Braid mailing list](https://groups.google.com/forum/#!forum/braid-http).
-In addition to contributions in GitHub, you are encouraged to participate in
-discussions there.
+Access control is wiki-style: anyone can edit.  Just let people know on the
+[Braid mailing list](https://groups.google.com/forum/#!forum/braid-http).
+To get Github access, send your login to [Michael](mailto:toomim@gmail.com).
 
-You might also like to familiarize yourself with other
+Discussion of the finished drafts will occur on the
+[IETF HTTPWG mailing list](https://lists.w3.org/Archives/Public/ietf-http-wg/)
+mailing list.  You might also like to familiarize yourself with other
 [HTTP working group documents](https://github.com/httpwg/http-extensions/blob/master/CONTRIBUTING.md).
 
 All material in this repository is considered Contributions to the
@@ -25,7 +46,6 @@ intellectual property policies of IETF currently designated as
 Any edit, commit, pull request, issue, comment or other change made to this
 repository constitutes Contributions to the IETF Standards Process
 (https://www.ietf.org/).
-
 
 You agree to comply with all applicable IETF policies and procedures,
 including, BCP 78, 79, the TLP, and the TLP rules regarding code components
