@@ -7,10 +7,9 @@ add Synchronization to HTTP.  They are authored in three documents:
 ### Braid HTTP — [`draft-xx-httpbis-braid-00.txt`](https://github.com/braid-work/braid-spec/blob/master/draft-xx-httpbis-braid-00.txt)
 Extends HTTP with three core features:
 
-1. *Subscriptions* to GET requests
-2. *Versioning* to resources
-3. *Merge semantics* for PATCH requests
-
+1. *Subscriptions* on GET requests
+2. *Versioning* on resources
+3. *Versioned requests* on PATCH, POST, PUT, and GET methods
 
 ### Braid Patch — [`draft-xx-httpbis-braid-patch-00.txt`](https://github.com/braid-work/braid-spec/blob/master/draft-xx-httpbis-braid-patch-00.txt)
 
@@ -29,8 +28,9 @@ This allows JSON objects to compose across websites.
 
 Anyone can contribute to Braid; you don't have to join the HTTP Working Group, because there is no "membership" -- anyone who participates in the work is part of the HTTP Working Group.  See also [Contributing to the HTTP Working Group](https://github.com/httpwg/http-extensions/blob/master/CONTRIBUTING.md).
 
-Anyone is welcome to edit these documents directly.  To get Github access,
-send your login to [Michael](mailto:toomim@gmail.com).  Discuss edits on the
+You are welcome to edit these documents directly while working.  To get Github
+access, send your login to [Michael](mailto:toomim@gmail.com).  Discuss edits
+on the
 [Braid mailing list](https://groups.google.com/forum/#!forum/braid-http).
 After editing, add your name to the authors list at the top and bottom of the
 document.
