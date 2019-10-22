@@ -1,6 +1,6 @@
 Internet-Draft                                                 M. Toomim
 Expires: Mar 8, 2020                                   Invisible College
-Intended status: Proposed Standard                             N. Youtoo
+Intended status: Proposed Standard                           X. Yourname
                                                         Your Affiliation
                                                              Nov 4, 2019
 
@@ -61,7 +61,7 @@ Table of Contents
 
    1.  Introduction  . . . . . . . . . . . . . . . . . . . . . . . . . 3
    2.  Subscriptions . . . . . . . . . . . . . . . . . . . . . . . .  11
-   3.  Versioning Model  . . . . . . . . . . . . . . . . . . . . . .  15
+   3.  Versioning  . . . . . . . . . . . . . . . . . . . . . . . . .  15
    4.  Merge Semantics
    2.3.  Patches     . . . . . . . . . . . . . . . . . . . . . . . .  17
    2.3.1.  A general patch format
@@ -78,7 +78,17 @@ Table of Contents
 1.  Introduction
 
   HTTP is designed to transfer static pages.  If a page changes, it is
-  the client's responsibility to issue another GET request.  This made
+  the client's responsibility to issue another GET request.
+
+  Although this model worked well for many years, websites now serve and
+  receive realtime data, synchronizing the state of an app across
+  multiple users.  This realtime state cannot be shared on HTTP, without
+  resorting to workarounds like writing a custom protocol on a Websocket
+  or implementing long-polling HTTP requests.
+
+  Furthermore, 
+
+  This made
   sense when pages were static and written by hand.  However, today's
   websites are dynamic, generated from databases, and continuously
   mutate as their state changes.  Now we need state *synchronization*,
@@ -91,7 +101,44 @@ Table of Contents
   that every dynamic website has to do, but there is no standard way to
   do it.
 
+1.1.  Use Cases
  
+
+2.  Subscriptions
+
+
+3.  Versioning
+
+  Time on a network is ambiguous as a result of latency.  If multiple
+  peers edit the same state at the same time, we cannot say that one
+  happened before the other, and time forks.  When they communicate
+  their changes over the network, they merge their edits, and time
+  merges.
+ 
+         (O)    All peers are aware of version (O).
+         / \
+        /   \
+      (A)   (B) Two peers make simultaneous edits creating versions (A)
+        \   /   and (B) respectively, and time forks.
+         \ /
+         (M)    Once a peer sees both of the edits, time merges again.
+                Until a peer makes an edit with (A) and (B) as parents,
+                the merge is only implicit-- there is no need for to
+                assign an ID to it.
+
+  Thus the shape of time is not a line but a Directed Acyclic Graph-- a
+  DAG.  Every change to state creates a new version.  This version has
+  *parents*: all recent (leaf) versions that the client had seen when it
+  made its edit.  The edit becomes the *child* of its parents.  We can
+  say that one version came before another only if the first version is
+  an *ancestor* of the second.
+   
+  Every version is identified by a unique ID.  There is no requirement
+  on the format of the ID, only that it be a unique string.
+  
+  When a peer makes an edit, it broadcasts the edit's version ID, its
+  parents version IDs, and a patch from its parents state to its state.
+
 
 5.  Related Work
 
