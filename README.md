@@ -1,7 +1,8 @@
 # Braid: Adding Synchronization to HTTP
 
-This is where we are writing the draft spec for the
-[Braid extensions to HTTP](https://braid.news).
+This is the working area for the specification for the
+[Braid](https://braid.news) protocol extensions to HTTP, which add
+Synchronization.
 
 ## Contributing
 
