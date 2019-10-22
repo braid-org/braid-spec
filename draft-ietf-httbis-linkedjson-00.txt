@@ -1,0 +1,195 @@
+Internet-Draft                                                 M. Toomim
+Expires: Mar 8, 2020                                   Invisible College
+Intended status: Proposed Standard                           Nov 4, 2019
+                                                             
+
+
+                              Linked JSON
+                    draft-ietf-httbis-linkedjson-00
+
+Abstract
+
+  Linked JSON is a format, written in JSON, that extends JSON with a new
+  datatype: the "link".  A link has a URL, and may also contain
+  metadata.
+
+
+
+Status of this Memo
+
+  This Internet-Draft is submitted in full conformance with the
+  provisions of BCP 78 and BCP 79.
+  
+  Internet-Drafts are working documents of the Internet Engineering Task
+  Force (IETF), its areas, and its working groups.  Note that other
+  groups may also distribute working documents as Internet-Drafts.  The
+  list of current Internet-Drafts is at
+  http://datatracker.ietf.org/drafts/current/.
+
+  Internet-Drafts are draft documents valid for a maximum of six months
+  and may be updated, replaced, or obsoleted by other documents at any
+  time.  It is inappropriate to use Internet-Drafts as reference
+  material or to cite them other than as "work in progress."
+
+  The list of current Internet-Drafts can be accessed at
+  https://www.ietf.org/1id-abstracts.html
+
+  The list of Internet-Draft Shadow Directories can be accessed at
+  https://www.ietf.org/shadow.html
+
+
+
+
+1.  Conventions
+
+   The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
+   "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this
+   document are to be interpreted as described in [RFC2119].
+
+2.  Introduction
+
+  Linked JSON adds a "Link" datatype to JSON.  A Link is encoded as an
+  object with a field named "link":
+
+     { "link": "/david-macaulay" }
+
+  The the value of the "link" field MUST be a string containing a URI
+  [RFC3986].
+
+  Links MAY be embedded within JSON:
+
+     {
+       "book-name": "The way things work",
+       "author": { "link": "/david-macaulay" }
+     }
+
+  Software MAY interpret embedded links as objects to be transcluded:
+
+     {
+       "book-name": "The way things work",
+       "author": {
+         "name": "David Macaulay",
+         "website": "https://davidmacaulay.com",
+         ...
+       }
+     }
+
+2.1.  Escaping
+
+  Any object with a field named "link" is special, and interpreted as a
+  Link.  To encode an actual field named "link", you prefix it with an
+  underscore, like:
+
+     {"_link": "this is not a link"}
+
+  To encode an actual field named "_link", you use two underscores, like
+  "__link".  To encode "__link", you use "___link", and so on.
+
+2.2.  Metadata
+
+3.  Related Standards
+
+  This draft borrows from draft-pbryan-zyp-json-ref-03, but makes the
+  following changes:
+
+    - It names the special field "link" instead of "$ref"
+    - It provides an escape hatch for when users need to encode the
+      string "link"
+    - It allows metadata to be specified on Links
+    - The contents of a link need not be JSON
+
+  This enables software to automatically differentiate Links from
+  strings.  Software could then automatically fetch, cache, and
+  transclude the author object into the book object, for instance, or
+  transform the relative link to absolute.
+       
+------
+
+2. Syntax
+
+  A Link is encoded as an object with the key "link":
+
+     {
+       "bookname": "The way things work",
+       "author": { "link": "https://davidmacaulay.com/profile.json" }
+     }
+
+  Any object with a field named "link" is special, and interpreted as a
+  Link.  To encode an actual field named "link", you prefix it with an
+  underscore, like:
+
+     {"_link": "this is not a link"}
+
+  To encode an actual field named "_link", you use two underscores, like
+  "__link".  To encode "__link", you use "___link", and so on.
+
+  Links can have metadata, specified on any field except "link".  For
+  instance, you could link to a specific version with the "version"
+  metadata:
+  
+     {
+       "message": "Hey guys! I just published a new draft!",
+       "attachment: {
+         "link": "/books/the-way-things-work",
+         "version": "4.0.5"
+       }
+     }
+
+
+
+4.  Resolution
+
+   Resolution of a JSON Reference object SHOULD yield the referenced
+   JSON value.
+
+   If the URI contained in the JSON Reference value is a relative URI,
+   then the base URI resolution MUST be calculated according to
+   [RFC3986], section 5.2.  Resolution is performed relative to the
+   referring document.
+
+   If a URI contains a fragment identifier, then the fragment should be
+   resolved per the fragment resolution mechansim of the referrant
+   document.  If the representation of the referrant document is JSON,
+   then the fragment identifier SHOULD be interpreted as a [JSON
+   Pointer].
+
+5.  Media Type
+
+   Linked JSON resources SHOULD include a media type parameter:
+   application/json; profile=http://json-schema.org/linked-json or refer to
+   a schema that extends http://json-schema.org/linked-json.
+
+
+6. Security Considerations
+
+  XXX fill this in
+
+7. IANA Considerations
+
+   This draft includes no request to IANA.
+
+8. Copyright Notice
+
+  Copyright (c) 2019 IETF Trust and the persons identified as the
+  document authors.  All rights reserved.
+
+  This document is subject to BCP 78 and the IETF Trust's Legal
+  Provisions Relating to IETF Documents
+  (http://trustee.ietf.org/license-info) in effect on the date of
+  publication of this document.  Please review these documents
+  carefully, as they describe your rights and restrictions with respect
+  to this document.  Code Components extracted from this document must
+  include Simplified BSD License text as described in Section 4.e of the
+  Trust Legal Provisions and are provided without warranty as described
+  in the Simplified BSD License.
+
+
+9. Author's Address
+
+  Michael Toomim
+  Invisible College, Berkeley
+  2053 Berkeley Way
+  Berkeley, CA 94704
+
+  Email: toomim@gmail.com
+  Web:   https://invisible.college/@toomim
