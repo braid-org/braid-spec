@@ -14,11 +14,11 @@ Extends HTTP with three core features:
 
 ### Braid Patch — `draft-xx-httpbis-braid-patch-00.txt`
 
-A general patch format.  It is a uniform format with abstractions that allow
-one to mix and match:
+A general patch format for representing changes to state with a uniform
+syntax.  This specification allows programmers to arbitrarily combine:
 
- - multiple `Merge-Types` (ie. CRDT and OT merge algorithms)
- - with multiple `Content-Types` (ie. data formats)
+ - `Merge-Types` (ie. CRDT and OT merge algorithms)
+ - with `Content-Types` (ie. data formats)
 
 ### Linked JSON — `draft-xx-httpbis-linked-json-00.txt`
 
