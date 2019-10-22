@@ -10,7 +10,7 @@ Intended status: Proposed Standard                           Nov 4, 2019
 Abstract
 
   Linked JSON is an extension to JSON that defines a new datatype: a
-  "Link".  A Link has a URL, and may have metadata.
+  "Link".  A Link has a URI, and may have metadata.
 
 
 
@@ -39,47 +39,54 @@ Status of this Memo
 
 
 
-1.  Conventions
+1.  Introduction
 
-   The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
-   "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this
-   document are to be interpreted as described in [RFC2119].
+  It is often useful to distinguish which strings in a JSON document
+  represent a URI.  Then software can automatically fetch the links and
+  include their contents, for example, or automatically translate
+  relative to absolute URIs.
 
-2.  Introduction
+  Linked JSON is an extension of JSON that adds a Link datatype.
 
-  It is useful to distinguish which strings in a JSON document represent
-  a URL.  That way, software can automatically fetch them and include
-  their contents, and can translate relative to absolute URLs.
 
-  Linked JSON adds a "Link" datatype to JSON.  A Link is encoded as an
-  object with a field named "link":
+1.1  Syntax
+
+  A Link is encoded as a JSON object with a field named "link":
 
      { "link": "/david-macaulay" }
 
-  Links MAY be embedded in other JSON:
+  Any object with a field named "link" is interpreted as a Link.  The
+  value of the link field MUST be a string containing a URI [RFC3986].
+  Links MAY be embedded in arbitrary JSON:
 
      {
        "book-name": "The way things work",
        "author": { "link": "/david-macaulay" }
      }
 
-  The the value of the "link" field MUST be a string containing a URI
-  [RFC3986].
+1.2.  Escaping
 
-
-
-2.1.  Escaping
-
-  Any object with a field named "link" is special, and interpreted as a
-  Link.  To encode an actual field named "link", one SHOULD prefix it
-  with an underscore, like:
+  To encode a field named "link" *without* creating a Link, prefix the
+  field with an underscore:
 
      {"_link": "this is not a link"}
 
-  To encode an actual field named "_link", you use two underscores, like
-  "__link".  To encode "__link", you use "___link", and so on.
+  To encode "_link", prefix it with two underscores: "__link".  To
+  encode "__link", use "___link", and so on.
 
-2.2.  Metadata
+1.3.  Metadata
+
+  Links can have metadata, specified on any field except "link".  For
+  instance, you could link to a specific version with the "version"
+  metadata:
+  
+     {
+       "message": "Hey guys! I just published a new draft!",
+       "attachment: {
+         "link": "/books/the-way-things-work",
+         "version": "4.0.5"
+       }
+     }
 
   The metadata in https://tools.ietf.org/html/rfc5988 could be expressed.
 
@@ -89,7 +96,7 @@ Status of this Memo
 
   But we do not define any such formats here.
 
-3.  Related Standards
+3.  Related Work
 
   This draft borrows from draft-pbryan-zyp-json-ref-03, but makes the
   following changes:
@@ -105,39 +112,6 @@ Status of this Memo
   transclude the author object into the book object, for instance, or
   transform the relative link to absolute.
        
-
-------
-
-2. Syntax
-
-  A Link is encoded as an object with the key "link":
-
-     {
-       "bookname": "The way things work",
-       "author": { "link": "https://davidmacaulay.com/profile.json" }
-     }
-
-  Any object with a field named "link" is special, and interpreted as a
-  Link.  To encode an actual field named "link", you prefix it with an
-  underscore, like:
-
-     {"_link": "this is not a link"}
-
-  To encode an actual field named "_link", you use two underscores, like
-  "__link".  To encode "__link", you use "___link", and so on.
-
-  Links can have metadata, specified on any field except "link".  For
-  instance, you could link to a specific version with the "version"
-  metadata:
-  
-     {
-       "message": "Hey guys! I just published a new draft!",
-       "attachment: {
-         "link": "/books/the-way-things-work",
-         "version": "4.0.5"
-       }
-     }
-
 
 
 4.  Resolution
@@ -166,6 +140,12 @@ Status of this Memo
    internet-draft.
 
 
+
+5.  Conventions
+
+   The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
+   "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this
+   document are to be interpreted as described in [RFC2119].
 
 6. Security Considerations
 
