@@ -3,9 +3,8 @@
 This is the working area for the Braid [Braid](https://braid.news) extensions
 for HTTP in the [IETF HTTP Working Group](https://httpwg.org/).
 
-These extensions adds Synchronization to HTTP.
-
-## Specifications
+These extensions add Synchronization to HTTP.  They are written in three
+specifications:
 
 ### Braid HTTP — `draft-xx-httpbis-braid-00.txt`
 Extends HTTP with three core features:
@@ -17,19 +16,22 @@ Extends HTTP with three core features:
 
 ### Braid Patch — `draft-xx-httpbis-braidpatch-00.txt`
 
-A general patch format
- - Can apply a variety of Merge-Types (ie. CRDT and OT merge algorithms)
- - To a variety of Content-Types (ie. data formats)
+A general patch format.  It allows one to mix and match
+ - multiple `Merge-Types` (ie. CRDT and OT merge algorithms)
+ - with multiple `Content-Types` (ie. data formats)
+
+It uses a uniform syntax that is easy to read.
 
 ### Linked JSON — `draft-xx-httpbis-linkedjson-00.txt`
 
 Linked JSON is an extension to JSON that defines a new datatype: a "Link".
+This allows a JSON objects to compose across websites.
 
 ## Contributing
 
-Access control is wiki-style: anyone can edit.  Just let people know on the
+You are welcome to edit any of these documents.  To get Github access, send
+your login to [Michael](mailto:toomim@gmail.com).  Discuss edits on the
 [Braid mailing list](https://groups.google.com/forum/#!forum/braid-http).
-To get Github access, send your login to [Michael](mailto:toomim@gmail.com).
 
 Discussion of the finished drafts will occur on the
 [IETF HTTPWG mailing list](https://lists.w3.org/Archives/Public/ietf-http-wg/)
