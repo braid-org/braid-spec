@@ -101,6 +101,9 @@ Status of this Memo
 
 3.  Related Work
 
+  A number of related formats are surveyed in:
+  https://www.mnot.net/blog/2011/11/25/linking_in_json.html
+
   This draft borrows from draft-pbryan-zyp-json-ref-03, but makes the
   following changes:
 
@@ -115,6 +118,10 @@ Status of this Memo
   transclude the author object into the book object, for instance, or
   transform the relative link to absolute.
        
+  JSON-LD also suppoorts linking in JSON, but bundles a number of other
+  features as well, making it more difficult to implement.
+  
+
 
 
 4.  Resolution
