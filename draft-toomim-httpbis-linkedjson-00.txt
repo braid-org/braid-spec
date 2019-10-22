@@ -42,9 +42,9 @@ Status of this Memo
 1.  Introduction
 
   It is often useful to distinguish which strings in a JSON document
-  represent a URI.  This allows software to automatically fetch the
-  links and include their contents, for example, or to automatically
-  translate relative to absolute URIs.
+  represent URIs.  This allows software to automatically fetch the links
+  and include their contents, for example, or to automatically translate
+  relative to absolute URIs.
 
   Linked JSON is an extension of JSON that adds a Link datatype, so that
   URIs can be distinguished from ordinary strings.
@@ -63,7 +63,8 @@ Status of this Memo
 
      {
        "book-name": "The way things work",
-       "author": { "link": "/david-macaulay" }
+       "image"      { "link": "/the-way-things-work.jpg" },
+       "author":    { "link": "/david-macaulay" }
      }
 
 1.2.  Escaping
@@ -126,19 +127,16 @@ Status of this Memo
 
 4.  Resolution
 
-   Resolution of a JSON Reference object SHOULD yield the referenced
-   JSON value.
+   Resolution of a Link SHOULD yield the referenced value.
 
    If the URI contained in the JSON Reference value is a relative URI,
    then the base URI resolution MUST be calculated according to
    [RFC3986], section 5.2.  Resolution is performed relative to the
    referring document.
 
-   If a URI contains a fragment identifier, then the fragment should be
-   resolved per the fragment resolution mechansim of the referrant
-   document.  If the representation of the referrant document is JSON,
-   then the fragment identifier SHOULD be interpreted as a [JSON
-   Pointer].
+   // If a URI contains a fragment identifier, then the fragment should be
+   // resolved per the fragment resolution mechansim of the referrant
+   // document.
 
 5.  Media Type
 

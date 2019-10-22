@@ -4,27 +4,10 @@ Intended status: Proposed Standard                             N. Youtoo
                                                         Your Affiliation
                                                              Nov 4, 2019
 
-        :::::::::  :::::::::      :::     ::::::::::: :::::::::  
-        :+:    :+: :+:    :+:   :+: :+:       :+:     :+:    :+: 
-        +:+    +:+ +:+    +:+  +:+   +:+      +:+     +:+    +:+ 
-        +#++:++#+  +#++:++#:  +#++:++#++:     +#+     +#+    +:+ 
-        +#+    +#+ +#+    +#+ +#+     +#+     +#+     +#+    +#+ 
-        #+#    #+# #+#    #+# #+#     #+#     #+#     #+#    #+# 
-        #########  ###    ### ###     ### ########### ######### 
-
-                    Braid: Synchronization for HTTP
-                       draft-ietf-httbis-braid-00
+         Braid-Patch: a General Format for Mergeable Operations
+                    draft-ietf-httbis-braidpatch-00
 
 Abstract
-
-  Braid is a set of extensions to HTTP that transform it from a state
-  *transfer* protocol into a state *synchronization* protocol.
-
-  Braid adds to HTTP:
-
-     (1) *Subscriptions* to GET requests
-     (2) *Versioning* to resources
-     (3) *Merge semantics* for PATCH requests
 
   These extensions enable a web resource to synchronize automatically,
   across multiple clients and servers, and guarantee consistency using a
@@ -60,13 +43,9 @@ Status of this Memo
 Table of Contents
 
    1.  Introduction  . . . . . . . . . . . . . . . . . . . . . . . . . 3
-   2.  Subscriptions . . . . . . . . . . . . . . . . . . . . . . . .  11
-   3.  Versioning Model  . . . . . . . . . . . . . . . . . . . . . .  15
-   4.  Merge Semantics
-   2.3.  Patches     . . . . . . . . . . . . . . . . . . . . . . . .  17
-   2.3.1.  A general patch format
-   2.3.  Cache-Control
-   4.4.4.  Acknowledgements  . . . . . . . . . . . . . . . . . . . .  19
+   2.  Selectors   . . . . . . . . . . . . . . . . . . . . . . . . .  18
+   2.1.  Partially-Ordered Content
+   3.  Merge Types     . . . . . . . . . . . . . . . . . . . . . . .  18
    5.  Related work
    6.  Security Considerations . . . . . . . . . . . . . . . . . . .  23
    7.  IANA Considerations . . . . . . . . . . . . . . . . . . . . .  23
@@ -75,6 +54,26 @@ Table of Contents
 
 
 
-5.  Related Work
+1.  Introduction
 
-- WebDAV
+  A fundamental problem in Synchronization is ensuring that two peers
+  resolve the same DAG of edits consistently.  But if two edits happen
+  in the same place at the same time, there occurrs what you might call
+  a "conflict", and different applications will want to resolve
+  conflicts differently.
+
+  For instance, if two users edit the same text in a collaborative
+  editor, the expected behavior is to all the characters that have been
+  inserted, and delete all the characters that have been deleted:
+
+                                  dogs
+                                  /  \
+                               cats  birds
+                                  \  /
+                                catbirds
+
+  However, ...
+
+  Implementing one of these mergeable datatypes can be difficult.
+  Therefore, it saves programmers a lot of time if they can re-use a
+  mergeable datatype implementation in multiple places.
