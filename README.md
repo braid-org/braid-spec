@@ -15,10 +15,8 @@ Extends HTTP with three core features:
 ### Braid Patch — `draft-xx-httpbis-braid-patch-00.txt`
 
 A general patch format for representing changes to state with a uniform
-syntax.  This specification allows programmers to arbitrarily combine:
-
- - `Merge-Types` (ie. CRDT and OT merge algorithms)
- - with `Content-Types` (ie. data formats)
+syntax.  This specification allows web resources to arbitrarily combine
+different CRDT or OT merge algorithms with different `Content-Type`s.
 
 ### Linked JSON — `draft-xx-httpbis-linked-json-00.txt`
 
