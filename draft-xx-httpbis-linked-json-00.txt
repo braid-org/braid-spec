@@ -5,7 +5,7 @@ Intended status: Proposed Standard                           Nov 4, 2019
 
 
                               Linked JSON
-                   draft-toomim-httbis-linkedjson-00
+                   draft-toomim-httbis-linked-json-00
 
 Abstract
 

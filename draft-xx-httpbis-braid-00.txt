@@ -12,7 +12,7 @@ Intended status: Proposed Standard                             N. Youtoo
         #+#    #+# #+#    #+# #+#     #+#     #+#     #+#    #+# 
         #########  ###    ### ###     ### ########### ######### 
 
-                    Braid: Synchronization for HTTP
+                  Braid HTTP: Synchronization for HTTP
                        draft-ietf-httbis-braid-00
 
 Abstract

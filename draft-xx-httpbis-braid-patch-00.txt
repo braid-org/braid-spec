@@ -5,7 +5,7 @@ Intended status: Proposed Standard                             N. Youtoo
                                                              Nov 4, 2019
 
          Braid-Patch: a General Format for Mergeable Operations
-                    draft-ietf-httbis-braidpatch-00
+                    draft-ietf-httbis-braid-patch-00
 
 Abstract
 

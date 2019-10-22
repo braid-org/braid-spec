@@ -14,7 +14,7 @@ Extends HTTP with three core features:
 3. *Merge semantics* for PATCH requests
 
 
-### Braid Patch — `draft-xx-httpbis-braidpatch-00.txt`
+### Braid Patch — `draft-xx-httpbis-braid-patch-00.txt`
 
 A general patch format.  It allows one to mix and match
  - multiple `Merge-Types` (ie. CRDT and OT merge algorithms)
@@ -22,7 +22,7 @@ A general patch format.  It allows one to mix and match
 
 It uses a uniform syntax that is easy to read.
 
-### Linked JSON — `draft-xx-httpbis-linkedjson-00.txt`
+### Linked JSON — `draft-xx-httpbis-linked-json-00.txt`
 
 Linked JSON is an extension to JSON that defines a new datatype: a "Link".
 This allows JSON objects to compose across websites.
@@ -32,6 +32,8 @@ This allows JSON objects to compose across websites.
 You are welcome to edit any of these documents.  To get Github access, send
 your login to [Michael](mailto:toomim@gmail.com).  Discuss edits on the
 [Braid mailing list](https://groups.google.com/forum/#!forum/braid-http).
+After editing, add your name to the authors list at the top and bottom of the
+document.
 
 Discussion of the finished drafts will occur on the
 [IETF HTTPWG mailing list](https://lists.w3.org/Archives/Public/ietf-http-wg/)
