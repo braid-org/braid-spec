@@ -27,8 +27,10 @@ This allows JSON objects to compose across websites.
 
 ## Contributing
 
-You are welcome to edit any of these documents.  To get Github access, send
-your login to [Michael](mailto:toomim@gmail.com).  Discuss edits on the
+Anyone can contribute to Braid; you don't have to join the HTTP Working Group, because there is no "membership" -- anyone who participates in the work is part of the HTTP Working Group.  See also [Contributing to the HTTP Working Group](https://github.com/httpwg/http-extensions/blob/master/CONTRIBUTING.md).
+
+Anyone is welcome to edit these documents directly.  To get Github access,
+send your login to [Michael](mailto:toomim@gmail.com).  Discuss edits on the
 [Braid mailing list](https://groups.google.com/forum/#!forum/braid-http).
 After editing, add your name to the authors list at the top and bottom of the
 document.
