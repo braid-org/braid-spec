@@ -7,7 +7,7 @@ These extensions adds Synchronization to HTTP.
 
 ## Specifications
 
-#### draft-xx-httpbis-braid-00.txt
+### Braid HTTP — `draft-xx-httpbis-braid-00.txt`
 Extends HTTP with three core features:
 
 1. *Subscriptions* to GET requests
@@ -15,13 +15,13 @@ Extends HTTP with three core features:
 3. *Merge semantics* for PATCH requests
 
 
-#### draft-xx-httpbis-braidpatch-00.txt
+### Braid Patch — `draft-xx-httpbis-braidpatch-00.txt`
 
 A general patch format
  - Can apply a variety of Merge-Types (ie. CRDT and OT merge algorithms)
  - To a variety of Content-Types (ie. data formats)
 
-#### draft-xx-httpbis-linkedjson-00.txt
+### Linked JSON — `draft-xx-httpbis-linkedjson-00.txt`
 
 Linked JSON is an extension to JSON that defines a new datatype: a "Link".
 
