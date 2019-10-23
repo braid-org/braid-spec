@@ -5,11 +5,13 @@ HTTP in the [IETF HTTP Working Group](https://httpwg.org/).  These extensions
 add Synchronization to HTTP.  They are authored in three documents:
 
 ### Braid HTTP — [`draft-xx-httpbis-braid-00.txt`](https://github.com/braid-work/braid-spec/blob/master/draft-xx-httpbis-braid-00.txt)
-Extends HTTP with three core features:
+Extends HTTP in three core aspects:
 
 1. *Subscriptions* on GET requests
 2. *Versioning* on resources
-3. *Versioned requests* on PATCH, POST, PUT, and GET methods
+3. *Merging and Caching* a patch history
+
+Caches
 
 ### Braid Patch — [`draft-xx-httpbis-braid-patch-00.txt`](https://github.com/braid-work/braid-spec/blob/master/draft-xx-httpbis-braid-patch-00.txt)
 

@@ -104,6 +104,20 @@ Table of Contents
 1.1.  Use Cases
  
 
+1.2.  Invariants
+
+  Version+url is immutible.
+
+  If you apply patch to old version, you get the new version, that
+  should be semantically equivalent to the document.
+
+  You have to be able to recognize duplicate patches (so they are
+  idempotent), and also you should be able to see which patches are
+  yours in the operation stream.
+
+  Speculative updates.
+
+
 2.  Subscriptions
 
 
