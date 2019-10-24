@@ -217,7 +217,10 @@ Table of Contents
   connection won't end the subscription.  Thus a client needs a way to
   explicitly end the subscription.  In HTTP/1, this is by sending the
   text "Forget\n" over the TCP connection.  In HTTP/2, this is by
-  issuing a CLOSE event to the GET request's stream.
+  issuing a CLOSE event to the GET request's stream.  Alternatively,
+  since today's web browsers do not support sending extra text after a
+  request body, the client can issue a fresh request specified as a
+  FORGET method.
 
 
 3.  Versioning
@@ -277,6 +280,10 @@ Table of Contents
 
      2.  (Commute) If the same set of patches are applied in a different
          order, the result is the same.
+
+  Example:
+
+      Patch-Type: braid-patch(json, json)
 
 4.1.  Cache-Control
 
