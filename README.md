@@ -14,9 +14,9 @@ Extends HTTP in three core aspects:
 
 ### Braid Patch — [`draft-xx-httpbis-braid-patch-00.txt`](https://github.com/braid-work/braid-spec/blob/master/draft-xx-httpbis-braid-patch-00.txt)
 
-A uniform syntax for expressing a change to state.  Enables web resources to
-mix and match merge algorithms with content-types.  Supports arbitrary CRDT or
-OT algorithms, and most `Content-Type`.
+Uniform syntax for expressing changes to state.  Web resources can mix and
+match merge algorithms with Content-Types.  Supports arbitrary CRDT or OT
+algorithms, and most Content-Types.
 
 ### Linked JSON — [`draft-xx-httpbis-linked-json-00.txt`](https://github.com/braid-work/braid-spec/blob/master/draft-xx-httpbis-linked-json-00.txt)
 
