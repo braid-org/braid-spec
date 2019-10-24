@@ -38,7 +38,7 @@ document.
 Discussion of the spec should occur on the
 [IETF HTTPWG mailing list](https://lists.w3.org/Archives/Public/ietf-http-wg/)
 mailing list.  Anyone can contribute; you don't have to join the HTTP Working
-Group, because there is no "membership" -- anyone who participates in the work
+Group, because there is no "membership" — anyone who participates in the work
 is part of the HTTP Working Group.  See also
 [Contributing to the HTTP Working Group](https://github.com/httpwg/http-extensions/blob/master/CONTRIBUTING.md).
 
