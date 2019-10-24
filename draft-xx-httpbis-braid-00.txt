@@ -174,8 +174,8 @@ Table of Contents
   containing a Subscribe header:
 
           Subscribe:
-       or Subscribe: keep-open
-       or Subscribe: keep-open=<seconds>
+  or      Subscribe: keep-open
+  or      Subscribe: keep-open=<seconds>
 
   Subscribe means go into the special mode.  This mode keeps the
   connection open, and sends multiple responses to a single request.
