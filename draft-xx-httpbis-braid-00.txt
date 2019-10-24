@@ -85,24 +85,24 @@ Table of Contents
 
 1.  Introduction
 
-  When you GET something over HTTP, it gives you the latest version of
-  the thing, but it does *not* update you if it changes.  This means
-  that programmers have to implement workarounds whenever they need to
-  synchronize with data that changes.
+  When you GET a resource over HTTP, the server gives you the latest
+  version, but does *not* update you when the resource changes.  This
+  means that programmers have to implement workarounds whenever they
+  need to synchronize with data that changes.
 
-  The original workaround was to require the user to reload the page
-  when it changed.  Then in 2000, XMLHTTPRequest made it possible to
-  update just part of a page, running a GET request behind the scenes.
-  But the GET request still could not push updates.  To work around
-  this, web programmers would poll the resource, which was inefficient.
-  Long-polling was invented to overcome the inefficiencies, which was
-  standardized as SSE.  But SSE provides semantics of an *event-stream*,
-  and although a programmer can encode a protocol within the event
-  stream for updating a resource, there is still no standard way to
-  update a resource.  In practice, programmers today often give up on
-  using a standard semantic for "data that changes", and instead write
-  their own idiosyncratic update protocol over a WebSocket, or adopt a
-  web framework that does this for them.
+  The web originally required users to click reload when a page changed.
+  In 2000, XMLHTTPRequest made it possible to update just part of a
+  page, running a GET request behind the scenes.  But the GET request
+  still could not push updates.  To work around this, web programmers
+  would poll the resource, which was inefficient.  Long-polling was
+  invented to overcome the inefficiencies, which was standardized as
+  SSE.  But SSE provides semantics of an *event-stream*, and although a
+  programmer can encode a protocol within the event stream for updating
+  a resource, there is still no standard way to update a resource.  In
+  practice, programmers today often give up on using a standard semantic
+  for "data that changes", and instead write their own idiosyncratic
+  update protocol over a WebSocket, or adopt a web framework that does
+  this for them.
 
   However, we can add support for "state that changes" into HTTP with a
   few small extensions.  Doing so transforms HTTP from a *state
