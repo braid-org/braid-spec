@@ -77,49 +77,71 @@ Table of Contents
 
 1.  Introduction
 
-  HTTP is designed to transfer static pages.  If a page changes, it is
-  the client's responsibility to issue another GET request.
+  When you GET something over HTTP, it gives you the latest version of
+  the thing, but it does *not* update you if it changes.  This means
+  that programmers have to implement workarounds whenever they need to
+  synchronize with data that changes.
 
-  Although this model worked well for many years, websites now serve and
-  receive realtime data, synchronizing the state of an app across
-  multiple users.  This realtime state cannot be shared on HTTP, without
-  resorting to workarounds like writing a custom protocol on a Websocket
-  or implementing long-polling HTTP requests.
+  The first workaround was to require the user to reload the page when
+  it changed.  In 2000, XMLHTTPRequest made it possible to update just
+  part of a page, running a GET request behind the scenes.  But the GET
+  request still could not push updates.  To work around this, web
+  programmers would poll a resource, which was inefficient.
+  Long-polling was invented to overcome the inefficiencies, which was
+  standardized as SSE.  But SSE provides semantics of an *event-stream*,
+  and although a programmer can encode a protocol within the event
+  stream for updating a resource, there is still no standard way to
+  update a resource.  In practice, programmers today often give up on
+  using a standard semantic for "data that changes", and instead write
+  their own idiosyncratic update protocol over a WebSocket, or adopt a
+  web framework that does this for them.
 
-  Furthermore, 
+  However, we can add support for "state that changes" into HTTP with a
+  few small extensions.  Doing so transforms HTTP from a *state
+  transfer* protocol into a *state synchronization* protocol, and
+  extends the REST architecture into RESS: REpresentational State
+  Synchronization.
 
-  This made
-  sense when pages were static and written by hand.  However, today's
-  websites are dynamic, generated from databases, and continuously
-  mutate as their state changes.  Now we need state *synchronization*,
-  not just state *transfer*.
+  We can do this with:
 
-  Unfortunately, there is no standard way to synchronize.  Instead,
-  programmers write non-standard code; wiring together custom protocols
-  over WebSockets and long-polling XMLHTTPrequests with stacks of
-  Javascript frameworks.  The task of connecting a UI with data is one
-  that every dynamic website has to do, but there is no standard way to
-  do it.
+  - An extended *subscribe* for GET: promises to send updates to state
+  - Versioning: A common language for time
+  - Specification of patch behavior: invariants, semantics, guarantees
 
-1.1.  Use Cases
- 
+  This can be super general:
 
-1.2.  Invariants
+  - We can even support any OT or CRDT: the most advanced synchronizers
 
-  Version+url is immutible.
+1.1.  Use Cases and Related Work
 
-  If you apply patch to old version, you get the new version, that
-  should be semantically equivalent to the document.
+  - The DAV standards:
+    - CalDAV
+    - CardDAV
+    - WebDAV
+  - Email push
+    - JMAP
+    - IMAP Web Push
 
-  You have to be able to recognize duplicate patches (so they are
-  idempotent), and also you should be able to see which patches are
-  yours in the operation stream.
+1.1.1  Distributed, Peer-to-Peer Web of Data Use Case
 
-  Speculative updates.
+  This also gives us the radical ability to distribute our state --
+  across many computers, separated by time and space -- because the
+  synchronization algorithm itself collapses spacetime.
 
+  Which enables a whole new radical vision.  We can support
+  transclusion, ted nelson's original vision, because you can insert
+  part of a document, that lives somewhere else, into a document that
+  lives here, and interact with both of them in synchrony.
+
+  We can have data structures that themselves are split amongst multiple
+  origin servers, but weaved together in a distributed web.  This is
+  what the linked-json format supports.
 
 2.  Subscriptions
 
+
+
+2.1.  Cache-Control
 
 3.  Versioning
 
@@ -153,7 +175,29 @@ Table of Contents
   When a peer makes an edit, it broadcasts the edit's version ID, its
   parents version IDs, and a patch from its parents state to its state.
 
+  Version+url is immutible.
 
-5.  Related Work
+  Speculative updates.
 
-- WebDAV
+
+4.  Patch Semantics
+
+  If you apply patch to old version, you get the new version, that
+  should be semantically equivalent to the document.
+
+  You have to be able to recognize duplicate patches (so they are
+  idempotent), and also you should be able to see which patches are
+  yours in the operation stream.
+
+
+5.  Validating Versions and Pruning History
+
+Enables:
+- Pruning history
+- Online & Offline
+- Validation
+
+New methods:
+- ACK
+- DISCONNECTED
+- CONNECT
