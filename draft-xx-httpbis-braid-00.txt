@@ -13,7 +13,7 @@ Intended status: Proposed Standard                             G. Little
         \=|====|=  |/====/=\  /=\/====|=\     =\=     \\=    =/=
         //\    /\\ //|    |\\ |/|     |||     \\\     |||    |//
         |||    ||| |\\    |// |\/     \|/     /|\     |=\    |\\
-        =\=\==/=/  ==|    |\= ||=     /== ===/=|=\=== |==\===// 
+        =\=\==/=/  ==|    |\= ||=     /== =/=/=|=\=\= |==\===// 
 
                   Braid-HTTP: Synchronization for HTTP
                        draft-ietf-httbis-braid-00
