@@ -29,9 +29,8 @@ Allows JSON objects to compose across websites.  Supports transclusion.
 We have weekly video meetings on Mondays.  Our next meeting is **Monday
 October 28th, from 4:00pm–5:00pm Pacific**.  See https://braid.news.
 
-You are welcome to edit these documents directly while working.  To get Github
-access, send your login to [Michael](mailto:toomim@gmail.com).  Discuss edits
-on the
+You are welcome to edit these documents.  To get Github access, send your
+login to [Michael](mailto:toomim@gmail.com).  Discuss edits on the
 [Braid mailing list](https://groups.google.com/forum/#!forum/braid-http).
 After editing, add your name to the authors list at the top and bottom of the
 document.
