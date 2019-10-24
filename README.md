@@ -21,7 +21,7 @@ algorithms, and most Content-Types.
 ### Linked JSON — [`draft-xx-httpbis-linked-json-00.txt`](https://github.com/braid-work/braid-spec/blob/master/draft-xx-httpbis-linked-json-00.txt)
 
 Linked JSON is an extension to JSON that defines a new datatype: a "Link".
-This allows JSON objects to compose across websites.
+Allows JSON objects to compose across websites.  Supports transclusion.
 
 ## Contributing
 
