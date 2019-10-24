@@ -45,7 +45,7 @@ Table of Contents
    1.  Introduction  . . . . . . . . . . . . . . . . . . . . . . . . . 3
    2.  Selectors   . . . . . . . . . . . . . . . . . . . . . . . . .  18
    2.1.  Partially-Ordered Content
-   3.  Merge Types     . . . . . . . . . . . . . . . . . . . . . . .  18
+   3.  Mergeables      . . . . . . . . . . . . . . . . . . . . . . .  18
    5.  Related work
    6.  Security Considerations . . . . . . . . . . . . . . . . . . .  23
    7.  IANA Considerations . . . . . . . . . . . . . . . . . . . . .  23
@@ -77,3 +77,8 @@ Table of Contents
   Implementing one of these mergeable datatypes can be difficult.
   Therefore, it saves programmers a lot of time if they can re-use a
   mergeable datatype implementation in multiple places.
+
+3.  Mergeables
+
+  A mergeable defines a space of partial orders, and promises to produce
+  the same output for any set of versions.

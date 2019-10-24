@@ -273,8 +273,9 @@ Table of Contents
 
   A patch-type can be defined separately.  It SHOULD satisfy:
 
-     1.  If you apply patch to old version, you get the new version,
-         that should be semantically equivalent to the document.
+     1.  If a set of patches originated from a version, and you apply
+         them to a copy of the version, you get the same new version
+         again.
 
   It MAY satisfy:
 
@@ -284,6 +285,8 @@ Table of Contents
   Example:
 
       Patch-Type: braid-patch(json, sync9(json))
+
+
 
 4.1.  Cache-Control
 
