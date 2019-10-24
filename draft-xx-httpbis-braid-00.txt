@@ -61,13 +61,15 @@ Table of Contents
 
    1.  Introduction  . . . . . . . . . . . . . . . . . . . . . . . . . 3
    1.1.  Use Cases and Related Work
-   1.1.1.  Distributed, Peer-to-Peer Web of Data Use Case
+   1.1.1.  Use Case: Distributed, Peer-to-Peer Web of Data
    2.  Subscriptions for GET   . . . . . . . . . . . . . . . . . . .  11
+   2.1.  Creating a Subscription
+   2.2.  Aborting a Subscription
+   2.3. Forgetting a subscription with the FORGET method
    3.  Versioning  . . . . . . . . . . . . . . . . . . . . . . . . .  15
    4.  Patch Semantics
    4.1.  Cache Control
    5.  Validating Versions and Pruning History
-   5.1. Forgetting a subscription with the FORGET method
    5.2. The FISSURE method
    5.3. The MULTISET method
    5.4. The ACK method
@@ -85,11 +87,11 @@ Table of Contents
   that programmers have to implement workarounds whenever they need to
   synchronize with data that changes.
 
-  The first workaround was to require the user to reload the page when
-  it changed.  In 2000, XMLHTTPRequest made it possible to update just
-  part of a page, running a GET request behind the scenes.  But the GET
-  request still could not push updates.  To work around this, web
-  programmers would poll a resource, which was inefficient.
+  The original workaround was to require the user to reload the page
+  when it changed.  Then in 2000, XMLHTTPRequest made it possible to
+  update just part of a page, running a GET request behind the scenes.
+  But the GET request still could not push updates.  To work around
+  this, web programmers would poll the resource, which was inefficient.
   Long-polling was invented to overcome the inefficiencies, which was
   standardized as SSE.  But SSE provides semantics of an *event-stream*,
   and although a programmer can encode a protocol within the event
@@ -117,7 +119,7 @@ Table of Contents
     controller, should be so simple you would not mind writing it by
     hand.
   - But also support the cutting-edge technology.
-  - This spec can support any OT or CRDT.
+    - This spec can support any OT or CRDT.
 
 1.1.  Use Cases and Related Work
 
@@ -129,9 +131,9 @@ Table of Contents
     - JMAP
     - IMAP Web Push
 
-1.1.1  Distributed, Peer-to-Peer Web of Data Use Case
+1.1.1  Use Case: Distributed, Peer-to-Peer Web of Data
 
-  [Feel free to rewrite this from scratch.]
+  [Rewrite this from scratch.]
 
   This also gives us the radical ability to distribute our state --
   across many computers, separated by time and space -- because the
@@ -156,9 +158,12 @@ Table of Contents
   can connect to them, and synchronize.  They can even catch up
   partially, however much they are behind.
 
-  So we add a header:
+2.1.  Creating a Subscription
 
-       New Header: Subscribe
+  A client MAY request a subscription by issuing a GET request
+  containing a Subscribe header:
+
+       Subscribe: long | short
 
   Subscribe means go into the special mode.  This mode keeps the
   connection open, and sends multiple responses to a single request.
@@ -172,7 +177,29 @@ Table of Contents
   Each response MUST have both headers and a body, just like a normal
   response.
 
-  Responses MAY be 
+2.2.  Aborting a Subscription
+
+  If the request has "Subscribe: short", then the subscription ends when
+  the connection closes.  However, if "Subscribe: long", and the server
+  acknowledges "Subscribe: long" in its own response, then the server
+  will keep the subscription active, which means it promises to keep
+  enough history to merge with the client when the client comes back
+  online.
+
+  The server can also return "Subscribe: <Max-age>" instead of
+  "Subscribe: long", which is a suggestion of how long it will keep the
+  history for the client, after a connection has ended.  <Max-age> may
+  be "infinity", in which case the server suggests it will keep state
+  forever.
+
+  Servers MAY drop a subscription at any time.  The client MAY attempt
+  to reconnect and establish a new subscription if it does.
+
+2.3.  Forgetting a Subscription with the FORGET method
+
+  If a client wants to end a Subscription, it sends a FORGET request,
+  using a new FORGET method.
+
 
 3.  Versioning
 
@@ -230,13 +257,6 @@ Table of Contents
   the patch semantics.
 
 5.  Validating Versions and Pruning History
-
-5.1.  Forgetting a Subscription with the FORGET method
-
-  Subscribing means that the server promises to synchronize the state at
-  that URI with you.  The server and client might want this promise to
-  extend even if the client goes offline and comes back online.  For instance, if a client goes offline, you might 
-  instance, to support offline editing.
 
 
 5.2. The FISSURE method
