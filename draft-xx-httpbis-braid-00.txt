@@ -283,7 +283,7 @@ Table of Contents
 
   Example:
 
-      Patch-Type: braid-patch(json, json)
+      Patch-Type: braid-patch(json, sync9(json))
 
 4.1.  Cache-Control
 
