@@ -136,6 +136,7 @@ Table of Contents
     - CalDAV
     - CardDAV
     - WebDAV
+  - W3C Push API: https://www.w3.org/TR/push-api/
   - Email push
     - JMAP
     - IMAP Web Push
@@ -188,15 +189,15 @@ Table of Contents
 
   Subscribe means go into the special mode.  This mode keeps the
   connection open, and sends multiple responses to a single request.
-  Each response indicates how long it is with the
+  Each response indicates how long its body is with the
 
-       Content-Length: N Bytes
+       Content-Length: N bytes
 
-  header.  Any text arriving after N bytes (including the length of the
-  header) begins the next response message.
+  header.  Any data arriving after N bytes of response body begins the
+  next response's header.
 
-  Each response MUST have both headers and a body, just like a normal
-  response.
+  Each response MUST have both headers and a body.  The body MAY be
+  zero-length.
 
 
 2.1.1.  Example: GET subscription to animated gif
