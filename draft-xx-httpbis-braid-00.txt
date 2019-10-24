@@ -195,10 +195,11 @@ Table of Contents
   Servers MAY drop a subscription at any time.  The client MAY attempt
   to reconnect and establish a new subscription if it does.
 
-2.3.  Forgetting a Subscription with the FORGET method
-
-  If a client wants to end a Subscription, it sends a FORGET request,
-  using a new FORGET method.
+  If a connection is set to Subscribe: long or <Max-age>, then simply
+  closing a connection won't end a subscription.  Thus a client needs a
+  way to explicitly end the subscription.  In HTTP/1, this is by sending
+  the text "Forget\n" over the TCP connection.  In HTTP/2, this is by
+  issuing a CLOSE event to the GET request's stream.
 
 
 3.  Versioning
