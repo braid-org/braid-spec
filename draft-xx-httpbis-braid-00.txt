@@ -91,18 +91,18 @@ Table of Contents
   need to synchronize with data that changes.
 
   The web originally required users to click reload when a page changed.
-  In 2000, XMLHTTPRequest made it possible to update just part of a
-  page, running a GET request behind the scenes.  But the GET request
-  still could not push updates.  To work around this, web programmers
-  would poll the resource, which was inefficient.  Long-polling was
-  invented to overcome the inefficiencies, which was standardized as
-  SSE.  But SSE provides semantics of an *event-stream*, and although a
-  programmer can encode a protocol within the event stream for updating
-  a resource, there is still no standard way to update a resource.  In
-  practice, programmers today often give up on using a standard semantic
-  for "data that changes", and instead write their own idiosyncratic
-  update protocol over a WebSocket, or adopt a web framework that does
-  this for them.
+  In the year 2000, XMLHTTPRequest made it possible to update just part
+  of a page, running a GET request behind the scenes.  But the GET
+  request still could not push updates.  To work around this, web
+  programmers would poll the resource, which was inefficient.
+  Long-polling was invented to overcome the inefficiencies, which was
+  standardized as SSE.  But SSE provides semantics of an *event-stream*,
+  and although a programmer can encode a protocol within the event
+  stream for updating a resource, there is still no standard way to
+  update a resource.  In practice, programmers today often give up on
+  using a standard semantic for "data that changes", and instead write
+  their own idiosyncratic update protocol over a WebSocket, or adopt a
+  web framework that does this for them.
 
   However, we can add support for "state that changes" into HTTP with a
   few small extensions.  Doing so transforms HTTP from a *state
@@ -146,7 +146,7 @@ Table of Contents
   that does a:
 
       GET /peers
-      Subscribe: keep-open
+      Subscribe: keep-alive
       -------
       [ {ip: '13.55.32.158', pubkey: 'x371...8382'}
         {ip: '244.38.55.83', pubkey: 'o2u8...2s73'},
@@ -180,8 +180,8 @@ Table of Contents
   containing a Subscribe header:
 
           Subscribe:
-  or      Subscribe: keep-open
-  or      Subscribe: keep-open=<seconds>
+  or      Subscribe: keep-alive
+  or      Subscribe: keep-alive=<seconds>
 
   Subscribe means go into the special mode.  This mode keeps the
   connection open, and sends multiple responses to a single request.
@@ -223,23 +223,22 @@ Table of Contents
 
 2.2.  Ending a Subscription
 
-  If the request lacks "Subscribe: keep-open", then the subscription
-  ends when the connection closes.  However, if "Subscribe: keep-open",
-  and the server acknowledges "Subscribe: keep-open" in its own
-  response, then the server will keep the subscription active, which
-  means it promises to keep enough history to merge with the client when
-  the client comes back online.
+  If the request lacks "Subscribe: keep-alive", then the subscription
+  ends when the connection closes.  However if a server responds with
+  "Subscribe: keep-alive", then it will keep the subscription active,
+  which means it promises to keep enough history to merge with the
+  client when the client comes back online.
 
-  The server can also return "Subscribe: keep-open=<seconds>" instead of
-  "Subscribe: keep-open", which is a suggestion of how long it will keep
-  the history for the client, after a connection has ended.
+  The server can also return "Subscribe: keep-alive=<seconds>" instead
+  of "Subscribe: keep-alive", which is a suggestion of how long it will
+  keep the history for the client, after a connection has ended.
 
   Servers and clients MAY drop a subscription at any time, no matter
-  what the value of keep-open.  A client MAY reconnect to establish a
+  what the value of keep-alive.  A client MAY reconnect to establish a
   new subscription, by issuing a new GET request with a new Subscribe
   header.
 
-  If a subscription is set to keep-open, then simply closing a
+  If a subscription is set to keep-alive, then simply closing a
   connection won't end the subscription.  Thus a client needs a way to
   explicitly end the subscription.  In HTTP/1, this is by sending the
   text "Forget\n" over the TCP connection.  In HTTP/2, this is by
