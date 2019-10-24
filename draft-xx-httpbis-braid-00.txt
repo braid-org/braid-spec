@@ -64,7 +64,7 @@ Table of Contents
    1.1.1.  Use Case: Distributed, Peer-to-Peer Web of Data
    2.  Subscriptions for GET   . . . . . . . . . . . . . . . . . . .  11
    2.1.  Creating a Subscription
-   2.2.  Aborting a Subscription
+   2.2.  Ending a Subscription
    2.3. Forgetting a subscription with the FORGET method
    3.  Versioning  . . . . . . . . . . . . . . . . . . . . . . . . .  15
    4.  Patch Semantics
@@ -163,7 +163,9 @@ Table of Contents
   A client MAY request a subscription by issuing a GET request
   containing a Subscribe header:
 
-       Subscribe: long | short
+          Subscribe:
+       or Subscribe: keep-open
+       or Subscribe: keep-open=<seconds>
 
   Subscribe means go into the special mode.  This mode keeps the
   connection open, and sends multiple responses to a single request.
@@ -177,28 +179,28 @@ Table of Contents
   Each response MUST have both headers and a body, just like a normal
   response.
 
-2.2.  Aborting a Subscription
+2.2.  Ending a Subscription
 
-  If the request has "Subscribe: short", then the subscription ends when
-  the connection closes.  However, if "Subscribe: long", and the server
-  acknowledges "Subscribe: long" in its own response, then the server
-  will keep the subscription active, which means it promises to keep
-  enough history to merge with the client when the client comes back
-  online.
+  If the request lacks "Subscribe: keep-open", then the subscription
+  ends when the connection closes.  However, if "Subscribe: keep-open",
+  and the server acknowledges "Subscribe: keep-open" in its own
+  response, then the server will keep the subscription active, which
+  means it promises to keep enough history to merge with the client when
+  the client comes back online.
 
-  The server can also return "Subscribe: <Max-age>" instead of
-  "Subscribe: long", which is a suggestion of how long it will keep the
-  history for the client, after a connection has ended.  <Max-age> may
-  be "infinity", in which case the server suggests it will keep state
-  forever.
+  The server can also return "Subscribe: keep-open=<seconds>" instead of
+  "Subscribe: keep-open", which is a suggestion of how long it will keep
+  the history for the client, after a connection has ended.
 
-  Servers MAY drop a subscription at any time.  The client MAY attempt
-  to reconnect and establish a new subscription if it does.
+  Servers and clients MAY drop a subscription at any time, no matter
+  what the value of keep-open.  A client MAY reconnect to establish a
+  new subscription, by issuing a new GET request with a new Subscribe
+  header.
 
-  If a connection is set to Subscribe: long or <Max-age>, then simply
-  closing a connection won't end a subscription.  Thus a client needs a
-  way to explicitly end the subscription.  In HTTP/1, this is by sending
-  the text "Forget\n" over the TCP connection.  In HTTP/2, this is by
+  If a subscription is set to keep-open, then simply closing a
+  connection won't end the subscription.  Thus a client needs a way to
+  explicitly end the subscription.  In HTTP/1, this is by sending the
+  text "Forget\n" over the TCP connection.  In HTTP/2, this is by
   issuing a CLOSE event to the GET request's stream.
 
 
