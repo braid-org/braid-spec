@@ -62,14 +62,15 @@ Table of Contents
    1.  Introduction  . . . . . . . . . . . . . . . . . . . . . . . . . 3
    1.1.  Use Cases and Related Work
    1.1.1.  Distributed, Peer-to-Peer Web of Data Use Case
-   2.  Subscriptions . . . . . . . . . . . . . . . . . . . . . . . .  11
-   2.1.  Cache Control
+   2.  Subscriptions for GET   . . . . . . . . . . . . . . . . . . .  11
    3.  Versioning  . . . . . . . . . . . . . . . . . . . . . . . . .  15
    4.  Patch Semantics
+   4.1.  Cache Control
    5.  Validating Versions and Pruning History
-   5.1. The FISSURE method
-   5.2. The MULTISET method
-   5.3. The ACK method
+   5.1. Forgetting a subscription with the FORGET method
+   5.2. The FISSURE method
+   5.3. The MULTISET method
+   5.4. The ACK method
    6.  Security Considerations . . . . . . . . . . . . . . . . . . .  23
    7.  IANA Considerations . . . . . . . . . . . . . . . . . . . . .  23
    8.  Copyright Notice  . . . . . . . . . . . . . . . . . . . . . .  23
@@ -110,9 +111,13 @@ Table of Contents
   - Versioning: A common language for time
   - Specification of patch behavior: invariants, semantics, guarantees
 
-  This can be super general:
+  This should be super general:
 
-  - We can even support any OT or CRDT: the most advanced synchronizers
+  - Simple cases, like subscribing to the state of a video game
+    controller, should be so simple you would not mind writing it by
+    hand.
+  - But also support the cutting-edge technology.
+  - This spec can support any OT or CRDT.
 
 1.1.  Use Cases and Related Work
 
@@ -141,7 +146,7 @@ Table of Contents
   origin servers, but weaved together in a distributed web.  This is
   what the linked-json format supports.
 
-2.  Subscriptions
+2.  Subscriptions for GET
 
   The goal is for GET to semantically update the resource.  We use a
   mechanism syntactically like SSE (a single GET is kept open, and
@@ -150,8 +155,6 @@ Table of Contents
   Caches and proxies can synchronize with changing content, and clients
   can connect to them, and synchronize.  They can even catch up
   partially, however much they are behind.
-
-2.1.  New Headers for GET
 
   So we add a header:
 
@@ -166,15 +169,10 @@ Table of Contents
   header.  Any text arriving after N bytes (including the length of the
   header) begins the next response message.
 
-2.2.  Forgetting a Subscription with FORGET
+  Each response MUST have both headers and a body, just like a normal
+  response.
 
-  Subscribing means that the server promises to synchronize the state at
-  that URI with you.  The server and client might want this promise to
-  extend even if the client goes offline and comes back online.  For instance, if a client goes offline, you might 
-  instance, to support offline editing.
-
-
-2.1.  Cache-Control
+  Responses MAY be 
 
 3.  Versioning
 
@@ -221,9 +219,27 @@ Table of Contents
   yours in the operation stream.
 
 
+4.1.  Cache-Control
+
+  Servers and clients can choose whether to send a state update as a full
+  resource, or just a patch.  If it uses a patch, the 
+
+      Cache-Control: no-cache
+
+  so that existing proxies/caches don't try to store it, without knowing
+  the patch semantics.
+
 5.  Validating Versions and Pruning History
 
-5.1. The FISSURE method
+5.1.  Forgetting a Subscription with the FORGET method
+
+  Subscribing means that the server promises to synchronize the state at
+  that URI with you.  The server and client might want this promise to
+  extend even if the client goes offline and comes back online.  For instance, if a client goes offline, you might 
+  instance, to support offline editing.
+
+
+5.2. The FISSURE method
 
   When a server receives a FISSURE message, it will incorporate this
   fissure information into itself, and if it hasn't seen it already, it
@@ -258,7 +274,7 @@ Table of Contents
         Parents: ["xyz", "xyz", ...]    // array of fissure ids
 
 
-5.2. The MULTISET method
+5.3. The MULTISET method
 
   There are two kinds of MULTISET:
 
@@ -295,7 +311,7 @@ Table of Contents
         Min-Leaves: ["xyz", "xyz", ...] // leaves of intersection
         Max-Leaves: ["xyz", "xyz", ...] // leaves of union
 
-5.3. The ACK method
+5.4. The ACK method
 
   There are two kinds of ACK:
 
