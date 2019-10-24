@@ -11,6 +11,8 @@ Braid adds to HTTP:
 2. *Versioning* to resources
 3. *Semantics* to PATCH requests
 
+And provides an optional peer-to-peer consensus algorithm for *Validation* and
+*History Pruning*.
 
 ### Braid Patch — [`draft-xx-httpbis-braid-patch-00.txt`](https://github.com/braid-work/braid-spec/blob/master/draft-xx-httpbis-braid-patch-00.txt)
 
