@@ -28,8 +28,6 @@ Allows JSON objects to compose across websites.  Supports transclusion.
 We have weekly video meetings on Mondays.  Our next meeting is **Monday
 October 28th, from 4:00pm–5:00pm Pacific**.  See https://braid.news.
 
-Anyone can contribute to Braid; you don't have to join the HTTP Working Group, because there is no "membership" -- anyone who participates in the work is part of the HTTP Working Group.  See also [Contributing to the HTTP Working Group](https://github.com/httpwg/http-extensions/blob/master/CONTRIBUTING.md).
-
 You are welcome to edit these documents directly while working.  To get Github
 access, send your login to [Michael](mailto:toomim@gmail.com).  Discuss edits
 on the
@@ -41,6 +39,8 @@ Discussion of the complete drafts will occur on the
 [IETF HTTPWG mailing list](https://lists.w3.org/Archives/Public/ietf-http-wg/)
 mailing list.  You might also like to familiarize yourself with other
 [HTTP working group documents](https://github.com/httpwg/http-extensions/blob/master/CONTRIBUTING.md).
+
+Anyone can contribute to the IETF; you don't have to join the HTTP Working Group, because there is no "membership" -- anyone who participates in the work is part of the HTTP Working Group.  See also [Contributing to the HTTP Working Group](https://github.com/httpwg/http-extensions/blob/master/CONTRIBUTING.md).
 
 All material in this repository is considered Contributions to the
 ([IETF](https://www.ietf.org/)) Standards Process, as defined in the
