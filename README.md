@@ -37,7 +37,7 @@ on the
 After editing, add your name to the authors list at the top and bottom of the
 document.
 
-Discussion of the finished drafts will occur on the
+Discussion of the complete drafts will occur on the
 [IETF HTTPWG mailing list](https://lists.w3.org/Archives/Public/ietf-http-wg/)
 mailing list.  You might also like to familiarize yourself with other
 [HTTP working group documents](https://github.com/httpwg/http-extensions/blob/master/CONTRIBUTING.md).
