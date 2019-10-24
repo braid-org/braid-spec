@@ -61,7 +61,7 @@ Table of Contents
 
    1.  Introduction  . . . . . . . . . . . . . . . . . . . . . . . . . 3
    1.1.  Use Cases and Related Work
-   1.1.1.  Use Case: Distributed, Peer-to-Peer Web of Data
+   1.1.1.  Use Case: a Serverless Chat
    2.  Subscriptions for GET   . . . . . . . . . . . . . . . . . . .  11
    2.1.  Creating a Subscription
    2.2.  Ending a Subscription
@@ -131,22 +131,32 @@ Table of Contents
     - JMAP
     - IMAP Web Push
 
-1.1.1  Use Case: Distributed, Peer-to-Peer Web of Data
+1.1.1  Use Case: a Serverless Chat
 
-  [Rewrite this from scratch.]
+  Imagine a chat web app.
 
-  This also gives us the radical ability to distribute our state --
-  across many computers, separated by time and space -- because the
-  synchronization algorithm itself collapses spacetime.
+  Imagine the server serves the current set of trusted clients' ip
+  addresses at the /peers state.  And thus each client runs Javascript
+  that does a:
 
-  Which enables a whole new radical vision.  We can support
-  transclusion, ted nelson's original vision, because you can insert
-  part of a document, that lives somewhere else, into a document that
-  lives here, and interact with both of them in synchrony.
+      GET /peers
+      Subscribe: keep-open
+      -------
+      [ {ip: '13.55.32.158', pubkey: 'x371...8382'}
+        {ip: '244.38.55.83', pubkey: 'o2u8...2s73'},
+        ...
+      ]
 
-  We can have data structures that themselves are split amongst multiple
-  origin servers, but weaved together in a distributed web.  This is
-  what the linked-json format supports.
+  Then each peer chooses some of those peers at random, establishes
+  WebRTC connection with them, and sends Braid messages to that peer
+  over that connection.  (Not necessarily Braid-HTTP, but sending the
+  same semantics.)
+
+  If the peers treat the peers just like a server, except for
+  transporting the messages over WebRTC instead of HTTP, then they will
+  not need the server beyond the initial bootstrap phase.  You can shut
+  off the server, and the app can continue running, with people able to
+  chat with one another.
 
 2.  Subscriptions for GET
 
