@@ -9,9 +9,8 @@ Extends HTTP in three core aspects:
 
 1. *Subscriptions* on GET requests
 2. *Versioning* on resources
-3. *Merging and Caching* a patch history
+3. *Consistency guarantees* to PATCH semantics
 
-Caches
 
 ### Braid Patch — [`draft-xx-httpbis-braid-patch-00.txt`](https://github.com/braid-work/braid-spec/blob/master/draft-xx-httpbis-braid-patch-00.txt)
 
