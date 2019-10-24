@@ -257,13 +257,26 @@ Table of Contents
 
 4.  Patch Semantics
 
-  If you apply patch to old version, you get the new version, that
-  should be semantically equivalent to the document.
+  You can patch witih either PATCH or PUT.  Just keep in mind that PATCH
+  is not idempotent.  We recommend using PUT if you specify a version &
+  parents.
 
-  You have to be able to recognize duplicate patches (so they are
-  idempotent), and also you should be able to see which patches are
-  yours in the operation stream.
+  You add a
 
+      Patch-Type: <patch-type>
+
+  header to your PUT.  This defines the format of patches, and the
+  behavior of merging them together.
+
+  A patch-type can be defined separately.  It SHOULD satisfy:
+
+     1.  If you apply patch to old version, you get the new version,
+         that should be semantically equivalent to the document.
+
+  It MAY satisfy:
+
+     2.  (Commute) If the same set of patches are applied in a different
+         order, the result is the same.
 
 4.1.  Cache-Control
 
