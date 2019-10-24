@@ -4,7 +4,7 @@ This is the working area for the [Braid](https://braid.news) extensions to
 HTTP in the [IETF HTTP Working Group](https://httpwg.org/).  These extensions
 add Synchronization to HTTP.  They are authored in three documents:
 
-### Braid HTTP — [`draft-xx-httpbis-braid-00.txt`](https://raw.githubusercontent.com/braid-work/braid-spec/blob/master/draft-xx-httpbis-braid-00.txt)
+### Braid HTTP — [`draft-xx-httpbis-braid-00.txt`](https://raw.githubusercontent.com/braid-work/braid-spec/master/draft-xx-httpbis-braid-00.txt)
 
 Braid adds to HTTP:
 1. *Subscriptions* to GET requests
@@ -13,13 +13,13 @@ Braid adds to HTTP:
 4. And an optional peer-to-peer consensus algorithm for *Validation* and
 *History Pruning*
 
-### Braid Patch — [`draft-xx-httpbis-braid-patch-00.txt`](https://raw.githubusercontent.com/braid-spec/blob/master/draft-xx-httpbis-braid-patch-00.txt)
+### Braid Patch — [`draft-xx-httpbis-braid-patch-00.txt`](https://raw.githubusercontent.com/braid-work/braid-spec/master/draft-xx-httpbis-braid-patch-00.txt)
 
 Uniform syntax for expressing changes to state.  Web resources can mix and
 match mergeables with Content-Types.  Supports arbitrary CRDT or OT
 algorithms, and most Content-Types.
 
-### Linked JSON — [`draft-xx-httpbis-linked-json-00.txt`](https://raw.githubusercontent.com/braid-work/braid-spec/blob/master/draft-xx-httpbis-linked-json-00.txt)
+### Linked JSON — [`draft-xx-httpbis-linked-json-00.txt`](https://raw.githubusercontent.com/braid-work/braid-spec/master/draft-xx-httpbis-linked-json-00.txt)
 
 Linked JSON is an extension to JSON that defines a new datatype: a "Link".
 Allows JSON objects to compose across websites.  Supports transclusion.
