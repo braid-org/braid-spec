@@ -85,10 +85,10 @@ Table of Contents
 
 1.  Introduction
 
-  When you GET a resource over HTTP, the server gives you the latest
-  version, but does *not* update you when the resource changes.  This
-  means that programmers have to implement workarounds whenever they
-  need to synchronize with data that changes.
+  When a client GETs a resource over HTTP, the server provides the
+  latest version, but does *not* provide updates when the resource
+  changes.  This means that programmers have to implement workarounds
+  whenever they need to synchronize with data that changes.
 
   The web originally required users to click reload when a page changed.
   In the year 2000, XMLHTTPRequest made it possible to update just part
