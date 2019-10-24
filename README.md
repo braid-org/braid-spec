@@ -48,7 +48,6 @@ intellectual property policies of IETF currently designated as
 [BCP 78](https://www.rfc-editor.org/info/bcp78),
 [BCP 79](https://www.rfc-editor.org/info/bcp79) and the
 [IETF Trust Legal Provisions (TLP) Relating to IETF Documents](http://trustee.ietf.org/trust-legal-provisions.html).
-
 Any edit, commit, pull request, issue, comment or other change made to this
 repository constitutes Contributions to the IETF Standards Process
 (https://www.ietf.org/).
