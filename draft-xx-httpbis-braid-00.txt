@@ -67,6 +67,9 @@ Table of Contents
    3.  Versioning  . . . . . . . . . . . . . . . . . . . . . . . . .  15
    4.  Patch Semantics
    5.  Validating Versions and Pruning History
+   5.1. The FISSURE method
+   5.2. The MULTISET method
+   5.3. The ACK method
    6.  Security Considerations . . . . . . . . . . . . . . . . . . .  23
    7.  IANA Considerations . . . . . . . . . . . . . . . . . . . . .  23
    8.  Copyright Notice  . . . . . . . . . . . . . . . . . . . . . .  23
@@ -140,6 +143,35 @@ Table of Contents
 
 2.  Subscriptions
 
+  The goal is for GET to semantically update the resource.  We use a
+  mechanism syntactically like SSE (a single GET is kept open, and
+  updates are streamed over it.), but with "update-resource" semantics.
+
+  Caches and proxies can synchronize with changing content, and clients
+  can connect to them, and synchronize.  They can even catch up
+  partially, however much they are behind.
+
+2.1.  New Headers for GET
+
+  So we add a header:
+
+       New Header: Subscribe
+
+  Subscribe means go into the special mode.  This mode keeps the
+  connection open, and sends multiple responses to a single request.
+  Each response indicates how long it is with the
+
+       Content-Length: N Bytes
+
+  header.  Any text arriving after N bytes (including the length of the
+  header) begins the next response message.
+
+2.2.  Forgetting a Subscription with FORGET
+
+  Subscribing means that the server promises to synchronize the state at
+  that URI with you.  The server and client might want this promise to
+  extend even if the client goes offline and comes back online.  For instance, if a client goes offline, you might 
+  instance, to support offline editing.
 
 
 2.1.  Cache-Control
@@ -178,8 +210,6 @@ Table of Contents
 
   Version+url is immutible.
 
-  Speculative updates.
-
 
 4.  Patch Semantics
 
@@ -193,10 +223,114 @@ Table of Contents
 
 5.  Validating Versions and Pruning History
 
+5.1. The FISSURE method
+
+  When a server receives a FISSURE message, it will incorporate this
+  fissure information into itself, and if it hasn't seen it already, it
+  will also repeat the message to all other peers.
+
+  A fissure represents a disconnection between two peers. In fact, each
+  disconnection creates two fissure objects, one on each side of the
+  disconnection. These fissure objects share a fissure id, but have
+  opposite Side-A and Side-B. A fissure object also has a list of
+  versions which were not globally acknowledged at the time of the
+  fissure. Note that these versions may be different between the two
+  fissure objects associated with the same disconnection event. Each
+  fissure object also has a list of parent fissure ids, which represent
+  the other fissures known at the time of this fissure.
+
+  The fissure information is used when pruning. The basic idea is this:
+  if a version is within the version set of some fissure, then it may
+  not be pruned. When can we prune it then? Well, we must first prune
+  the fissure, and we can prune a fissure if we become aware of both
+  sides of the fissure (the two fissure objects with the same id, but
+  opposite Side-A and Side-B), and also we are not aware of any fissures
+  which are children of this fissure. Once the fissure is gone, we can
+  prune the versions that it was protecting, as well as possibly prune
+  other fissures that this fissure was a child of.
+    
+    FISSURE
+        From-Peer: "xyz"                // peer id
+        Id: "xyz"                       // fissure id
+        Side-A: "xyz"                   // peer id
+        Side-B: "xyz"                   // peer id
+        Versions: ["xyz", "xyz", ...]   // array of version ids to keep
+        Parents: ["xyz", "xyz", ...]    // array of fissure ids
+
+
+5.2. The MULTISET method
+
+  There are two kinds of MULTISET:
+
+  (1) an initial MULTISET, sent as a response to a GET. This MULTISET
+      does not contain Min-Leaves or Max-Leaves. When a peer receives an
+      initial MULTISET, it will consume it, and send a new MULTISET to
+      all its other peers. The new MULTISET will only contain the
+      versions and fissures that were new to this peer. Also, it will
+      send Min-Leaves and Max-Leaves, where Min-Leaves is a list of the
+      leaves of the set intersection of this peer's versions with the
+      incoming versions, and Max-Leaves is a list of the leaves of the
+      set union.
+
+  (2) a non-initial MULTISET, sent as a response to another
+      MULTISET. This MULTISET does contain Min-Leaves and
+      Max-Leaves. When a peer receives such a MULTISET, it will consume
+      it, and send a new MULTISET to all its other peers just like
+      above, except that it won't calculate a new Min-Leaves and
+      Max-Leaves, it will just forward the values it receives for these.
+
+  The purpose of Min-Leaves is to tell everyone to
+  un-globally-acknowledge anything newer than these versions (since
+  these versions are no longer globally acknowledged given that this
+  newcommer hasn't heard of them yet). The purpose of Max-Leaves is to
+  tell everyone to ignore any in-flight global acknowledgements for any
+  versions within Max-Leaves, meaning the system will wait for a version
+  newer than Max-Leaves to become globally acknowledged in order to know
+  that it has been acknowledged by this newcommer as well.
+    
+    MULTISET key
+        From-Peer: "xyz"                // peer id
+        Versions: [{version_id, parents, patches}, {...}, ...]
+        Fissures: [{fissure_id, side_a, side_b, versions, parents}, {...}, ...]
+        Min-Leaves: ["xyz", "xyz", ...] // leaves of intersection
+        Max-Leaves: ["xyz", "xyz", ...] // leaves of union
+
+5.3. The ACK method
+
+  There are two kinds of ACK:
+
+  (1) ACK Seen:
+
+      If a peer creates a version, then it should send a SET to all its
+      peers, and wait for an ACK Seen "local" or a SET with the same
+      version id from each peer before then sending an ACK Seen "global"
+      to all its peers.
+
+      If a peer receives a version initially from a SET, then it should
+      send a SET to all other peers, and wait for an ACK Seen "local" or
+      a SET with the same version id from each of these peers before
+      sending an ACK Seen "local" back to the peer that sent the initial
+      SET.
+
+      If a peer receives an ACK Seen "global", and this is new
+      information, then it should send an ACK Seen "global" to all its
+      other peers.
+
+  (2) ACK Valid:
+
+      ACK key
+          From-Peer: "xyz"                // peer id
+          Seen: "local" | "global"
+          Valid: "local" | "global" | "abort"
+          Version: "xyz"                  // version being acknowledged
+
+
+
 Enables:
 - Pruning history
 - Online & Offline
 - Validation
+  - With Speculative updates.
 
 New methods:
 - ACK
