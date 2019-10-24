@@ -60,14 +60,13 @@ Status of this Memo
 Table of Contents
 
    1.  Introduction  . . . . . . . . . . . . . . . . . . . . . . . . . 3
+   1.1.  Use Cases and Related Work
+   1.1.1.  Distributed, Peer-to-Peer Web of Data Use Case
    2.  Subscriptions . . . . . . . . . . . . . . . . . . . . . . . .  11
+   2.1.  Cache Control
    3.  Versioning  . . . . . . . . . . . . . . . . . . . . . . . . .  15
-   4.  Merge Semantics
-   2.3.  Patches     . . . . . . . . . . . . . . . . . . . . . . . .  17
-   2.3.1.  A general patch format
-   2.3.  Cache-Control
-   4.4.4.  Acknowledgements  . . . . . . . . . . . . . . . . . . . .  19
-   5.  Related work
+   4.  Patch Semantics
+   5.  Validating Versions and Pruning History
    6.  Security Considerations . . . . . . . . . . . . . . . . . . .  23
    7.  IANA Considerations . . . . . . . . . . . . . . . . . . . . .  23
    8.  Copyright Notice  . . . . . . . . . . . . . . . . . . . . . .  23
@@ -123,6 +122,8 @@ Table of Contents
     - IMAP Web Push
 
 1.1.1  Distributed, Peer-to-Peer Web of Data Use Case
+
+  [Feel free to rewrite this from scratch.]
 
   This also gives us the radical ability to distribute our state --
   across many computers, separated by time and space -- because the
