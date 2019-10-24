@@ -297,8 +297,13 @@ Table of Contents
 
 5.  Validating Versions and Pruning History
 
+  A client or server does not need to implement any of the methods in
+  this section unless they want to participate in a validation network,
+  or be able to provably prune history without breaking subscriptions.
 
 5.2. The FISSURE method
+
+  A Fissure occurs whenever a connection between two peers is broken.
 
   When a server receives a FISSURE message, it will incorporate this
   fissure information into itself, and if it hasn't seen it already, it
