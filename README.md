@@ -25,6 +25,9 @@ Allows JSON objects to compose across websites.  Supports transclusion.
 
 ## Contributing
 
+We have weekly video meetings on Mondays.  Our next meeting is **Monday
+October 28th, from 4:00pm–5:00pm Pacific**.  See https://braid.news.
+
 Anyone can contribute to Braid; you don't have to join the HTTP Working Group, because there is no "membership" -- anyone who participates in the work is part of the HTTP Working Group.  See also [Contributing to the HTTP Working Group](https://github.com/httpwg/http-extensions/blob/master/CONTRIBUTING.md).
 
 You are welcome to edit these documents directly while working.  To get Github
