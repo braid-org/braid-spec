@@ -63,8 +63,9 @@ Status of this Memo
 Table of Contents
 
    1.  Introduction  . . . . . . . . . . . . . . . . . . . . . . . . . 3
-   1.1.  Use Cases and Related Work
-   1.1.1.  Use Case: a Serverless Chat
+   1.1.  Design Goals
+   1.2.  Use Cases and Related Work
+   1.2.1.  Use Case: a Serverless Chat
    2.  Subscriptions for GET   . . . . . . . . . . . . . . . . . . .  11
    2.1.  Creating a Subscription
    2.1.1.  Example: GET subscription to animated gif
@@ -110,13 +111,15 @@ Table of Contents
   extends the REST architecture into RESS: REpresentational State
   Synchronization.
 
-
-
   We can do this with:
 
   - An extended *subscribe* for GET: promises to send updates to state
   - Versioning: A common language for time
   - Specification of patch behavior: invariants, semantics, guarantees
+
+
+
+1.1.  Design Goals
 
   This should be super general:
 
@@ -127,7 +130,7 @@ Table of Contents
     - This spec can support any OT or CRDT.
 
 
-1.1.  Use Cases and Related Work
+1.2.  Use Cases and Related Work
 
   - The DAV standards:
     - CalDAV
@@ -137,7 +140,7 @@ Table of Contents
     - JMAP
     - IMAP Web Push
 
-1.1.1  Use Case: a Serverless Chat
+1.2.1  Use Case: a Serverless Chat
 
   Imagine a chat web app.
 
