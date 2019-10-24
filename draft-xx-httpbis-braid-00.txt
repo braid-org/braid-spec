@@ -68,7 +68,7 @@ Table of Contents
    2.  Subscriptions for GET   . . . . . . . . . . . . . . . . . . .  11
    2.1.  Creating a Subscription
    2.2.  Ending a Subscription
-   2.3. Forgetting a subscription with the FORGET method
+   2.3.  Example: GET subscription to animated gif
    3.  Versioning  . . . . . . . . . . . . . . . . . . . . . . . . .  15
    4.  Patch Semantics
    4.1.  Cache Control
@@ -221,6 +221,30 @@ Table of Contents
   since today's web browsers do not support sending extra text after a
   request body, the client can issue a fresh request specified as a
   FORGET method.
+
+2.3.  Example: GET subscription to animated gif
+
+  Request:
+      GET /animated-braid.gif
+      Subscribe
+
+  Response:
+      OK 200
+      Subscribe
+      Cache-Control: no-cache
+      Patch-Type: braid-patch(bytes, sync9(array))
+
+      Content-Type: image/gif                             -- Part 1
+      Patch-Type: braid-patch(bytes, sync9(array))
+      Content-Length: 1239
+
+      [100:200] = <binary data>
+
+      Content-Type: image/gif                             -- Part 2
+      Patch-Type: braid-patch(bytes, sync9(array))
+      Content-Length: 62638
+
+      [348:887] = <binary data>
 
 
 3.  Versioning
