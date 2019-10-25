@@ -12,6 +12,10 @@ Abstract
   Linked JSON is an extension to JSON that defines a new datatype: a
   "Link".  A Link has a URI, and may have metadata.
 
+  Links allow JSON objects to compose across websites, supporting
+  transclusion.  Optional metadata on links can be used to specify a
+  specific version or sub-slice of data to link to.
+
 
 
 Status of this Memo
@@ -41,14 +45,13 @@ Status of this Memo
 
 1.  Introduction
 
-  It is often useful to distinguish which strings in a JSON document
-  represent URIs.  This allows software to automatically fetch the links
-  and include their contents, for example, or to automatically translate
-  relative to absolute URIs.
+  JSON documents often include URIs, or references to other documents,
+  as strings.  It is often useful to distinguish which strings actually
+  represent URIs, for example, to fetch and include the contents of
+  links, or to translate relative to absolute URIs.
 
   Linked JSON is an extension of JSON that adds a Link datatype, so that
   URIs can be distinguished from ordinary strings.
-
 
 1.1  Syntax
 
@@ -79,7 +82,7 @@ Status of this Memo
 
 1.3.  Metadata
 
-  Links MAY specify metadata on the other fields of the JSON object.
+  Links MAY specify metadata on other fields of the JSON object.
 
   For instance, a "version" field could be used to specify a specific
   version to link to:
@@ -92,8 +95,7 @@ Status of this Memo
        }
      }
 
-  The metadata in https://tools.ietf.org/html/rfc5988 could also be
-  expressed.
+  The metadata in [RFC5988] could also be expressed.
 
   Or a graphql query:
 
@@ -134,18 +136,12 @@ Status of this Memo
    [RFC3986], section 5.2.  Resolution is performed relative to the
    referring document.
 
-   // If a URI contains a fragment identifier, then the fragment should be
-   // resolved per the fragment resolution mechansim of the referrant
-   // document.
 
 5.  Media Type
 
-   Linked JSON resources SHOULD include a parameter in the HTTP Header:
+   Linked JSON resources MAY use the media type:
 
-      JSON-Extensions: Link
-
-   This signals that links can be interpreted according to this
-   internet-draft.
+      Content-Type: application/Linked-JSON
 
 
 

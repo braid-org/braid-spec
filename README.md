@@ -10,14 +10,13 @@ Braid adds to HTTP:
 1. *Subscriptions* to GET requests
 2. *Versioning* to resources
 3. *Semantics* to PATCH requests
-4. And an optional peer-to-peer consensus algorithm for *Validation* and
-*History Pruning*
+4. *Multi-party Acknowledgements* for validation and history pruning
 
 ### Braid Patch — [`draft-xx-httpbis-braid-patch-00.txt`](https://raw.githubusercontent.com/braid-work/braid-spec/master/draft-xx-httpbis-braid-patch-00.txt)
 
 Uniform syntax for expressing changes to state.  Web resources can mix and
-match mergeables with Content-Types.  Supports arbitrary CRDT or OT
-algorithms, and most Content-Types.
+match synchronization algorithms with Content-Types.  Supports arbitrary CRDT
+or OT algorithms, and most Content-Types.
 
 ### Linked JSON — [`draft-xx-httpbis-linked-json-00.txt`](https://raw.githubusercontent.com/braid-work/braid-spec/master/draft-xx-httpbis-linked-json-00.txt)
 
