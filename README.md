@@ -10,7 +10,7 @@ Braid adds to HTTP:
 1. *Subscriptions* to GET requests
 2. *Versioning* to resources
 3. *Semantics* to PATCH requests
-4. *Multi-party Acknowledgements* for validation and history pruning
+4. *Multi-party Acknowledgements* to validate and prune history
 
 ### Braid Patch — [`draft-xx-httpbis-braid-patch-00.txt`](https://raw.githubusercontent.com/braid-work/braid-spec/master/draft-xx-httpbis-braid-patch-00.txt)
 

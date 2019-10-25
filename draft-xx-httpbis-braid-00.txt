@@ -28,6 +28,7 @@ Abstract
      1. *Subscriptions* to GET requests
      2. *Versioning* to resources
      3. *Semantics* to PATCH requests
+     4. *Multi-party Acknowledgements* to validate and prune history
 
   These extensions enable a web resource to synchronize automatically,
   across multiple clients and servers, and guarantee consistency using a
@@ -68,8 +69,9 @@ Table of Contents
    1.2.1.  Use Case: a Serverless Chat
    2.  Subscriptions for GET   . . . . . . . . . . . . . . . . . . .  11
    2.1.  Creating a Subscription
-   2.1.1.  Example: GET subscription to animated gif
-   2.2.  Ending a Subscription
+   2.2.  Sending multiple updates per GET
+   2.3.  Ending a Subscription
+   2.4.  Example: GET subscription to animated gif
    3.  Versioning  . . . . . . . . . . . . . . . . . . . . . . . . .  15
    4.  Patch Semantics
    4.1.  Cache Control
@@ -91,59 +93,47 @@ Table of Contents
   changes.  This means that programmers have to implement workarounds
   whenever they need to synchronize with data that changes.
 
-  The web originally required users to click reload when a page changed.
-  In the year 2000, XMLHTTPRequest made it possible to update just part
-  of a page, running a GET request behind the scenes.  But the GET
-  request still could not push updates.  To work around this, web
-  programmers would poll the resource, which was inefficient.
-  Long-polling was invented to overcome the inefficiencies, which was
-  standardized as SSE.  But SSE provides semantics of an *event-stream*,
-  and although a programmer can encode a protocol within the event
-  stream for updating a resource, there is still no standard way to
-  update a resource.  In practice, programmers today often give up on
-  using a standard semantic for "data that changes", and instead write
-  their own idiosyncratic update protocol over a WebSocket, or adopt a
-  web framework that does this for them.
+  The web used to require users to click reload when a page changed.  In
+  2000, XMLHTTPRequest made it possible to update just part of a page,
+  running a GET request behind the scenes.  But a GET request still
+  could not push updates.  To work around this, web programmers would
+  poll the resource, which was inefficient.  Long-polling was invented
+  to overcome the inefficiencies, which was standardized as SSE.  But
+  SSE provides semantics of an *event-stream*, and although a programmer
+  can encode a protocol within the event stream for updating a resource,
+  there is still no standard way to express the update of a resource.
+  In practice, programmers today often give up on using a standard
+  semantic for "data that changes", and instead write their own
+  idiosyncratic update protocol over a WebSocket, or adopt a web
+  framework that does this for them.
 
-  However, we can add support for "state that changes" into HTTP with a
-  few small extensions.  Doing so transforms HTTP from a *state
-  transfer* protocol into a *state synchronization* protocol, and
+  This document specifies how to add support for "state that changes" to
+  HTTP with a few small extensions.  Doing so transforms HTTP from a
+  *state transfer* protocol into a *state synchronization* protocol, and
   extends the REST architecture into RESS: REpresentational State
   Synchronization.
-
-  We can do this with:
-
-  - An extended *subscribe* for GET: promises to send updates to state
-  - Versioning: A common language for time
-  - Specification of patch behavior: invariants, semantics, guarantees
 
 
 
 1.1.  Design Goals
 
-  This should be super general:
-
-  - Simple cases, like subscribing to the state of a video game
-    controller, should be so simple you would not mind writing it by
-    hand.
-  - But also support the cutting-edge technology.
-    - This spec can support any OT or CRDT.
-
+  This spec is designed to be easy to implement, while also supporting
+  full Operational Transform and CRDT synchronization algorithms.
 
 1.2.  Use Cases and Related Work
 
-  - The DAV standards:
-    - CalDAV
-    - CardDAV
-    - WebDAV
-  - W3C Push API: https://www.w3.org/TR/push-api/
-  - Email push
-    - JMAP
-    - IMAP Web Push
-
 1.2.1  Use Case: a Serverless Chat
 
-  Imagine a chat web app.
+  This protocol provides enough information for a web app to function
+  offline, and synchronize all changes between client and server once it
+  comes back online.  Additionally, the abstract Braid protocol can be
+  expressed on a peer-to-peer transport (e.g. WebRTC), and enable a set
+  of peers to simultaneously edit and synchronize with a resource,
+  without a server.
+
+  For example, we can build a chat app where the server can go offline,
+  and all the peers will continue to send and receive messages from one
+  another.
 
   Imagine the server serves the current set of trusted clients' ip
   addresses at the /peers state.  And thus each client runs Javascript
@@ -159,8 +149,7 @@ Table of Contents
 
   Then each peer chooses some of those peers at random, establishes
   WebRTC connection with them, and sends Braid messages to that peer
-  over that connection.  (Not necessarily Braid-HTTP, but sending the
-  same semantics.)
+  over that connection.  We can call this protocol Braid-WebRTC.
 
   If the peers treat the peers just like a server, except for
   transporting the messages over WebRTC instead of HTTP, then they will
@@ -168,11 +157,26 @@ Table of Contents
   off the server, and the app can continue running, with people able to
   chat with one another.
 
+
+1.2.2.  Other Use-Cases [XX Flesh this out]
+
+  - The DAV standards:
+    - CalDAV
+    - CardDAV
+    - WebDAV
+  - W3C Push API: https://www.w3.org/TR/push-api/
+  - Email push
+    - JMAP
+    - IMAP Web Push
+
+
 2.  Subscriptions for GET
 
-  The goal is for GET to semantically update the resource.  We use a
-  mechanism syntactically like SSE (a single GET is kept open, and
-  updates are streamed over it.), but with "update-resource" semantics.
+  A Braid client specifies which resources it wants to subscribe to by
+  adding Subscribe headers to their GET requests.  A server that
+  implements the Subscribe header SHOULD keep the connection open, and
+  use it to send updates to the client as the state of the resource
+  changes.
 
   Caches and proxies can synchronize with changing content, and clients
   can connect to them, and synchronize.  They can even catch up
@@ -189,43 +193,24 @@ Table of Contents
 
   Subscribe means go into the special mode.  This mode keeps the
   connection open, and sends multiple responses to a single request.
-  Each response indicates how long its body is with the
 
-       Content-Length: N bytes
+2.2.  Sending multiple updates per GET
 
-  header.  Any data arriving after N bytes of response body begins the
-  next response's header.
+  To allow multiple updates per GET request, the server concatenates
+  multiple sub-responses within a single response body.  Each
+  sub-response MUST contain its own headers and body.  Each
+  sub-response's headers MUST contain a
+
+       Content-Length: N
+
+  header, where N is specified in bytes, and its body MUST be exactly N
+  bytes, followed by a single newline.  Any data following this newline
+  begins the next sub-response's header.
 
   Each response MUST have both headers and a body.  The body MAY be
   zero-length.
 
-
-2.1.1.  Example: GET subscription to animated gif
-
-  Request:
-      GET /animated-braid.gif
-      Subscribe
-
-  Response:
-      OK 200
-      Subscribe
-      Cache-Control: no-cache
-      Patch-Type: braid-patch(bytes, sync9(array))
-
-      Content-Type: image/gif                             -- Part 1
-      Patch-Type: braid-patch(bytes, sync9(array))
-      Content-Length: 1239
-
-      [100:200] = <binary data>
-
-      Content-Type: image/gif                             -- Part 2
-      Patch-Type: braid-patch(bytes, sync9(array))
-      Content-Length: 62638
-
-      [348:887] = <binary data>
-
-
-2.2.  Ending a Subscription
+2.3.  Ending a Subscription
 
   If the request lacks "Subscribe: keep-alive", then the subscription
   ends when the connection closes.  However if a server responds with
@@ -250,6 +235,32 @@ Table of Contents
   since today's web browsers do not support sending extra text after a
   request body, the client can issue a fresh request specified as a
   FORGET method.
+
+
+2.4.  Example: GET subscription to animated gif
+
+  Request:
+      GET /animated-braid.gif
+      Subscribe
+
+  Response:
+      OK 200
+      Subscribe
+      Cache-Control: no-cache
+      Patch-Type: braid-patch(bytes, sync9(array))
+
+      Content-Type: image/gif                             -- Part 1
+      Patch-Type: braid-patch(bytes, sync9(array))
+      Content-Length: 1239
+
+      [100:200] = <binary data>
+
+      Content-Type: image/gif                             -- Part 2
+      Patch-Type: braid-patch(bytes, sync9(array))
+      Content-Length: 62638
+
+      [348:887] = <binary data>
+
 
 
 3.  Versioning
@@ -319,13 +330,15 @@ Table of Contents
 
 4.1.  Cache-Control
 
-  Servers and clients can choose whether to send a state update as a full
-  resource, or just a patch.  If it uses a patch, the 
+  Servers and clients can choose whether to send a state update as a
+  full resource, or just a patch.  If sent as a patch, the request and
+  response headers should contain:
 
-      Cache-Control: no-cache
+      Cache-Control: no-cache, patch
 
-  so that existing proxies/caches don't try to store it, without knowing
-  the patch semantics.
+  so that legacy caches do not try to store the patch.  However, any
+  cache that implements the given Patch-Type MUST ignore the no-cache
+  directive if the patch directive is present.
 
 5.  Validating Versions and Pruning History
 
