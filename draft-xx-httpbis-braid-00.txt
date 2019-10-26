@@ -501,7 +501,7 @@ Table of Contents
   fissure object also has a list of parent fissure ids, which represent
   the other fissures known at the time of this fissure.
 
-    FISSURE
+    FISSURE /<path>
         From-Peer: "xyz"                // peer id
         Id: "xyz"                       // fissure id
         Side-A: "xyz"                   // peer id
@@ -551,8 +551,8 @@ Table of Contents
   versions within Max-Leaves, meaning the system will wait for a version
   newer than Max-Leaves to become globally acknowledged in order to know
   that it has been acknowledged by this newcommer as well.
-    
-    MULTISET key
+
+    MULTISET /<path>
         From-Peer: "xyz"                // peer id
         Versions: [{version_id, parents, patches}, ...]
         Fissures: [{fissure_id, side_a, side_b, versions, parents}, ...]
