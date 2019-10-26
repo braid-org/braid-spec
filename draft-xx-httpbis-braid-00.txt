@@ -321,6 +321,33 @@ Table of Contents
   state.
 
 
+3.1.  Interpreting Versions
+
+  Versions need their parents to be understood.
+
+  There is a root version. [XX Greg fill this in]
+
+3.2.  GET for Historical Versions
+
+  GET requests can optionally contain a Version and/or Parents header.
+
+  If a GET request contains a Version header:
+
+    - The Subscribe header MUST be absent
+    - The server SHOULD return a single response, containing that
+      version of the resource in its body
+
+  If a GET request contains a Parents header:
+
+    - If the request does not also contain a Version, then the request
+      MUST also contain a Subscribe header, and the server SHOULD send a
+      set of versions connecting the Parents to the current Version, and
+      then subscribe the client to future updates.
+
+    - If the request also contains a Version, then the server SHOULD
+      respond with a set of versions that connect the specified Parents
+      with the specified Version, and then close the connection.
+
 4.  Patches
 
 4.1.  The Version Data Structure
@@ -337,7 +364,8 @@ Table of Contents
 
   The restriction is that if a version's Content-Type is a type of
   patch, then it MUST also specify Cache-Control: no-cache, patch, to
-  ensure that legacy systems do not cache the body as the resource.
+  ensure that legacy systems do not cache the patch as if it were the
+  resource.
 
     - If a version's Content-Type is not a patch/*, or Cache-Control
       does not have no-cache, then the request or response body SHOULD
@@ -355,27 +383,23 @@ Table of Contents
 
 4.2.  Defining a new Patch Type
 
-  A patch type MAY be defined with a specification that provides the
-  patch type's:
+  A human MAY define a patch type by publishing a specification of its:
 
     - Content-Type
     - Data format
     - and Behavior: the outcome after applying a sequence of patches to
       a set of versions
 
-  Patches SHOULD define a content type that starts with patch/*:
+  The Content-Type SHOULD start with patch/*, such as:
 
-      Content-Type: patch/*
+      Content-Type: patch/braid
+      Content-Type: patch/automerge/json
+      Content-Type: patch/sharedb/rich-text
 
   A patch/* content-type indicates that the content is a type of patch
   that applies to a different Content-Type (or set of Content-Types),
   and satisfies the requirements of this section.
 
-  Example:
-
-      Content-Type: patch/braid
-      Content-Type: patch/automerge/json
-      Content-Type: patch/sharedb/rich-text
 
 4.2.2.  Patch Behavior
 
