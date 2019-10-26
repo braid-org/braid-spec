@@ -261,16 +261,16 @@ Table of Contents
       OK 200
       Subscribe
       Cache-Control: no-cache
-      Patch-Type: braid-patch(bytes, sync9(array))
+      Patch-Type: braid(bytes, sync9(array))
 
       Content-Type: image/gif                             -- Frame 1
-      Patch-Type: braid-patch(bytes, sync9(array))
+      Patch-Type: braid(bytes, sync9(array))
       Content-Length: 1239
 
       [100:200] = <binary data>
 
       Content-Type: image/gif                             -- Frame 2
-      Patch-Type: braid-patch(bytes, sync9(array))
+      Patch-Type: braid(bytes, sync9(array))
       Content-Length: 62638
 
       [348:887] = <binary data>
