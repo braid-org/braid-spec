@@ -98,18 +98,19 @@ Table of Contents
   changes.  This means that programmers have to implement workarounds
   whenever they need to synchronize with data that changes.
 
-  The web used to require users to click reload when a page changed.  In
-  2000, XMLHTTPRequest made it possible to update just part of a page,
-  running a GET request behind the scenes.  But a GET request still
-  could not push updates.  To work around this, web programmers would
-  poll the resource, which was inefficient.  Long-polling was invented
-  to overcome the inefficiencies, which was standardized as SSE.  But
-  SSE provides semantics of an *event-stream*, and although a programmer
-  can encode a protocol within the event stream for updating a resource,
+  The web has a long history of these workarounds.  The original web
+  required users to click reload when a page changed.  In 2000,
+  XMLHTTPRequest made it possible to update just part of a page, running
+  a GET request behind the scenes.  But a GET request still could not
+  push updates.  To work around this, web programmers would poll the
+  resource, which was inefficient.  Long-polling was invented to
+  overcome the inefficiencies, which was standardized as SSE.  But SSE
+  provides semantics of an *event-stream*, and although a programmer can
+  encode a protocol within the event stream for updating a resource,
   there is still no standard way to express the update of a resource.
   In practice, programmers today often give up on using a standard
   semantic for "data that changes", and instead write their own
-  idiosyncratic update protocol over a WebSocket, or adopt a web
+  non-standard update protocol over a WebSocket, or adopt a web
   framework that does this for them.
 
   This document specifies how to add support for "state that changes" to
