@@ -76,10 +76,12 @@ Table of Contents
    3.  Versioning  . . . . . . . . . . . . . . . . . . . . . . . . .  15
    4.  Patch Semantics
    4.1.  Cache Control
-   5.  Validating Versions and Pruning History
-   5.1. The ACK method
-   5.2. The FISSURE method
-   5.3. The MULTISET method
+   5.  Multi-Party Consensus: Seen and Valid
+   5.1.  The ACK method
+   5.1.1.  Seen
+   5.1.1.  Valid
+   5.2.  The FISSURE method
+   5.3.  The MULTISET method
    6.  Security Considerations . . . . . . . . . . . . . . . . . . .  23
    7.  IANA Considerations . . . . . . . . . . . . . . . . . . . . .  23
    8.  Copyright Notice  . . . . . . . . . . . . . . . . . . . . . .  23
@@ -354,11 +356,11 @@ Table of Contents
   cache that implements the given Patch-Type MUST ignore the no-cache
   directive if the patch directive is present.
 
-5.  Multi-Party Acknowledgements
+5.  Multi-Party Consensus: Seen and Valid
 
   The protocol in this section is optional.  A client or server would
-  typically only need to implement them to support two features across a
-  client/server or peer-to-peer network:
+  typically only need to implement them to support these two features
+  across a client/server or peer-to-peer network:
 
        1. Pruning historical versions
        2. Validating changes
@@ -373,7 +375,7 @@ Table of Contents
   the concept of a SET request as a stand-in for a PUT, POST, or PATCH
   that contains a Version and Parents header.
 
-5.1. The ACK method
+5.1.  The ACK method
 
   The ACK method has the following signature:
 
@@ -414,7 +416,7 @@ Table of Contents
 
 
 
-5.2. The FISSURE method
+5.2.  The FISSURE method
 
   A Fissure occurs whenever a connection between two peers is broken
   uncleanly.
@@ -459,7 +461,7 @@ Table of Contents
   other fissures that this fissure was a child of.
     
 
-5.3. The MULTISET method
+5.3.  The MULTISET method
 
   There are two kinds of MULTISET:
 
