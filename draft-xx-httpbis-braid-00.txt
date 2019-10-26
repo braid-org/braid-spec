@@ -469,6 +469,8 @@ Table of Contents
     - MUST specify the Sender and Version headers
     - MUST specify at least one of the Valid or Seen headers
 
+  [I think the 'Sender' should actually be a cookie.]
+
 5.1.1.  Seen
 
   If a peer creates a version, then it SHOULD send a SET to all its
