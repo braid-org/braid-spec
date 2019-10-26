@@ -337,16 +337,18 @@ Table of Contents
   patch, then it MUST also specify Cache-Control: no-cache, patch, to
   distinguish that the body is a patch, and not the actual resource.
 
-    - If a version's Content-Type is not patchable, then it is
-      interpreted as a complete representation of the resource.
+    - If a version's Content-Type is not a patch/*, or Cache-Control
+      does not have no-cache, then the request or response body SHOULD
+      be interpreted as a complete representation of the resource.
 
     - If the Version header is not specified, then the recipient MAY
-      invent a new version ID for it.
+      invent a new version ID for it, and MAY use that new ID in network
+      communications with others.
 
     - If the Parents is not specified, then the recipient SHOULD
-      interpret it to be a new version, built upon the latest versions
-      the recipient has.  However, the recipient in this case MAY choose
-      their own definition of which versions are "latest".
+      interpret the version to be new, built upon the latest versions
+      the recipient has.  The determination of which versions are
+      "latest" is up to the recipient.
 
 
 4.2.  Defining a new Patch Type
