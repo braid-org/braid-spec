@@ -353,12 +353,13 @@ Table of Contents
 
 4.2.  Defining a new Patch Type
 
-  A Patch Definition MAY be defined with a specification that defines:
+  A patch type MAY be defined with a specification that provides the
+  patch type's:
 
-    - The patch data format
-    - The patch behavior: how to apply a sequence of patches to a set of
-      versions
-    - The patch's Content-Type
+    - Content-Type
+    - Data format
+    - and Behavior: the outcome after applying a sequence of patches to
+      a set of versions
 
   Patches SHOULD define a content type that starts with patch/*:
 
@@ -366,7 +367,7 @@ Table of Contents
 
   A patch/* content-type indicates that the content is a type of patch
   that applies to a different Content-Type (or set of Content-Types),
-  and satisfies the requirements in this section.
+  and satisfies the requirements of this section.
 
   Example:
 
