@@ -365,7 +365,8 @@ Table of Contents
 
   To implement these features, a peer has to know when a version has
   been (1) *seen* by all write-capable peers, and/or (2) *validated* by
-  all authoritative peers, respectively.  Peers report 
+  all authoritative peers, respectively.  Peers report their knowledge
+  of a version's Seenness or Validness via ACK requests.
 
   In this section, we use the term "peer" instead of "client" or
   "server", where the protocol applies uniformly to either.  We also use
@@ -405,7 +406,7 @@ Table of Contents
   If a peer receives an ACK Seen "global", and this is new information,
   then it SHOULD send an ACK Seen "global" to all its other peers.
 
-5.1.2.  Valid acknowledgements
+5.1.2.  Valid
 
 
 
@@ -415,10 +416,18 @@ Table of Contents
 
 5.2. The FISSURE method
 
-  A Fissure occurs whenever a connection between two peers is broken.
+  A Fissure occurs whenever a connection between two peers is broken
+  uncleanly.
+
+  Both sides of a broken connection will braodcast an equal but opposite
+  Fissure message, along with the set of outstanding versions, to inform
+  the rest of the network.  Any peer receiving a Fissure will hold onto
+  the message, and the outstanding versions, until it receives the
+  opposite side of the Fissure.  A Fissure message also resets any
+  outstanding acknowledgement waves.
 
   When a server receives a FISSURE message, it will incorporate this
-  fissure information into itself, and if it hasn't seen it already, it
+  Fissure information into itself, and if it hasn't seen it already, it
   will also repeat the message to all other peers.
 
   A fissure represents a disconnection between two peers.  In fact, each
