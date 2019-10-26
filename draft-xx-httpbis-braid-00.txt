@@ -279,14 +279,18 @@ Table of Contents
 
 3.  Versioning
 
-  The  of a patch (Section 4) depends  on *time*.
+  Patches change the state of a resource over time.  A point in time is
+  called a Version.  Each version has a unique ID-- a string, and a set
+  of patches from its prior versions: its Parents.
 
-  Time on a network is ambiguous as a result of latency.  If multiple
-  peers edit the same state at the same time, we cannot say that one
-  happened before the other, and time forks.  When they communicate
-  their changes over the network, they merge their edits, and time
-  merges.
- 
+        Version: a unique string identifying a point in time
+        Parents: a set of Version IDs
+
+  A Version can have multiple Parents because time on a network is a
+  DAG.  Because there is latency, it can be physically impossible to
+  distinguish which of two events happened first.  In this situation,
+  time branches from a line into a DAG (Directed Acyclic Graph):
+
           a     All peers are aware of version (a).
          / \
         /   \
@@ -298,33 +302,33 @@ Table of Contents
                 the merge is only implicit-- there is no need for to
                 assign an ID to it.
 
-  Thus the shape of time is not a line but a Directed Acyclic Graph-- a
-  DAG.  Every change to state creates a new version.  This version has
-  *parents*: all recent (leaf) versions that the client had seen when it
-  made its edit.  The edit becomes the *child* of its parents.  We can
-  say that one version came before another only if the first version is
-  an *ancestor* of the second.
+  Every change to state creates a new version.  This version has
+  Parents: the set of leaves in the DAG that were present when the new
+  version was created.  The new version is the Child of its parents.  We
+  can say that one version came before another only if the first version
+  is an Ancestor of the second.
    
-  Every version is identified by a unique ID.  There is no requirement
-  on the format of the ID, only that it be a unique string.
-  
-  When a peer makes an edit, it broadcasts the edit's version ID, its
-  parents version IDs, and a patch from its parents state to its state.
+  A Version also specifies a list of Patches, which, when applied to the
+  merger of Parents, creates the Version's state.
 
-  Version+url is immutible.
+  When a peer makes an edit, it broadcasts the edit's version ID, its
+  parents version IDs, and the patches from its parents state to its
+  state.
 
 
 4.  Patch Semantics
 
-  You can patch witih either PATCH or PUT.  Just keep in mind that PATCH
-  is not idempotent.  We recommend using PUT if you specify a version &
+  You can patch witih either PATCH, POST, or PUT.  Just keep in mind
+  that PATCH and POST is not idempotent, but PUT is, and if a change
+  specifies its Version and Parents, it can be idempotent.  Thus, it is
+  RECOMMENDED for a client to use PUT if it specifies a version &
   parents.
 
-  You add a
+  The client adds a
 
       Patch-Type: <patch-type>
 
-  header to your PUT.  This defines the format of patches, and the
+  header to its PUT.  This defines the format of patches, and the
   behavior of merging them together.
 
   A patch-type can be defined separately.  It SHOULD satisfy:
