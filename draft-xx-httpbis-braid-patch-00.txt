@@ -11,7 +11,6 @@ Abstract
 
   ### This document is still being written ###
 
-  
 
 
 
@@ -81,3 +80,5 @@ Table of Contents
 
   A mergeable defines a space of partial orders, and promises to produce
   the same output for any set of versions.
+
+  braid(bytes, sync9(array))

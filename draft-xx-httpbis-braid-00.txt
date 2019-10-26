@@ -261,16 +261,16 @@ Table of Contents
       OK 200
       Subscribe
       Cache-Control: no-cache
-      Patch-Type: braid(bytes, sync9(array))
+      Patch-Type: braid
 
       Content-Type: image/gif                             -- Frame 1
-      Patch-Type: braid(bytes, sync9(array))
+      Patch-Type: braid
       Content-Length: 1239
 
       [100:200] = <binary data>
 
       Content-Type: image/gif                             -- Frame 2
-      Patch-Type: braid(bytes, sync9(array))
+      Patch-Type: braid
       Content-Length: 62638
 
       [348:887] = <binary data>
@@ -403,15 +403,15 @@ Table of Contents
 
   The Patch-Type is an arbitrary string, such as:
 
-      Patch-Type: braid(bytes, sync9(array))
+      Patch-Type: braid
       Patch-Type: automerge/json
       Patch-Type: sharedb/rich-text
 
   The Content-Type SHOULD start with patch/*, such as:
 
       Content-Type: patch/braid
-      Content-Type: patch/automerge
-      Content-Type: patch/sharedb
+      Content-Type: patch/automerge/json
+      Content-Type: patch/sharedb/rich-text
 
   A patch/* content-type indicates that the content is a type of patch
   that satisfies the requirements of this section.
