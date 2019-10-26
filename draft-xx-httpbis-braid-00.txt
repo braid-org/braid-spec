@@ -365,10 +365,10 @@ Table of Contents
        1. Pruning historical versions
        2. Validating changes
 
-  To implement these features, a peer has to know when a version has
-  been (1) *seen* by all write-capable peers, and/or (2) *validated* by
-  all authoritative peers, respectively.  Peers report their knowledge
-  of a version's Seenness or Validness via ACK requests.
+  These features require a peer to know when a version has been (1)
+  *seen* by all editing peers, or (2) *validated* by all authoritative
+  peers, respectively.  Peers report their knowledge of a version's
+  Seenness or Validness via ACK messages.
 
   In this section, we use the term "peer" instead of "client" or
   "server", where the protocol applies uniformly to either.  We also use
@@ -412,7 +412,7 @@ Table of Contents
 
 
 
-5.4.1.  Example: Using validation to enable speculative edits
+5.1.3.  Example: Using validation to enable speculative edits
 
 
 
@@ -500,6 +500,27 @@ Table of Contents
         Min-Leaves: ["xyz", "xyz", ...] // leaves of intersection
         Max-Leaves: ["xyz", "xyz", ...] // leaves of union
 
+
+5.4.  Sending messages from server to client
+
+  Since HTTP requests all must be initiated by the client, we need
+  alternate methods for a server to push an ACK, FISSURE, or MULTISET
+  message back to a client.
+
+5.4.1.  Server-sent ACKs
+
+  If a response 200 to a POST, PUT, or PATCH request contains a Version,
+  it MUST be interpreted as:
+
+        ACK /<path>
+        Valid: local
+        Seen: local
+        Version: <the version in the response>
+
+5.4.1.  Server-sent FISSURE and MULTISET
+  
+  XXX Todo: add these to the response to a GET.  Distinguish each one
+  with a header like Braid-Message: Fissure or Braid-Message: Multiset.
 
 6. Security Considerations
 
