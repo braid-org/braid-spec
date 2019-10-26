@@ -30,7 +30,7 @@ Abstract
      3. *Semantics* to PATCH requests
      4. *Multi-party Acknowledgements* to validate and prune history
 
-  These extensions enable a web resource to synchronize automatically,
+  These extensions enable a web resource to synchronize automatically
   across multiple clients and servers, and guarantee consistency using a
   OT or CRDT algorithm.
 
@@ -169,14 +169,15 @@ Table of Contents
 2.  Subscriptions for GET
 
   A Braid client requests a subscription by issuing a GET with the
-  Subscribe header.  A server that implements subscriptions promises to
-  keep its subscribed clients up-to-date by sending changes until the
+  "Subscribe" header.  A server that implements subscriptions promises
+  to keep its subscribed clients up-to-date by sending changes until the
   client closes the subscription.
 
   A subscription is different than a GET connection (e.g. a TCP
-  connection, or HTTP/2 stream).  A subscription marked keep-alive will
-  remembered even after the GET is closed, and can be continued by the
-  client issuing another GET with a Subscribe header.
+  connection, or HTTP/2 stream).  If a client requests "Subscribe:
+  keep-alive", then the subscription will be remembered even after the
+  GET closes, and can be continued by the client issuing another GET
+  with a Subscribe header.
 
 2.1.  Creating a Subscription
 
