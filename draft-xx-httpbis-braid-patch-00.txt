@@ -9,10 +9,9 @@ Intended status: Proposed Standard                           X. Yourname
 
 Abstract
 
-  These extensions enable a web resource to synchronize automatically,
-  across multiple clients and servers, and guarantee consistency using a
-  OT or CRDT algorithm.
+  ### This document is still being written ###
 
+  
 
 
 
