@@ -267,12 +267,14 @@ Table of Contents
       Patch-Type: braid
       Content-Length: 1239
 
+      bytes, sync9(array)
       [100:200] = <binary data>
 
       Content-Type: image/gif                             -- Frame 2
       Patch-Type: braid
       Content-Length: 62638
 
+      bytes, sync9(array)
       [348:887] = <binary data>
 
 
@@ -454,7 +456,7 @@ Table of Contents
   The ACK method has the following signature:
 
      ACK /<path>
-     From-Peer: <peer-id>
+     Sender:    <peer-id>
      Seen:      local | global
      Valid:     local | global | abort
      Version:   <version-id>
@@ -464,7 +466,7 @@ Table of Contents
   has been seen by the peer (local) or entire network (global).  An ACK
   request:
 
-    - MUST specify the From-Peer and Version headers
+    - MUST specify the Sender and Version headers
     - MUST specify at least one of the Valid or Seen headers
 
 5.1.1.  Seen
@@ -517,7 +519,7 @@ Table of Contents
   the other fissures known at the time of this fissure.
 
     FISSURE /<path>
-        From-Peer: "xyz"                // peer id
+        Sender: "xyz"                   // peer id
         Id: "xyz"                       // fissure id
         Side-A: "xyz"                   // peer id
         Side-B: "xyz"                   // peer id
@@ -568,7 +570,7 @@ Table of Contents
   that it has been acknowledged by this newcommer as well.
 
     MULTISET /<path>
-        From-Peer: "xyz"                // peer id
+        Sender: "xyz"                   // peer id
         Versions: [{version_id, parents, patches}, ...]
         Fissures: [{fissure_id, side_a, side_b, versions, parents}, ...]
         Min-Leaves: ["xyz", "xyz", ...] // leaves of intersection
