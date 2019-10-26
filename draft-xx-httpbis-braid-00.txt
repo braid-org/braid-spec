@@ -73,9 +73,11 @@ Table of Contents
    2.3.  Continuing a Subscription
    2.4.  Ending a Subscription
    2.5.  Example: GET subscription to animated gif
-   3.  Versioning  . . . . . . . . . . . . . . . . . . . . . . . . .  15
-   4.  Patch Semantics
-   4.1.  Cache Control
+   3.  Versioning State  . . . . . . . . . . . . . . . . . . . . . .  15
+   4.  Patches
+   4.1.  The Version Data Structure
+   4.2.  Defining a new Patch Type
+   4.2.2.  Patch Behavior
    5.  Multi-Party Consensus: Seen and Valid
    5.1.  The ACK method
    5.1.1.  Seen
@@ -137,14 +139,14 @@ Table of Contents
 1.2.1  Example: a Serverless Chat
 
   A Braid web application can operate offline.  Multiple users can use
-  the app from an airplane, and their edits will synchronize when they
+  the app from an airplane, and their edits can synchronize when they
   regain internet connections.  Additionally, the Braid protocol can be
   expressed on a peer-to-peer transport (e.g. Braid-WebRTC) to support a
-  peer-to-peer synchronization without a server.  Braid-HTTP clients can
-  interoperate with Braid-WebRTC peers.  Thus, a chat application, for
-  instance, could be served and synchronized over Braid-HTTP, with
-  redundant peer-to-peer connections established using Braid-WebRTC.
-  The server could then be shut down, and users of the chat app could
+  peer-to-peer synchronization without a server.  Braid-HTTP clients
+  could interoperate with Braid-WebRTC peers.  Thus, a chat application,
+  for instance, could be served and synchronized on Braid-HTTP, yet also
+  establish redundant peer-to-peer connections on Braid-WebRTC.  The
+  server could then be shut down, and users of the chat app could
   continue to send messages to one another.
 
   Imagine the server serves the current set of trusted clients' IP
@@ -243,8 +245,8 @@ Table of Contents
 2.5.  Example: GET subscription to animated gif
 
   In this example, a server streams changes to a GIF file in a sequence
-  of patches.  When the client renders the changes in the GIF file at
-  each step, it animates.
+  of patches.  When the client renders the new state of the GIF after
+  each patch, a new frame of animation is displayed.
 
   Request:
       GET /animated-braid.gif
@@ -277,19 +279,20 @@ Table of Contents
 
 
 
-3.  Versioning
+3.  Versioning State
 
-  Patches change the state of a resource over time.  A point in time is
-  called a Version.  Each version has a unique ID-- a string, and a set
-  of patches from its prior versions: its Parents.
+  Patches change the state of a resource over time.  A point in time for
+  a resource is called a Version.  Each version has a unique ID-- a
+  string, and a set of patches from its prior versions: its Parents.
 
         Version: a unique string identifying a point in time
         Parents: a set of Version IDs
 
   A Version can have multiple Parents because time on a network is a
-  DAG.  Because there is latency, it can be physically impossible to
-  distinguish which of two events happened first.  In this situation,
-  time branches from a line into a DAG (Directed Acyclic Graph):
+  DAG, due to the unavoidable presence of network latency.  It can be
+  physically impossible to distinguish the order of two events that
+  occur close in time.  In this situation, time branches from a line
+  into a DAG (Directed Acyclic Graph):
 
           a     All peers are aware of version (a).
          / \
@@ -316,49 +319,72 @@ Table of Contents
   state.
 
 
-4.  Patch Semantics
+4.  Patches
 
-  You can patch witih either PATCH, POST, or PUT.  Just keep in mind
-  that PATCH and POST is not idempotent, but PUT is, and if a change
-  specifies its Version and Parents, it can be idempotent.  Thus, it is
-  RECOMMENDED for a client to use PUT if it specifies a version &
-  parents.
+4.1.  The Version Data Structure
 
-  The client adds a
+  A client SHOULD send a new version in a PATCH, POST, or PUT request.
+  A server MAY send a version in the response or sub-response to a GET
+  request.  A version MAY contain any combination of the following
+  headers, with one restriction:
 
-      Patch-Type: <patch-type>
+      Content-Type: <patch-content-type>
+      Cache-Control: no-cache, patch
+      Version: <versionid>
+      Parents: <versionid>, <versionid>, ...
 
-  header to its PUT.  This defines the format of patches, and the
-  behavior of merging them together.
+  The restriction is that if a version's Content-Type is a type of
+  patch, then it MUST also specify Cache-Control: no-cache, patch, to
+  distinguish that the body is a patch, and not the actual resource.
 
-  A patch-type can be defined separately.  It SHOULD satisfy:
+    - If a version's Content-Type is not patchable, then it is
+      interpreted as a complete representation of the resource.
+
+    - If the Version header is not specified, then the recipient MAY
+      invent a new version ID for it.
+
+    - If the Parents is not specified, then the recipient SHOULD
+      interpret it to be a new version, built upon the latest versions
+      the recipient has.  However, the recipient in this case MAY choose
+      their own definition of which versions are "latest".
+
+
+4.2.  Defining a new Patch Type
+
+  A Patch Definition MAY be defined with a specification that defines:
+
+    - The patch data format
+    - The patch behavior: how to apply a sequence of patches to a set of
+      versions
+    - The patch's Content-Type
+
+  Patches SHOULD define a content type that starts with patch/*:
+
+      Content-Type: patch/*
+
+  A patch/* content-type indicates that the content is a type of patch
+  that applies to a different Content-Type (or set of Content-Types),
+  and satisfies the requirements in this section.
+
+  Example:
+
+      Content-Type: patch/braid
+      Content-Type: patch/automerge/json
+      Content-Type: patch/sharedb/rich-text
+
+4.2.2.  Patch Behavior
+
+  A patch SHOULD satisfy:
 
      1.  If a set of patches originated from a version, and you apply
          them to a copy of the version, you get the same new version
          again.
 
-  It MAY satisfy:
+  A patch MAY satisfy:
 
      2.  (Commute) If the same set of patches are applied in a different
          order, the result is the same.
 
-  Example:
-
-      Patch-Type: braid-patch(json, sync9(json))
-
-
-
-4.1.  Cache-Control
-
-  Servers and clients can choose whether to send a state update as a
-  full resource, or just a patch.  If sent as a patch, the request and
-  response headers should contain:
-
-      Cache-Control: no-cache, patch
-
-  so that legacy caches do not try to store the patch.  However, any
-  cache that implements the given Patch-Type MUST ignore the no-cache
-  directive if the patch directive is present.
 
 5.  Multi-Party Consensus: Seen and Valid
 
