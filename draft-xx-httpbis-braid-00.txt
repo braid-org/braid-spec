@@ -184,8 +184,8 @@ Table of Contents
      or   Subscribe: keep-alive=<seconds>
 
   If a server implements Subscribe, it MUST include a Subscribe header
-  in its response.  The server then SHOULD keep the connection open, so
-  it can send the client updates over the connection.
+  in its response.  The server then SHOULD keep the connection open, and
+  send updates over it.
 
 2.2.  Sending multiple updates per GET
 
@@ -195,9 +195,9 @@ Table of Contents
 
           Content-Length: N
 
-  header, where N is specified in bytes, and its body MUST be exactly N
-  bytes, followed by a single newline.  Any data following this newline
-  begins the next sub-response's header.
+  header, where N is specified in bytes.  The sub-response body MUST be
+  exactly N bytes, and be followed with a single newline.  Any data
+  after this newline begins the next sub-response's header.
 
   Each response MUST have both headers and a body.  The body MAY be
   zero-length.
