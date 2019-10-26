@@ -122,8 +122,12 @@ Table of Contents
 
 1.1.  Design Goals
 
-  This spec is designed to be easy to implement, while also supporting
-  full Operational Transform and CRDT synchronization algorithms.
+  This spec is designed to be:
+
+   - backwards-compatible with existing HTTP
+   - easy to implement for simple synchronizers
+   - while also supporting full Operational Transform and CRDT
+     synchronization algorithms.
 
 1.2.  Use Cases and Related Work
 
