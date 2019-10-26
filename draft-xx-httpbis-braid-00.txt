@@ -240,6 +240,10 @@ Table of Contents
 
 2.5.  Example: GET subscription to animated gif
 
+  In this example, a server streams changes to a GIF file in a sequence
+  of patches.  When the client renders the changes in the GIF file at
+  each step, it animates.
+
   Request:
       GET /animated-braid.gif
       Subscribe
@@ -261,6 +265,7 @@ Table of Contents
       Content-Length: 62638
 
       [348:887] = <binary data>
+
 
 2.6.  Errors
 
