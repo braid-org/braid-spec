@@ -77,9 +77,9 @@ Table of Contents
    4.  Patch Semantics
    4.1.  Cache Control
    5.  Validating Versions and Pruning History
+   5.1. The ACK method
    5.2. The FISSURE method
    5.3. The MULTISET method
-   5.4. The ACK method
    6.  Security Considerations . . . . . . . . . . . . . . . . . . .  23
    7.  IANA Considerations . . . . . . . . . . . . . . . . . . . . .  23
    8.  Copyright Notice  . . . . . . . . . . . . . . . . . . . . . .  23
@@ -273,7 +273,11 @@ Table of Contents
            client asks for?  How does it tell the client "sorry, I don't
            have the history to synchronize with you."
 
+
+
 3.  Versioning
+
+  The  of a patch (Section 4) depends  on *time*.
 
   Time on a network is ambiguous as a result of latency.  If multiple
   peers edit the same state at the same time, we cannot say that one
@@ -350,11 +354,64 @@ Table of Contents
   cache that implements the given Patch-Type MUST ignore the no-cache
   directive if the patch directive is present.
 
-5.  Validating Versions and Pruning History
+5.  Multi-Party Acknowledgements
 
-  A client or server does not need to implement any of the methods in
-  this section unless they want to participate in a validation network,
-  or be able to provably prune history without breaking subscriptions.
+  The protocol in this section is optional.  A client or server would
+  typically only need to implement them to support two features across a
+  client/server or peer-to-peer network:
+
+       1. Pruning historical versions
+       2. Validating changes
+
+  To implement these features, a peer has to know when a version has
+  been (1) *seen* by all write-capable peers, and/or (2) *validated* by
+  all authoritative peers, respectively.  Peers report 
+
+  In this section, we use the term "peer" instead of "client" or
+  "server", where the protocol applies uniformly to either.  We also use
+  the concept of a SET request as a stand-in for a PUT, POST, or PATCH
+  that contains a Version and Parents header.
+
+5.1. The ACK method
+
+  The ACK method has the following signature:
+
+     ACK /<path>
+     From-Peer: <peer-id>
+     Seen:      local | global
+     Valid:     local | global | abort
+     Version:   <version-id>
+
+  An ACK request is issued to communicate both that a version has been
+  validated by a peer (local) or entire network (global), and/or that it
+  has been seen by the peer (local) or entire network (global).  An ACK
+  request:
+
+    - MUST specify the From-Peer and Version headers
+    - MUST specify at least one of the Valid or Seen headers
+
+5.1.1.  Seen
+
+  If a peer creates a version, then it SHOULD send a SET to all its
+  peers, and wait for an ACK Seen "local" or a SET with the same version
+  id from each peer before then sending an ACK Seen "global" to all its
+  peers.
+
+  If a peer receives a version initially from a SET, then it SHOULD send
+  a SET to all other peers, and wait for an ACK Seen "local" or a SET
+  with the same version id from each of these peers before sending an
+  ACK Seen "local" back to the peer that sent the initial SET.
+
+  If a peer receives an ACK Seen "global", and this is new information,
+  then it SHOULD send an ACK Seen "global" to all its other peers.
+
+5.1.2.  Valid acknowledgements
+
+
+
+5.4.1.  Example: Using validation to enable speculative edits
+
+
 
 5.2. The FISSURE method
 
@@ -431,37 +488,6 @@ Table of Contents
         Fissures: [{fissure_id, side_a, side_b, versions, parents}, ...]
         Min-Leaves: ["xyz", "xyz", ...] // leaves of intersection
         Max-Leaves: ["xyz", "xyz", ...] // leaves of union
-
-5.4. The ACK method
-
-  There are two kinds of ACK:
-
-  1. ACK Seen:
-
-     If a peer creates a version, then it SHOULD send a SET to all its
-     peers, and wait for an ACK Seen "local" or a SET with the same
-     version id from each peer before then sending an ACK Seen "global"
-     to all its peers.
-
-     If a peer receives a version initially from a SET, then it SHOULD
-     send a SET to all other peers, and wait for an ACK Seen "local" or
-     a SET with the same version id from each of these peers before
-     sending an ACK Seen "local" back to the peer that sent the initial
-     SET.
-
-     If a peer receives an ACK Seen "global", and this is new
-     information, then it SHOULD send an ACK Seen "global" to all its
-     other peers.
-
-  2. ACK Valid:
-
-     ACK key
-         From-Peer: "xyz"                // peer id
-         Seen: "local" | "global"
-         Valid: "local" | "global" | "abort"
-         Version: "xyz"                  // version being acknowledged
-
-5.4.1.  Example: Using validation to enable speculative edits
 
 
 6. Security Considerations
