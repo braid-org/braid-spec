@@ -207,12 +207,13 @@ Table of Contents
 
 2.3.  Continuing a Subscription
 
-  If a server responds with
+  Even if a connection closes, a subscription might still be active.  If
+  a server's response headers for a connection contained:
 
           Subscribe: keep-alive
       or  Subscribe: keep-alive=<seconds>
 
-  Then it SHOULD keep the subscription open even after the GET request's
+  Then the server SHOULD keep the subscription open even after the
   connection closes.  This means that the server promises to keep enough
   history to merge with the client when the client comes back online.
 
@@ -280,9 +281,10 @@ Table of Contents
 
 3.  Versioning State
 
-  Patches change the state of a resource over time.  A point in time for
-  a resource is called a Version.  Each version has a unique ID-- a
-  string, and a set of patches from its prior versions: its Parents.
+  Patches change the state of a resource over time.  We define a
+  "Version" as a point in time.  At a particular version, the contents
+  of a resource is immutable.  Each version has a unique ID-- a string,
+  and a set of patches from its prior versions: its Parents.
 
         Version: a unique string identifying a point in time
         Parents: a set of Version IDs
