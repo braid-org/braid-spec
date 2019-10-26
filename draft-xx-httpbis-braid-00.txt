@@ -283,8 +283,9 @@ Table of Contents
 
   Patches change the state of a resource over time.  We define a
   "Version" as a point in time.  At a particular version, the contents
-  of a resource is immutable.  Each version has a unique ID-- a string,
-  and a set of patches from its prior versions: its Parents.
+  of a particular resource is immutable -- it will never change.  Each
+  version has a unique ID (a string), and a set of patches from its
+  prior versions: its Parents.
 
         Version: a unique string identifying a point in time
         Parents: a set of Version IDs
