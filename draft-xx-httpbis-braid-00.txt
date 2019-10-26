@@ -66,7 +66,7 @@ Table of Contents
    1.  Introduction  . . . . . . . . . . . . . . . . . . . . . . . . . 3
    1.1.  Design Goals
    1.2.  Use Cases and Related Work
-   1.2.1.  Use Case: a Serverless Chat
+   1.2.1  Example: a Serverless Chat
    2.  Subscriptions for GET   . . . . . . . . . . . . . . . . . . .  11
    2.1.  Creating a Subscription
    2.2.  Sending multiple updates per GET
@@ -123,22 +123,31 @@ Table of Contents
 
 1.2.  Use Cases and Related Work
 
-1.2.1  Use Case: a Serverless Chat
+  - The DAV standards:
+    - CalDAV
+    - CardDAV
+    - WebDAV
+  - W3C Push API: https://www.w3.org/TR/push-api/
+  - Email push
+    - JMAP
+    - IMAP Web Push
 
-  This protocol provides enough information for a web app to function
-  offline, and synchronize all changes between client and server once it
-  comes back online.  Additionally, the abstract Braid protocol can be
-  expressed on a peer-to-peer transport (e.g. WebRTC), and enable a set
-  of peers to simultaneously edit and synchronize with a resource,
-  without a server.
+1.2.1  Example: a Serverless Chat
 
-  For example, we can build a chat app where the server can go offline,
-  and all the peers will continue to send and receive messages from one
-  another.
+  A Braid web application can operate offline.  Multiple users can use
+  the app from an airplane, and their edits will synchronize when they
+  regain internet connections.  Additionally, the Braid protocol can be
+  expressed on a peer-to-peer transport (e.g. Braid-WebRTC) to support a
+  peer-to-peer synchronization without a server.  Braid-HTTP clients can
+  interoperate with Braid-WebRTC peers.  Thus, a chat application, for
+  instance, could be served and synchronized over Braid-HTTP, with
+  redundant peer-to-peer connections established using Braid-WebRTC.
+  The server could then be shut down, and users of the chat app could
+  continue to send messages to one another.
 
-  Imagine the server serves the current set of trusted clients' ip
-  addresses at the /peers state.  And thus each client runs Javascript
-  that does a:
+  Imagine the server serves the current set of trusted clients' IP
+  addresses at the /peers state.  Each client then subscribes to the
+  /peers state with:
 
       GET /peers
       Subscribe: keep-alive
@@ -148,27 +157,9 @@ Table of Contents
         ...
       ]
 
-  Then each peer chooses some of those peers at random, establishes
-  WebRTC connection with them, and sends Braid messages to that peer
-  over that connection.  We can call this protocol Braid-WebRTC.
-
-  If the peers treat the peers just like a server, except for
-  transporting the messages over WebRTC instead of HTTP, then they will
-  not need the server beyond the initial bootstrap phase.  You can shut
-  off the server, and the app can continue running, with people able to
-  chat with one another.
-
-
-1.2.2.  Other Use-Cases [XX Flesh this out]
-
-  - The DAV standards:
-    - CalDAV
-    - CardDAV
-    - WebDAV
-  - W3C Push API: https://www.w3.org/TR/push-api/
-  - Email push
-    - JMAP
-    - IMAP Web Push
+  Each peer can then choose some of those peers at random to establish a
+  WebRTC connection with.  It will then send Braid messages to that peer
+  over that connection.
 
 
 2.  Subscriptions for GET
