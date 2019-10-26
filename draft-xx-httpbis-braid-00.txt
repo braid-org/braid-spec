@@ -70,8 +70,9 @@ Table of Contents
    2.  Subscriptions for GET   . . . . . . . . . . . . . . . . . . .  11
    2.1.  Creating a Subscription
    2.2.  Sending multiple updates per GET
-   2.3.  Ending a Subscription
-   2.4.  Example: GET subscription to animated gif
+   2.3.  Continuing a Subscription
+   2.4.  Ending a Subscription
+   2.5.  Example: GET subscription to animated gif
    3.  Versioning  . . . . . . . . . . . . . . . . . . . . . . . . .  15
    4.  Patch Semantics
    4.1.  Cache Control
@@ -172,36 +173,35 @@ Table of Contents
 
 2.  Subscriptions for GET
 
-  A Braid client specifies which resources it wants to subscribe to by
-  adding Subscribe headers to their GET requests.  A server that
-  implements the Subscribe header SHOULD keep the connection open, and
-  use it to send updates to the client as the state of the resource
-  changes.
+  A Braid client requests a subscription by issuing a GET with the
+  Subscribe header.  A server that implements the Subscribe header
+  promises to keep its subscribed clients up-to-date by sending changes,
+  until the client ends the subscription.
 
-  Caches and proxies can synchronize with changing content, and clients
-  can connect to them, and synchronize.  They can even catch up
-  partially, however much they are behind.
+  SHOULD keep the connection open, and use it to send updates to the
+  client as the state of the resource changes.
 
 2.1.  Creating a Subscription
 
   A client MAY request a subscription by issuing a GET request
   containing a Subscribe header:
 
-          Subscribe:
-  or      Subscribe: keep-alive
-  or      Subscribe: keep-alive=<seconds>
+          Subscribe
+     or   Subscribe: keep-alive
+     or   Subscribe: keep-alive=<seconds>
 
-  Subscribe means go into the special mode.  This mode keeps the
-  connection open, and sends multiple responses to a single request.
+  If a server implements GET subscriptions, it MUST add a Subscribe
+  header to its response.  It is RECOMMENDED that the server also keep
+  the connection open, so it can send the client updates over the
+  connection.
 
 2.2.  Sending multiple updates per GET
 
-  To allow multiple updates per GET request, the server concatenates
-  multiple sub-responses within a single response body.  Each
-  sub-response MUST contain its own headers and body.  Each
-  sub-response's headers MUST contain a
+  To send multiple updates, a server concatenates multiple sub-responses
+  into a single response body.  Each sub-response MUST contain its own
+  headers and body.  Each sub-response's headers MUST contain a
 
-       Content-Length: N
+          Content-Length: N
 
   header, where N is specified in bytes, and its body MUST be exactly N
   bytes, followed by a single newline.  Any data following this newline
@@ -210,24 +210,35 @@ Table of Contents
   Each response MUST have both headers and a body.  The body MAY be
   zero-length.
 
-2.3.  Ending a Subscription
+2.3.  Continuing a Subscription
 
-  If the request lacks "Subscribe: keep-alive", then the subscription
-  ends when the connection closes.  However if a server responds with
-  "Subscribe: keep-alive", then it will keep the subscription active,
-  which means it promises to keep enough history to merge with the
-  client when the client comes back online.
+  If a server responds with
 
-  The server can also return "Subscribe: keep-alive=<seconds>" instead
-  of "Subscribe: keep-alive", which is a suggestion of how long it will
-  keep the history for the client, after a connection has ended.
+          Subscribe: keep-alive
+      or  Subscribe: keep-alive=<seconds>
+
+  Then it SHOULD keep the subscription active even after the GET
+  request's connection closes.  This means that the server promises to
+  keep enough history to merge with the client when the client comes
+  back online.
+
+  When the client reconnects, it MAY specify the most recent versions it
+  saw from the server using the Parents header (Section 3).  This tells
+  the server which versions of state to catch it up from.
+
+  The server can suggest how long it will wait for the client by
+  responding with Subscribe: keep-alive=<seconds>.  A server SHOULD wait
+  at least <seconds> after a connection closes before dropping the
+  subscription, and clearing its history.
+
+2.4.  Ending a Subscription
 
   Servers and clients MAY drop a subscription at any time, no matter
   what the value of keep-alive.  A client MAY reconnect to establish a
   new subscription, by issuing a new GET request with a new Subscribe
   header.
 
-  If a subscription is set to keep-alive, then simply closing a
+  If a subscription is set to keep-alive, then closing the TCP/QUIC
   connection won't end the subscription.  Thus a client needs a way to
   explicitly end the subscription.  In HTTP/1, this is by sending the
   text "Forget\n" over the TCP connection.  In HTTP/2, this is by
@@ -237,7 +248,7 @@ Table of Contents
   FORGET method.
 
 
-2.4.  Example: GET subscription to animated gif
+2.5.  Example: GET subscription to animated gif
 
   Request:
       GET /animated-braid.gif
