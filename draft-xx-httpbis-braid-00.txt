@@ -108,10 +108,10 @@ Table of Contents
   provides semantics of an *event-stream*, and although a programmer can
   encode a protocol within the event stream for updating a resource,
   there is still no standard way to express the update of a resource.
-  In practice, programmers today often give up on using a standard
-  semantic for "data that changes", and instead write their own
-  non-standard update protocol over a WebSocket, or adopt a web
-  framework that does this for them.
+  In practice, programmers today often give up on using standards for
+  "data that changes", and instead write their own non-standard update
+  protocol over a WebSocket, or adopt a web framework that does this for
+  them.
 
   This document specifies how to add support for "state that changes" to
   HTTP with a few small extensions.  Doing so transforms HTTP from a
@@ -127,8 +127,8 @@ Table of Contents
 
    - backwards-compatible with existing HTTP
    - easy to implement for simple synchronizers
-   - while also supporting full Operational Transform and CRDT
-     synchronization algorithms.
+   - while also supporting arbitrary synchronization algorithms, such as
+     Operational Transform and CRDTs
 
 1.2.  Use Cases and Related Work
 
@@ -263,18 +263,20 @@ Table of Contents
       Cache-Control: no-cache
       Patch-Type: braid-patch(bytes, sync9(array))
 
-      Content-Type: image/gif                             -- Part 1
+      Content-Type: image/gif                             -- Frame 1
       Patch-Type: braid-patch(bytes, sync9(array))
       Content-Length: 1239
 
       [100:200] = <binary data>
 
-      Content-Type: image/gif                             -- Part 2
+      Content-Type: image/gif                             -- Frame 2
       Patch-Type: braid-patch(bytes, sync9(array))
       Content-Length: 62638
 
       [348:887] = <binary data>
 
+
+  [Should we START the spec with examples?  Maybe in "Use Cases"?]
 
 2.6.  Errors
 
@@ -366,19 +368,19 @@ Table of Contents
   request.  A version MAY contain any combination of the following
   headers, with one restriction:
 
-      Content-Type: <patch-content-type>
+      Patch-Type: <patch-type>
       Cache-Control: no-cache, patch
       Version: <versionid>
       Parents: <versionid>, <versionid>, ...
 
-  The restriction is that if a version's Content-Type is a type of
-  patch, then it MUST also specify Cache-Control: no-cache, patch, to
-  ensure that legacy systems do not cache the patch as if it were the
-  resource.
+  The restriction is that if Patch-Type is present, then the body
+  contains a patch, and the response MUST also specify Cache-Control:
+  no-cache, patch, to ensure that legacy systems do not cache the patch
+  as if it were the resource.
 
-    - If a version's Content-Type is not a patch/*, or Cache-Control
-      does not have no-cache, then the request or response body SHOULD
-      be interpreted as a complete representation of the resource.
+    - If Patch-Type is not specified, or Cache-Control does not have
+      no-cache, then the request or response body SHOULD be interpreted
+      as a complete representation of the resource.
 
     - If the Version header is not specified, then the recipient MAY
       invent a new version ID for it, and MAY use that new ID in network
@@ -394,21 +396,25 @@ Table of Contents
 
   A human MAY define a patch type by publishing a specification of its:
 
-    - Content-Type
+    - Patch-Type
     - Data format
     - and Behavior: the outcome after applying a sequence of patches to
       a set of versions
 
+  The Patch-Type is an arbitrary string, such as:
+
+      Patch-Type: braid(bytes, sync9(array))
+      Patch-Type: automerge/json
+      Patch-Type: sharedb/rich-text
+
   The Content-Type SHOULD start with patch/*, such as:
 
       Content-Type: patch/braid
-      Content-Type: patch/automerge/json
-      Content-Type: patch/sharedb/rich-text
+      Content-Type: patch/automerge
+      Content-Type: patch/sharedb
 
   A patch/* content-type indicates that the content is a type of patch
-  that applies to a different Content-Type (or set of Content-Types),
-  and satisfies the requirements of this section.
-
+  that satisfies the requirements of this section.
 
 4.2.2.  Patch Behavior
 
