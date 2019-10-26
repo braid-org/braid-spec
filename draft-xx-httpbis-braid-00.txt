@@ -293,8 +293,8 @@ Table of Contents
   A Version can have multiple Parents because time on a network is a
   DAG, due to the unavoidable presence of network latency.  It can be
   physically impossible to distinguish the order of two events that
-  occur close in time.  In this situation, time branches from a line
-  into a DAG (Directed Acyclic Graph):
+  occur close in time.  Thus, the general form of time on a network is a
+  Directed Acyclic Graph.
 
           a     All peers are aware of version (a).
          / \
@@ -337,7 +337,7 @@ Table of Contents
 
   The restriction is that if a version's Content-Type is a type of
   patch, then it MUST also specify Cache-Control: no-cache, patch, to
-  distinguish that the body is a patch, and not the actual resource.
+  ensure that legacy systems do not cache the body as the resource.
 
     - If a version's Content-Type is not a patch/*, or Cache-Control
       does not have no-cache, then the request or response body SHOULD
