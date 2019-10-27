@@ -101,9 +101,34 @@ Table of Contents
   This specifies to interpret a file as JSON, and merge it using sync9's
   JSON type.
 
-1.  The Parse-As parameter
+1.  The Parser
 
-2.  The Merge-As parameter
+  The Parser is specified as a function, which takes a query string and
+  returns a region in the document.  For instance, this is a query
+  string that works on the json Parser:
+
+         .foo.bar[3][5].baz
+
+  The regions produced by the Parser have a partial ordering.  This
+  partial ordering must be one supported by the Merger.
+
+  A Parser also specifies how to write a new value for a region into the
+  Content, for instance to accept this patch:
+
+         .foo.bar[3][5].baz = "Yesss! New stuff!!!"
+
+2.  The Merger
+
+  The Merger is specified as a function that defines how to merge
+  multiple versions together, given complete access to their historical
+  braid of patches.
 
 3.  Partially-Ordered Content
 
+  The output of the parser must fit a *partial order* that is supported
+  as input to the merger.
+
+  For instance, an array is fully ordered.  But JSON is
+  partially-ordered -- it defines an ordering for array elements, and
+  characters in a string, but does not define the ordering of keys and
+  values in a hash.
