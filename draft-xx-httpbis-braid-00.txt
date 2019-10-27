@@ -261,20 +261,18 @@ Table of Contents
       OK 200
       Subscribe
       Cache-Control: no-cache
-      Patch-Type: braid
+      Patch-Type: braid(bytes, sync9(array))
 
       Content-Type: image/gif                             -- Frame 1
-      Patch-Type: braid
+      Patch-Type: braid(bytes, sync9(array))
       Content-Length: 1239
-
-      bytes, sync9(array)
+      
       [100:200] = <binary data>
 
       Content-Type: image/gif                             -- Frame 2
-      Patch-Type: braid
+      Patch-Type: braid(bytes, sync9(array))
       Content-Length: 62638
 
-      bytes, sync9(array)
       [348:887] = <binary data>
 
 
@@ -392,6 +390,7 @@ Table of Contents
       interpret the version to be new, built upon the latest versions
       the recipient has.  The determination of which versions are
       "latest" is up to the recipient.
+
 
 
 4.2.  Defining a new Patch Type
@@ -590,7 +589,7 @@ Table of Contents
   If a response 200 to a POST, PUT, or PATCH request contains a Version,
   it MUST be interpreted as:
 
-        ACK /<path>
+    ACK /<path>
         Valid: local
         Seen: local
         Version: <the version in the response>

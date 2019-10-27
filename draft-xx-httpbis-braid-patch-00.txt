@@ -9,8 +9,10 @@ Intended status: Proposed Standard                           X. Yourname
 
 Abstract
 
-  ### This document is still being written ###
+  A uniform syntax for expressing changes to state.  Allows re-use of
+  existing synchronization algorithms and Content-Types.
 
+  Supports arbitrary CRDT or OT algorithms, and most Content-Types.
 
 
 
@@ -41,10 +43,9 @@ Status of this Memo
 Table of Contents
 
    1.  Introduction  . . . . . . . . . . . . . . . . . . . . . . . . . 3
-   2.  Selectors   . . . . . . . . . . . . . . . . . . . . . . . . .  18
-   2.1.  Partially-Ordered Content
-   3.  Mergeables      . . . . . . . . . . . . . . . . . . . . . . .  18
-   5.  Related work
+   2.  Parse-As   . . . . . . . . . . . . . . . . . . . . . . . . .  18
+   3.  Merge-As
+   4.  Partially-Ordered Content
    6.  Security Considerations . . . . . . . . . . . . . . . . . . .  23
    7.  IANA Considerations . . . . . . . . . . . . . . . . . . . . .  23
    8.  Copyright Notice  . . . . . . . . . . . . . . . . . . . . . .  23
@@ -54,31 +55,43 @@ Table of Contents
 
 1.  Introduction
 
-  A fundamental problem in Synchronization is ensuring that two peers
-  resolve the same DAG of edits consistently.  But if two edits happen
-  in the same place at the same time, there occurrs what you might call
-  a "conflict", and different applications will want to resolve
-  conflicts differently.
+  Even though there are many synchronization algorithms, making
+  different tradeoffs, with different network protocols, it turns out
+  that they all need to communicate roughly the same thing -- we can
+  re-express their network messages in a single format.
 
-  For instance, if two users edit the same text in a collaborative
-  editor, the expected behavior is to all the characters that have been
-  inserted, and delete all the characters that have been deleted:
+  Braid-Patch is a uniform syntax for changes to state.  Any change is
+  expressed in the form:
 
-                                  dogs
-                                  /  \
-                               cats  birds
-                                  \  /
-                                catbirds
+          "region X of the data was replaced with content Y"
 
-  However, ...
+  Synchronization algorithms can be difficult to implement, but the
+  Braid-Patch format lets you re-use an algorithm over multiple
+  Content-Types.  To do this, you specify (1) how to PARSE REGIONS from
+  the data structure, and (2) how multiple conflicting patches are
+  MERGED.
 
-  Implementing one of these mergeable datatypes can be difficult.
-  Therefore, it saves programmers a lot of time if they can re-use a
-  mergeable datatype implementation in multiple places.
+  For instance, this specifies to *interpret a Content-Type* as a linear
+  sequence of bytes, and then *merge* simultaneous patches using the
+  sync9(array) specification:
 
-3.  Mergeables
+       braid(bytes, sync9(array))
+              ^           ^
+              |           |
+         (1) Parse as    (2) Merge as
 
-  A mergeable defines a space of partial orders, and promises to produce
-  the same output for any set of versions.
+  This specifies to interpret a file as JSON, and merge it using sync9's
+  JSON type:
 
-  braid(bytes, sync9(array))
+       braid(json, sync9(json))
+              ^           ^
+              |           |
+         (1) Parse as    (2) Merge as
+
+
+1.  The Parse-As parameter
+
+2.  The Merge-As parameter
+
+3.  Partially-Ordered Content
+
