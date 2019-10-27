@@ -122,6 +122,8 @@ Table of Contents
 
        /foo/bar/*[3]/baz = <one two="tree"/>
 
+  Note that JSON does not actually appear in patches; it only merges
+  according to the rules of the sync9(json) type.
 
 2.  The Parser
 
