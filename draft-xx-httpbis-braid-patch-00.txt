@@ -72,10 +72,10 @@ Table of Contents
   the data structure, and (2) how multiple conflicting patches are
   MERGED.
 
-  A Braid-Patch is *composed* of a Parser and a Merger.  The Parser
-  specifies how to index into subregions of the Content-Type, and the
-  Merger specifies how simultaneous patches to the same state are
-  merged.
+  A Braid-Patch format is thus *composed* of a Parser type and a Merger
+  type.  The Parser specifies how to index into subregions of the
+  Content-Type, and the Merger specifies how simultaneous patches to the
+  same state are merged.
 
   For instance, here is a patch specification for binary files:
 
