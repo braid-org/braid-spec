@@ -46,7 +46,7 @@ Table of Contents
    2.  Parser      . . . . . . . . . . . . . . . . . . . . . . . . .  18
    3.  Merger
    4.  Partially-Ordered Content
-   5.  >Portals to past versions
+   5.  Portals to Past Versions
    6.  Security Considerations . . . . . . . . . . . . . . . . . . .  23
    7.  IANA Considerations . . . . . . . . . . . . . . . . . . . . .  23
    8.  Copyright Notice  . . . . . . . . . . . . . . . . . . . . . .  23
@@ -135,7 +135,7 @@ Table of Contents
   values in a hash.
 
 
-5.  Portals to past versions
+5.  Portals to Past Versions
 
   The normal behavior for a version is that it *creates* some regions,
   and then just *portals* other regions from the previous version.
