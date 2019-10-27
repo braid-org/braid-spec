@@ -67,7 +67,7 @@ Table of Contents
           "region X of the data was replaced with content Y"
 
   Synchronization algorithms can be difficult to implement, but the
-  Braid-Patch format lets you re-use an algorithm over multiple
+  Braid-Patch format lets you re-use existing algorithms and
   Content-Types.  To do this, you specify (1) how to PARSE REGIONS from
   the data structure, and (2) how multiple conflicting patches are
   MERGED.
