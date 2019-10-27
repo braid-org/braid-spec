@@ -115,7 +115,7 @@ Table of Contents
          .foo.bar[3][5].baz
 
   The regions produced by the Parser have a partial ordering.  This
-  partial ordering must be one supported by the Merger.
+  partial ordering must be one supported by the Merger type.
 
   A Parser also specifies how to write a new value for a region into the
   Content, for instance to accept this patch:
@@ -150,12 +150,12 @@ Table of Contents
 
   Like, instead of:
 
-        [3:5] = 'hello'
+        [3:5] = "hello"
 
   We could explicitly write the copies with portals:
 
         [:3] = old[:3]
-        [3:5] = 'hello'
+        [3:5] = "hello"
         [5:] = old[5:]
 
 
