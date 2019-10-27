@@ -78,7 +78,7 @@ Table of Contents
    4.1.  The Version Data Structure
    4.2.  Defining a new Patch Type
    4.2.2.  Patch Behavior
-   5.  Multi-Party Consensus: Seen and Valid
+   5.  Multi-Party Consensus
    5.1.  The ACK method
    5.1.1.  Seen
    5.1.1.  Valid
@@ -431,7 +431,7 @@ Table of Contents
          order, the result is the same.
 
 
-5.  Multi-Party Consensus: Seen and Valid
+5.  Multi-Party Consensus
 
   The protocol in this section is optional.  A client or server would
   typically only need to implement them to support these two features
