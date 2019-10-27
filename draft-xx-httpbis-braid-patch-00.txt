@@ -106,6 +106,18 @@ Table of Contents
 
        .foo.bar[3].baz = {"1": {"two": "tree"}}
 
+  XML files have an isomorphic partial ordering with JSON files.  You
+  could conceivably re-use a JSON synchronizer on an XML file by
+  converting the XML to JSON, merging the JSON, and then converting the
+  result back when necessary.  However, you can do the same thing by
+  connecting an XML parser to a JSON merger, since their partial orders
+  are compatible:
+
+       braid(xml,  sync9(json))
+              ^           ^
+              |           |
+         (1) Parser    (2) Merger
+
 2.  The Parser
 
   The Parser is specified as a function, which takes a query string and
