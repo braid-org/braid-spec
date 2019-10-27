@@ -334,8 +334,6 @@ Table of Contents
 
   Versions need their parents to be understood.
 
-  There is a root version. [XX Greg fill this in]
-
 3.2.  GET for Historical Versions
 
   GET requests can optionally contain a Version and/or Parents header.
