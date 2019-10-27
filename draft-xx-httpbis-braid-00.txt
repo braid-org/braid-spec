@@ -30,7 +30,7 @@ Abstract
      1. *Subscriptions* to GET requests
      2. *Versioning* to resources
      3. *Semantics* to PATCH requests
-     4. *Multi-party Acknowledgements* to validate and prune history
+     4. *Multi-party Consensus* to validate and prune history
 
   These extensions enable a web resource to synchronize automatically
   across multiple clients and servers, and guarantee consistency using a
