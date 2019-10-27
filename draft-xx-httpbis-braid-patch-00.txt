@@ -71,23 +71,26 @@ Table of Contents
   the data structure, and (2) how multiple conflicting patches are
   MERGED.
 
-  For instance, this specifies to *interpret a Content-Type* as a linear
-  sequence of bytes, and then *merge* simultaneous patches using the
-  sync9(array) specification:
+  For instance, here is a patch specification for binary files:
 
        braid(bytes, sync9(array))
               ^           ^
               |           |
          (1) Parse as    (2) Merge as
 
-  This specifies to interpret a file as JSON, and merge it using sync9's
-  JSON type:
+  This specifies to (1) interpret a Content-Type as a linear sequence of
+  bytes, and to (2) *merge* simultaneous patches using the sync9(array)
+  specification.
+
+  Here is a patch specification for JSON files:
 
        braid(json, sync9(json))
               ^           ^
               |           |
          (1) Parse as    (2) Merge as
 
+  This specifies to interpret a file as JSON, and merge it using sync9's
+  JSON type.
 
 1.  The Parse-As parameter
 
