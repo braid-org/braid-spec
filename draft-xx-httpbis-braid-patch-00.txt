@@ -71,6 +71,11 @@ Table of Contents
   the data structure, and (2) how multiple conflicting patches are
   MERGED.
 
+  A Braid-Patch is *composed* of a Parser and a Merger.  The Parser
+  specifies how to index into subregions of the Content-Type, and the
+  Merger specifies how simultaneous patches to the same state are
+  merged.
+
   For instance, here is a patch specification for binary files:
 
        braid(bytes, sync9(array))
@@ -81,6 +86,10 @@ Table of Contents
   This specifies to (1) interpret a Content-Type as a linear sequence of
   bytes, and to (2) *merge* simultaneous patches using the sync9(array)
   specification.
+
+  Here is a patch following that specification:
+
+       [33:3889] = <binary-data>
 
   Here is a patch specification for JSON files:
 
