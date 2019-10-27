@@ -118,6 +118,11 @@ Table of Contents
               |           |
          (1) Parser    (2) Merger
 
+  Here is a patch following that specification:
+
+       /foo/bar/*[3]/baz = <one two="tree"/>
+
+
 2.  The Parser
 
   The Parser is specified as a function, which takes a query string and
