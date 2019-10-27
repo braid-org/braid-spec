@@ -102,6 +102,10 @@ Table of Contents
   This specifies to interpret a file as JSON, and merge it using sync9's
   JSON type.
 
+  Here is a patch following that specification:
+
+       .foo.bar[3].baz = {"1": {"two": "tree"}}
+
 2.  The Parser
 
   The Parser is specified as a function, which takes a query string and
