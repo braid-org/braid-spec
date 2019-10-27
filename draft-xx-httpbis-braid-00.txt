@@ -74,7 +74,7 @@ Table of Contents
    2.2.  Sending multiple updates per GET
    2.3.  Continuing a Subscription
    2.4.  Ending a Subscription
-   2.5.  Example: GET subscription to animated gif
+   2.5.  Example: GET subscription that animates a GIF
    3.  Versioning State  . . . . . . . . . . . . . . . . . . . . . .  15
    4.  Patches
    4.1.  The Version Data Structure
@@ -249,7 +249,7 @@ Table of Contents
   FORGET method.
 
 
-2.5.  Example: GET subscription to animated gif
+2.5.  Example: GET subscription that animates a GIF
 
   In this example, a server streams changes to a GIF file in a sequence
   of patches.  When the client renders the new state of the GIF after
