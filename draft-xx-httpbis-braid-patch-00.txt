@@ -46,6 +46,7 @@ Table of Contents
    2.  Parser      . . . . . . . . . . . . . . . . . . . . . . . . .  18
    3.  Merger
    4.  Partially-Ordered Content
+   5.  >Portals to past versions
    6.  Security Considerations . . . . . . . . . . . . . . . . . . .  23
    7.  IANA Considerations . . . . . . . . . . . . . . . . . . . . .  23
    8.  Copyright Notice  . . . . . . . . . . . . . . . . . . . . . .  23
@@ -101,7 +102,7 @@ Table of Contents
   This specifies to interpret a file as JSON, and merge it using sync9's
   JSON type.
 
-1.  The Parser
+2.  The Parser
 
   The Parser is specified as a function, which takes a query string and
   returns a region in the document.  For instance, this is a query
@@ -117,13 +118,13 @@ Table of Contents
 
          .foo.bar[3][5].baz = "Yesss! New stuff!!!"
 
-2.  The Merger
+3.  The Merger
 
   The Merger is specified as a function that defines how to merge
   multiple versions together, given complete access to their historical
   braid of patches.
 
-3.  Partially-Ordered Content
+4.  Partially-Ordered Content
 
   The output of the parser must fit a *partial order* that is supported
   as input to the merger.
@@ -132,3 +133,43 @@ Table of Contents
   partially-ordered -- it defines an ordering for array elements, and
   characters in a string, but does not define the ordering of keys and
   values in a hash.
+
+
+5.  Portals to past versions
+
+  The normal behavior for a version is that it *creates* some regions,
+  and then just *portals* other regions from the previous version.
+
+  However, these *portals* are implicit so far... in a subsequent
+  extension, we can make these portals explicit, and remap them amongst
+  regions.
+
+  Like, instead of:
+
+        [3:5] = 'hello'
+
+  We could explicitly write the copies with portals:
+
+        [:3] = old[:3]
+        [3:5] = 'hello'
+        [5:] = old[5:]
+
+
+  Portals allow Braid-Patch to directly support:
+    - Clones
+    - Moves
+     - A move is a portal + a delete
+    - Ancestral splices
+    - Re-orderings (perhaps useful to capture a merge linearization)
+
+
+6.  Hints
+
+  Escape-valve / failsafe where you can shove data into it if it's
+  easier for you to write your code that way.
+
+  So, the overall format of a braid-patch is:
+
+     Patch: "<region> = <value>"     # Required
+     Hint: .*                        # Optional
+
