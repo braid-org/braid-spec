@@ -142,7 +142,7 @@ Status of this Memo
 
    Linked JSON resources MAY use the media type:
 
-      Content-Type: application/Linked-JSON
+      Content-Type: application/linked-json
 
 
 
