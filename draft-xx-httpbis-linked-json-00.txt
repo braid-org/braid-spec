@@ -1,7 +1,8 @@
 Internet-Draft                                                 M. Toomim
 Expires: Mar 8, 2020                                   Invisible College
-Intended status: Proposed Standard                           Nov 4, 2019
-                                                             
+Intended status: Proposed Standard                           X. Yourname
+                                                        Your Affiliation
+                                                             Nov 4, 2019
 
 
                               Linked JSON
