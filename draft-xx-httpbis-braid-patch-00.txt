@@ -43,8 +43,8 @@ Status of this Memo
 Table of Contents
 
    1.  Introduction  . . . . . . . . . . . . . . . . . . . . . . . . . 3
-   2.  Parse-As   . . . . . . . . . . . . . . . . . . . . . . . . .  18
-   3.  Merge-As
+   2.  Parser      . . . . . . . . . . . . . . . . . . . . . . . . .  18
+   3.  Merger
    4.  Partially-Ordered Content
    6.  Security Considerations . . . . . . . . . . . . . . . . . . .  23
    7.  IANA Considerations . . . . . . . . . . . . . . . . . . . . .  23
