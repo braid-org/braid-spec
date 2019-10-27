@@ -455,10 +455,10 @@ Table of Contents
   The ACK method has the following signature:
 
      ACK /<path>
-     Sender:    <peer-id>
-     Seen:      local | global
-     Valid:     local | global | abort
-     Version:   <version-id>
+         Sender:    <peer-id>
+         Seen:      local | global
+         Valid:     local | global | abort
+         Version:   <version-id>
 
   An ACK request is issued to communicate both that a version has been
   validated by a peer (local) or entire network (global), and/or that it
