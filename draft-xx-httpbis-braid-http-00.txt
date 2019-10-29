@@ -18,7 +18,7 @@ Intended status: Proposed Standard                             G. Little
         =\=\==/=/  ==|    |\= ||=     /== ===/=|=\=== |==\===// 
 
                   Braid-HTTP: Synchronization for HTTP
-                       draft-ietf-httbis-braid-00
+                    draft-ietf-httbis-braid-http-00
 
 Abstract
 
@@ -498,7 +498,7 @@ Table of Contents
   A Fissure occurs whenever a connection between two peers is broken
   uncleanly.
 
-  Both sides of a broken connection will braodcast an equal but opposite
+  Both sides of a broken connection will broadcast an equal but opposite
   Fissure message, along with the set of outstanding versions, to inform
   the rest of the network.  Any peer receiving a Fissure will hold onto
   the message, and the outstanding versions, until it receives the
@@ -634,7 +634,7 @@ Table of Contents
 
   Greg Little
   Invisible College, Berkeley
-  Email: toomim@gmail.com
+  Email: glittle@gmail.com
   Web:   https://glittle.org/
 
   Rafie Walker
