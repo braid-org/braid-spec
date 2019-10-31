@@ -50,12 +50,13 @@ Table of Contents
            4.1.1. Procedure ...........................................7
            4.1.2. Registrations .......................................8
            4.1.3. Comments on Synchronization Type Registrations ......9
-   5. Security Considerations ........................................10
-   6. Conventions ....................................................11
-   7. Copyright Notice ...............................................12
-   8. References .....................................................13
-      8.1. Normative References ......................................14
-      8.2. Informative References ....................................15
+           4.1.4. Change Procedures ..................................10
+   5. Security Considerations ........................................11
+   6. Conventions ....................................................12
+   7. Copyright Notice ...............................................13
+   8. References .....................................................14
+      8.1. Normative References ......................................15
+      8.2. Informative References ....................................16
 
 
 
@@ -82,6 +83,16 @@ Table of Contents
 3.  Synchronization Type System
 
 4.  IANA Considerations
+
+4.1.  Synchronization Type Registry
+
+4.1.1.  Procedure
+
+4.1.2.  Registrations
+
+4.1.3.  Comments on Synchronization Type Registrations
+
+4.1.4.  Change Procedures
 
 5.  Security Considerations
 
