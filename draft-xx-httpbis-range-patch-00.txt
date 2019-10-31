@@ -87,8 +87,9 @@ Table of Contents
      ... 26012 bytes of partial image data ...
 
    The same approach can be used to describe a range inside content
-   interpreted not as bytes, but, for example, as JSON [RFC8259]
-   structure.  We define such JSON range unit in Section 4.1.  Example:
+   interpreted not as bytes, but, for example, as JSON [RFC8259] or
+   JSON-compatible structure.  We define such JSON range unit in
+   Section 4.1.  Example:
 
      HTTP/1.1 206 Partial Content
      Date: Thu, 31 Oct 2019 07:51:08 GMT
@@ -108,9 +109,14 @@ Table of Contents
        {"baz": {"1": {"two": "tree"}}}
      ]}}
 
-   Similarly, when issuing a PATCH request to a resource, a range patch
-   can be provided using Range header field.  This is an extension of
-   what is defined in [RFC7233].
+   [RFC7233] defines and allows a Range header only for GET request
+   method.  In this document we define the behavior for other request
+   methods.  Which methods a given resource supports and which
+   methods accept range patches as defined in this document is left to
+   the application to define.
+
+   When issuing a non-GET request to a resource, a range patch can be
+   provided using Range header field.
 
      PATCH /api/image/1 HTTP/1.1
      Host: example.com
@@ -130,8 +136,11 @@ Table of Contents
 
      {"2": {"three": "flour"}}
 
-   Server MUST NOT ignore the Range header field when used with a PATCH
-   request.
+   When server supports Range header with non-GET requests, server MUST
+   NOT ignore the Range header field when used with a non-GET request.
+   When server does not support Range header with non-GET requests,
+   a server MUST generate a 416 (Range Not Satisfiable) or a 400 (Bad
+   Request) response when a non-GET request with a Range header is made.
 
 2.1.  Multiple Range Patches
 
