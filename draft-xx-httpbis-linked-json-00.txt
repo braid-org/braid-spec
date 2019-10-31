@@ -137,7 +137,7 @@ Status of this Memo
 
 5.  IANA Considerations
 
-   This draft includes no request to IANA.
+   XXX fill this in.
 
 6.  Security Considerations
 
