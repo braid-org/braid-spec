@@ -177,6 +177,10 @@ Table of Contents
 
 2.1.  Creating a Subscription
 
+  The "Subscribe" header on a GET request modifies the method semantics
+  to request a subscription to future updates to the data, rather than
+  only the current version of the representation data.
+
   A client MAY request a subscription by issuing a GET request
   containing a Subscribe header:
 
@@ -262,7 +266,7 @@ Table of Contents
   Response:
       OK 200
       Subscribe
-      Cache-Control: no-cache
+      Cache-Control: no-cache, patch
       Patch-Type: braid(bytes, sync9(array))
 
       Content-Type: image/gif                             -- Frame 1
@@ -329,7 +333,6 @@ Table of Contents
   parents version IDs, and the patches from its parents state to its
   state.
 
-
 3.1.  Interpreting Versions
 
   Versions need their parents to be understood.
@@ -358,6 +361,11 @@ Table of Contents
   A server MAY refactor or rebase the version history that it provides
   to a client, so long as it does not affect the resulting state, or the
   result of the patch-type's merges.
+
+  Note that the 'Version' header is similar to, but not the same as the
+  'ETag' header, because an ETag depends on the Content-Encoding.  For
+  instance, the same resource sent using gzip Content-Encoding will have
+  a different ETag, but the same Version.
 
 4.  Patches
 
