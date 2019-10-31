@@ -43,16 +43,18 @@ Table of Contents
    2. Range Patch .....................................................2
       2.1. Multiple Range Patches .....................................3
       2.2. Stand-Alone Range Patch ....................................4
-   3. Range Units .....................................................5
-      3.1. JSON Range Unit ............................................6
-   4. IANA Considerations .............................................7
-      4.1. Range Unit Registrations ...................................8
-   5. Security Considerations .........................................9
-   6. Conventions ....................................................10
-   7. Copyright Notice ...............................................11
-   8. References .....................................................12
-      8.1. Normative References ......................................13
-      8.2. Informative References ....................................14
+      2.3. URI Fragment Identifiers ...................................5
+   3. Range Units .....................................................6
+      3.1. JSON Range Unit ............................................7
+   4. IANA Considerations .............................................8
+      4.1. Range Unit Registration ....................................9
+      4.2. The +patch Structured Syntax Suffix .......................10
+   5. Security Considerations ........................................11
+   6. Conventions ....................................................12
+   7. Copyright Notice ...............................................13
+   8. References .....................................................14
+      8.1. Normative References ......................................15
+      8.2. Informative References ....................................16
 
 
 
@@ -184,9 +186,27 @@ Table of Contents
      Content-Length: 62
      Content-Type: application/json+patch
 
-     Content-Range: json=/foo/bar/3/baz
+     Content-Range: json /foo/bar/3/baz
 
      {"2": {"three": "flour"}}
+
+   Stand-alone range patches are binary data.
+
+2.3.  URI Fragment Identifiers
+
+   For media types which support range patches ranges can be used as URI
+   fragment identifies as well.  For example, URI:
+
+     /api/document/1#json=/foo/bar/0
+
+   identifies a fragment with the following content:
+
+     {"some": "thing"}
+
+   Multiple ranges are supported as well and they identify multiple
+   fragments:
+
+     /api/document/1#json=/foo/bar/0,/foo/bar/1
 
 3.  Range Units
 
@@ -208,7 +228,7 @@ Table of Contents
 
 4.  IANA Considerations
 
-4.1.  Range Unit Registrations
+4.1.  Range Unit Registration
 
    This document registers the following range unit:
 
@@ -222,6 +242,54 @@ Table of Contents
 
    The change controller is: "IETF (iesg@ietf.org) - Internet
    Engineering Task Force".
+
+4.2.  The +patch Structured Syntax Suffix
+
+   This document registers the following media type structured syntax
+   suffix:
+
+   Name:  Range patch
+
+   +suffix:  +patch
+
+   References:  See Section 2.2 of this document.
+
+   Encoding considerations:  Stand-alone range patches are binary data.
+
+   Fragment identifier considerations:
+
+      The syntax and semantics of fragment identifiers specified for
+      +patch SHOULD be as specified for range patches themselves.  (At
+      publication of this document, there is no fragment identification
+      syntax defined for range patches themselves.)
+
+      The syntax and semantics for fragment identifiers for a specific
+      "xxx/yyy+patch" SHOULD be processed as follows:
+
+         For cases defined in +patch, where the fragment identifier
+         resolves per the +patch rules, then process as specified in
+         +patch.
+
+         For cases defined in +patch, where the fragment identifier does
+         not resolve per the +patch rules, then such fragment SHOULD
+         identifies a fragment which is obtained by intersection of the
+         fragment identifier and the underlying range patch range
+         specification for "xxx/yyy+patch".
+
+         For cases not defined in +patch, then such fragment SHOULD
+         identifies a fragment which is obtained by intersection of the
+         fragment identifier and the underlying range patch range
+         specification for "xxx/yyy+patch".
+
+   Interoperability considerations:  n/a
+
+   Security considerations:  See Section 5 of this document.
+
+   Contact:  IETF HTTP Working Group (ietf-http-wg@w3.org)
+
+   Author/Change controller:
+
+      IETF (iesg@ietf.org) - Internet Engineering Task Force
 
 5.  Security Considerations
 
