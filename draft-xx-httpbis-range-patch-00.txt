@@ -1,186 +1,232 @@
 Internet-Draft                                                 M. Toomim
 Expires: Mar 8, 2020                                   Invisible College
-Intended status: Proposed Standard                           X. Yourname
-                                                        Your Affiliation
+Intended status: Proposed Standard                        M. Milutinovic
+                                                             UC Berkeley
                                                              Nov 4, 2019
 
-         Braid-Patch: a General Format for Mergeable Operations
-                    draft-ietf-httbis-braid-patch-00
+                             Range Patch
+                  draft-xx-httpbis-range-patch-00.txt
 
 Abstract
 
-  A uniform syntax for expressing changes to state.  Allows re-use of
-  existing synchronization algorithms and Content-Types.
-
-  Supports arbitrary CRDT or OT algorithms, and most Content-Types.
+   A uniform approach for expressing changes to state over HTTP.
 
 
 
 Status of this Memo
 
-  This Internet-Draft is submitted in full conformance with the
-  provisions of BCP 78 and BCP 79.
-  
-  Internet-Drafts are working documents of the Internet Engineering Task
-  Force (IETF), its areas, and its working groups.  Note that other
-  groups may also distribute working documents as Internet-Drafts.  The
-  list of current Internet-Drafts is at
-  http://datatracker.ietf.org/drafts/current/.
+   This Internet-Draft is submitted in full conformance with the
+   provisions of BCP 78 and BCP 79.
 
-  Internet-Drafts are draft documents valid for a maximum of six months
-  and may be updated, replaced, or obsoleted by other documents at any
-  time.  It is inappropriate to use Internet-Drafts as reference
-  material or to cite them other than as "work in progress."
+   Internet-Drafts are working documents of the Internet Engineering Task
+   Force (IETF), its areas, and its working groups.  Note that other
+   groups may also distribute working documents as Internet-Drafts.  The
+   list of current Internet-Drafts is at
+   http://datatracker.ietf.org/drafts/current/.
 
-  The list of current Internet-Drafts can be accessed at
-  https://www.ietf.org/1id-abstracts.html
+   Internet-Drafts are draft documents valid for a maximum of six months
+   and may be updated, replaced, or obsoleted by other documents at any
+   time.  It is inappropriate to use Internet-Drafts as reference
+   material or to cite them other than as "work in progress."
 
-  The list of Internet-Draft Shadow Directories can be accessed at
-  https://www.ietf.org/shadow.html
+   The list of current Internet-Drafts can be accessed at
+   https://www.ietf.org/1id-abstracts.html
+
+   The list of Internet-Draft Shadow Directories can be accessed at
+   https://www.ietf.org/shadow.html
 
 
 
 Table of Contents
 
-   1.  Introduction  . . . . . . . . . . . . . . . . . . . . . . . . . 3
-   2.  Parser      . . . . . . . . . . . . . . . . . . . . . . . . .  18
-   3.  Merger
-   4.  Partially-Ordered Content
-   5.  Portals to Past Versions
-   6.  Security Considerations . . . . . . . . . . . . . . . . . . .  23
-   7.  IANA Considerations . . . . . . . . . . . . . . . . . . . . .  23
-   8.  Copyright Notice  . . . . . . . . . . . . . . . . . . . . . .  23
-   9.  Author's Address  . . . . . . . . . . . . . . . . . . . . . .  23
+   1. Introduction ....................................................1
+   2. Range Patch .....................................................2
+      2.1. Stand-Alone Range Patch ....................................3
+   3. Range Units .....................................................4
+      3.1. JSON Range Unit ............................................5
+   4. IANA Considerations .............................................6
+      4.1. Range Unit Registrations ...................................7
+   5. Security Considerations .........................................8
+   6. Conventions .....................................................9
+   7. Copyright Notice ...............................................10
+   8. References .....................................................11
+      8.1. Normative References ......................................12
+      8.2. Informative References ....................................13
 
 
 
 1.  Introduction
 
-  Even though there are many synchronization algorithms, making
-  different tradeoffs, with different network protocols, it turns out
-  that they all need to communicate roughly the same thing -- we can
-  re-express their network messages in a single format.
+   This documents describes a uniform approach for expressing changes to
+   state over HTTP.  It builds upon [RFC7233] and details how patches
+   can be defined using range units, ranges, and content.  Any patch is
+   expressed in the form:
 
-  Braid-Patch is a uniform syntax for changes to state.  Any change is
-  expressed in the form:
+     "range X in units Y of the data was replaced with content Z"
 
-          "region X of the data was replaced with content Y"
+   Range units define how original content (being patched) should be
+   parsed to obtain a region of the content which is being patched, and
+   then how that region is replaced with new content.
 
-  Synchronization algorithms can be difficult to implement, but the
-  Braid-Patch format lets you re-use existing algorithms and
-  Content-Types.  To do this, you specify (1) how to PARSE REGIONS from
-  the data structure, and (2) how multiple conflicting patches are
-  MERGED.
+2.  Range Patch
 
-  A Braid-Patch format is thus *composed* of a Parser type and a Merger
-  type.  The Parser specifies how to index into subregions of the
-  Content-Type, and the Merger specifies how simultaneous patches to the
-  same state are merged.
+   [RFC7233] effectively already defines how a patch operating on byte
+   units can be represented over HTTP, using Content-Range,
+   Content-Type, and Content-Length HTTP headers. Example:
 
-  For instance, here is a patch specification for binary files:
+     HTTP/1.1 206 Partial Content
+     Date: Wed, 15 Nov 1995 06:25:24 GMT
+     Last-Modified: Wed, 15 Nov 1995 04:58:08 GMT
+     Content-Range: bytes 21010-47021/47022
+     Content-Length: 26012
+     Content-Type: image/gif
 
-       braid(bytes, sync9(array))
-              ^           ^
-              |           |
-         (1) Parse as    (2) Merge as
+     ... 26012 bytes of partial image data ...
 
-  This specifies to (1) interpret a Content-Type as a linear sequence of
-  bytes, and to (2) *merge* simultaneous patches using the sync9(array)
-  specification.
+   The same approach can be used to describe a range inside content
+   interpreted not as bytes, but, for example, as JSON [RFC8259]
+   structure.  We define such JSON range unit in Section 4.1.  Example:
 
-  Here is a patch following that specification:
+     HTTP/1.1 206 Partial Content
+     Date: Thu, 31 Oct 2019 07:51:08 GMT
+     Last-Modified: Thu, 18 Oct 2019 17:44:39 GMT
+     Content-Range: json /foo/bar/3/baz
+     Content-Length: 22
+     Content-Type: application/json
 
-       [33:3889] = <binary-data>
+     {"1": {"two": "tree"}}
 
-  Here is a patch specification for JSON files:
+   Where full example JSON document operated on could be:
 
-       braid(json, sync9(json))
-              ^           ^
-              |           |
-         (1) Parse as    (2) Merge as
+     {"foo": {"bar": [
+       {"some": "thing"},
+       {"no": "thing"},
+       {"mo": "re"},
+       {"baz": {"1": {"two": "tree"}}}
+     ]}}
 
-  This specifies to interpret a file as JSON, and merge it using sync9's
-  JSON type.
+   Similarly, when issuing a PATCH request to a resource, a range patch
+   can be provided using Range header field:
 
-  Here is a patch following that specification:
+     PATCH /api/image/1 HTTP/1.1
+     Host: example.com
+     Range: bytes=21010-47021
+     Content-Length: 26012
+     Content-Type: image/gif
 
-       .foo.bar[3].baz = {"1": {"two": "tree"}}
+     ... 26012 bytes of new partial image data ...
 
-  XML files have an isomorphic partial ordering with JSON files.  You
-  could conceivably re-use a JSON synchronizer on an XML file by
-  converting the XML to JSON, merging the JSON, and then converting the
-  result back when necessary.  However, you can do the same thing by
-  connecting an XML parser to a JSON merger, since their partial orders
-  are compatible:
+   And for JSON:
 
-       braid(xml,  sync9(json))
-              ^           ^
-              |           |
-         (1) Parser    (2) Merger
+     PATCH /api/document/1 HTTP/1.1
+     Host: example.com
+     Range: json=/foo/bar/3/baz
+     Content-Length: 25
+     Content-Type: application/json
 
-  Here is a patch following that specification:
+     {"2": {"three": "flour"}}
 
-       /foo/bar/*[3]/baz = <one two="tree"/>
+   Server MUST NOT ignore the Range header field when used with a PATCH
+   request.
 
-  Note that JSON does not actually appear in patches; it only merges
-  according to the rules of the sync9(json) type.
+2.1.  Stand-Alone Range Patch
 
-2.  The Parser
+   When range patches are transmitted outside of HTTP session, a stand-alone
+   range patch format can be used.  For example, in this format it can be
+   stored in a file.  The format reuses structure from HTTP and consists
+   of headers separated from the patch body by an empty line. Only
+   Content-Range header is required. Example:
 
-  The Parser is specified as a function, which takes a query string and
-  returns a region in the document.  For instance, this is a query
-  string that works on the json Parser:
+     Content-Range: json /foo/bar/3/baz
 
-         .foo.bar[3][5].baz
+     {"1": {"two": "tree"}}
 
-  The regions produced by the Parser have a partial ordering.  This
-  partial ordering must be one supported by the Merger type.
+   Additional headers can be provided.
 
-  A Parser also specifies how to write a new value for a region into the
-  Content, for instance to accept this patch:
+3.  Range Units
 
-         .foo.bar[3][5].baz = "Yesss! New stuff!!!"
+   Range units define how content is parsed into a structure. They
+   define a corresponding range specification which is a string
+   describing range under the unit.
 
-3.  The Merger
+   Different range units can be compatible with content expresses
+   through different media types.
 
-  The Merger is specified as a function that defines how to merge
-  multiple versions together, given complete access to their historical
-  braid of patches.
+   Bytes range unit is already specified in [RFC7233].
 
-4.  Partially-Ordered Content
+3.1.  JSON Range Unit
 
-  The output of the parser must fit a *partial order* that is supported
-  as input to the merger.
+   JSON range unit operates on JSON and JSON-compatible data structures.
+   Its range specification is based on JSON pointer as described in
+   [RFC6901].  The content of the range MUST always be a valid JSON
+   by itself.
 
-  For instance, an array is fully ordered.  But JSON is
-  partially-ordered -- it defines an ordering for array elements, and
-  characters in a string, but does not define the ordering of keys and
-  values in a hash.
+5.  Security Considerations
+
+   Both GET and PATCH requests using a range patch are potentially
+   susceptible to denial-of-service attacks because the effort required
+   to compute the patch or apply the patch.
+
+
+
+6.  Conventions
+
+   The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
+   "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this
+   document are to be interpreted as described in [RFC2119].
+
+7.  Copyright Notice
+
+   Copyright (c) 2019 IETF Trust and the persons identified as the
+   document authors.  All rights reserved.
+
+   This document is subject to BCP 78 and the IETF Trust's Legal
+   Provisions Relating to IETF Documents
+   (http://trustee.ietf.org/license-info) in effect on the date of
+   publication of this document.  Please review these documents
+   carefully, as they describe your rights and restrictions with respect
+   to this document.  Code Components extracted from this document must
+   include Simplified BSD License text as described in Section 4.e of the
+   Trust Legal Provisions and are provided without warranty as described
+   in the Simplified BSD License.
+
+8.  References
+
+8.1.  Normative References
+
+   [RFC2119]  Bradner, S., "Key words for use in RFCs to Indicate
+              Requirement Levels", BCP 14, RFC 2119, March 1997.
+
+   [RFC7233]  Fielding, R., Lafon, Y., and J. Reschke, "Hypertext
+              Transfer Protocol (HTTP/1.1): Range Requests", RFC 7233,
+              June 2014.
+
+   [RFC6901]  Bryan, P., Zyp, K., and M. Nottingham, "JavaScript Object
+              Notation (JSON) Pointer", RFC 6901, April 2013.
+
+8.2.  Informative References
+
+   [RFC8259]  T. Bray, "The JavaScript Object Notation (JSON) Data
+              Interchange Format", RFC 8259, December 2017.
+
+Authors' Addresses
+
+   For more information, the authors of this document are best contacted
+   via Internet mail:
+
+   Michael Toomim
+   Invisible College, Berkeley
+   2053 Berkeley Way
+   Berkeley, CA 94704
+
+   EMail: toomim@gmail.com
+   Web:   https://invisible.college/@toomim
 
 
-5.  Portals to Past Versions
+   Mitar Milutinovic
+   UC Berkeley, EECS Department
+   775 Soda Hall #1776
+   Berkeley, CA 94720-1776
 
-  The normal behavior for a version is that it *creates* some regions,
-  and then just *portals* other regions from the previous version.
-
-  However, these *portals* are implicit so far... in a subsequent
-  extension, we can make these portals explicit, and remap them amongst
-  regions.
-
-  Like, instead of:
-
-        [3:5] = "hello"
-
-  We could explicitly write the copies with portals:
-
-        [:3] = old[:3]
-        [3:5] = "hello"
-        [5:] = old[5:]
-
-
-  Portals allow Braid-Patch to directly support:
-    - Clones
-    - Moves
-     - A move is a portal + a delete
-    - Ancestral splices
-    - Re-orderings (perhaps useful to capture a merge linearization)
+   EMail: mitar.ietf@tnode.com
+   Web:   https://mitar.tnode.com/

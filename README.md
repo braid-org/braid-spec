@@ -14,7 +14,7 @@ Braid adds to HTTP:
 
 ### Range Patch — [`draft-xx-httpbis-range-patch-00.txt`](https://raw.githubusercontent.com/braid-work/braid-spec/master/draft-xx-httpbis-range-patch-00.txt)
 
-Uniform approach for expressing changes to state over HTTP.
+A uniform approach for expressing changes to state over HTTP.
 
 ### Synchronization Types — [`draft-xx-httpbis-synchronization-types-00.txt`](https://raw.githubusercontent.com/braid-work/braid-spec/master/draft-xx-httpbis-synchronization-types-00.txt)
 

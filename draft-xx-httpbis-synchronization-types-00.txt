@@ -265,7 +265,7 @@ Table of Contents
               Requirement Levels", BCP 14, RFC 2119, March 1997.
 
    [RFC6838]  Freed, N., Klensin, J., and T. Hansen, "Media Type
-              Specifications and Registration Procedures" BCP 13, RFC
+              Specifications and Registration Procedures", BCP 13, RFC
               6838, January 2013.
 
    [RFC5226]  Narten, T. and H. Alvestrand, "Guidelines for Writing an
