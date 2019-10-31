@@ -41,17 +41,18 @@ Table of Contents
 
    1. Introduction ....................................................1
    2. Range Patch .....................................................2
-      2.1. Stand-Alone Range Patch ....................................3
-   3. Range Units .....................................................4
-      3.1. JSON Range Unit ............................................5
-   4. IANA Considerations .............................................6
-      4.1. Range Unit Registrations ...................................7
-   5. Security Considerations .........................................8
-   6. Conventions .....................................................9
-   7. Copyright Notice ...............................................10
-   8. References .....................................................11
-      8.1. Normative References ......................................12
-      8.2. Informative References ....................................13
+      2.1. Multiple Range Patches .....................................3
+      2.2. Stand-Alone Range Patch ....................................4
+   3. Range Units .....................................................5
+      3.1. JSON Range Unit ............................................6
+   4. IANA Considerations .............................................7
+      4.1. Range Unit Registrations ...................................8
+   5. Security Considerations .........................................9
+   6. Conventions ....................................................10
+   7. Copyright Notice ...............................................11
+   8. References .....................................................12
+      8.1. Normative References ......................................13
+      8.2. Informative References ....................................14
 
 
 
@@ -106,7 +107,8 @@ Table of Contents
      ]}}
 
    Similarly, when issuing a PATCH request to a resource, a range patch
-   can be provided using Range header field:
+   can be provided using Range header field. This is an extension of
+   what is defined in [RFC7233].
 
      PATCH /api/image/1 HTTP/1.1
      Host: example.com
@@ -129,7 +131,33 @@ Table of Contents
    Server MUST NOT ignore the Range header field when used with a PATCH
    request.
 
-2.1.  Stand-Alone Range Patch
+2.1.  Multiple Range Patches
+
+   Multiple range patches can also be combined in one request. This is
+   again done by reusing [RFC7233] for transferring multiple parts
+   using multipart/byteranges payload as described in section 4.1. of
+   [RFC7233].
+
+   When issuing a PATCH request to a resource, multiple range patches
+   can be provided as well:
+
+     PATCH /api/document/1 HTTP/1.1
+     Host: example.com
+     Content-Length: 200
+     Content-Type: multipart/byteranges; boundary=THIS_STRING_SEPARATES
+
+     --THIS_STRING_SEPARATES
+     Content-Type: application/json
+     Range: json=/foo/bar/2/mo
+
+     42
+     --THIS_STRING_SEPARATES
+     Content-Type: application/json
+     Range: json=/foo/bar/1/no
+
+     "person"
+
+2.2.  Stand-Alone Range Patch
 
    When range patches are transmitted outside of HTTP session, a stand-alone
    range patch format can be used.  For example, in this format it can be
@@ -141,7 +169,8 @@ Table of Contents
 
      {"1": {"two": "tree"}}
 
-   Additional headers can be provided.
+   Additional headers can be provided.  This can be used even for
+   multiple range patches.
 
 3.  Range Units
 
