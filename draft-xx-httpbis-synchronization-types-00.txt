@@ -44,7 +44,7 @@ Table of Contents
 
    1. Introduction ....................................................1
    2. Definitions .....................................................2
-   3. Synchronization Type System .....................................3
+   3. Synchronization Type Naming .....................................3
    4. IANA Considerations .............................................5
       4.1. Synchronization Type Registry ..............................6
            4.1.1. Procedure ...........................................7
@@ -80,7 +80,20 @@ Table of Contents
    define an identifier for each such approach a synchronization type.
    Those synchronization types might have additional parameters.
 
-3.  Synchronization Type System
+3.  Synchronization Type Naming
+
+   Naming of synchronization type follows naming requirements of
+   media types as described in Section 4.2. of [RFC6838] with the
+   following exception: synchronization type names consist only of a
+   type-name without a sub-type.
+
+   Similarly, synchronization type parameters follow Section 4.3. of
+   [RFC6838].
+
+   Example:
+
+     ot; type=json1
+     crdt; history=1001
 
 4.  IANA Considerations
 
@@ -185,6 +198,10 @@ Table of Contents
 
    [RFC2119]  Bradner, S., "Key words for use in RFCs to Indicate
               Requirement Levels", BCP 14, RFC 2119, March 1997.
+
+   [RFC6838]  Freed, N., Klensin, J., and T. Hansen, "Media Type
+              Specifications and Registration Procedures" BCP 13, RFC
+              6838, January 2013.
 
 8.2.  Informative References
 
