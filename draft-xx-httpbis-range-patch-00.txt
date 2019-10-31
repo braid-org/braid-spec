@@ -194,8 +194,8 @@ Table of Contents
 
 2.3.  URI Fragment Identifiers
 
-   For media types which support range patches ranges can be used as URI
-   fragment identifies as well.  For example, URI:
+   For media types which support range patches, ranges can be used as
+   URI fragment identifies as well.  For example, URI:
 
      /api/document/1#json=/foo/bar/0
 
