@@ -92,7 +92,7 @@ Status of this Memo
        }
      }
 
-   The metadata in [RFC5988] could also be expressed.
+   The metadata in [RFC8288] could also be expressed.
 
    Or a GraphQL [GRAPHQL] query:
 
@@ -165,6 +165,30 @@ Status of this Memo
    include Simplified BSD License text as described in Section 4.e of
    the Trust Legal Provisions and are provided without warranty as
    described in the Simplified BSD License.
+
+9.  References
+
+9.1.  Normative References
+
+   [RFC2119]  Bradner, S., "Key words for use in RFCs to Indicate
+              Requirement Levels", BCP 14, RFC 2119, March 1997.
+
+   [RFC3986]  Berners-Lee, T., Fielding, R., and L. Masinter, "Uniform
+              Resource Identifier (URI): Generic Syntax", STD 66, RFC
+              3986, January 2005.
+
+9.2.  Informative References
+
+   [RFC8288]  M. Nottingham, "Web Linking", RFC 8288, October 2017.
+
+   [GRAPHQL]  Facebook, "GraphQL", June 2018.
+
+   [MNOT]     Nottingham, M., "Linking in JSON", November 2011.
+
+   [JSONREF]  Bryan, P., and K. Zyp, "JSON Reference", September 2012.
+
+   [JSONLD]   Sporny, M., Longley, D., Kellogg, G., Lanthaler, M., and
+              N. Lindström, "JSON-LD", January 2014.
 
 Author's Address
 
