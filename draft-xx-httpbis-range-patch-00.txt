@@ -161,6 +161,23 @@ Table of Contents
    [RFC6901].  The content of the range MUST always be a valid JSON
    by itself.
 
+4.  IANA Considerations
+
+4.1.  Range Unit Registrations
+
+   This document registers the following range unit:
+
+   +-------------+---------------------------------------+-------------+
+   | Range Unit  | Description                           | Reference   |
+   | Name        |                                       |             |
+   +-------------+---------------------------------------+-------------+
+   | json        | a JSON pointer range on JSON and      | Section 3.1 |
+   |             | JSON-compatible data structures       |             |
+   +-------------+---------------------------------------+-------------+
+
+   The change controller is: "IETF (iesg@ietf.org) - Internet
+   Engineering Task Force".
+
 5.  Security Considerations
 
    Both GET and PATCH requests using a range patch are potentially
