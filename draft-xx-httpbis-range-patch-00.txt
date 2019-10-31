@@ -73,7 +73,7 @@ Table of Contents
 
    [RFC7233] effectively already defines how a patch operating on byte
    units can be represented over HTTP, using Content-Range,
-   Content-Type, and Content-Length HTTP headers. Example:
+   Content-Type, and Content-Length HTTP headers.  Example:
 
      HTTP/1.1 206 Partial Content
      Date: Wed, 15 Nov 1995 06:25:24 GMT
@@ -107,7 +107,7 @@ Table of Contents
      ]}}
 
    Similarly, when issuing a PATCH request to a resource, a range patch
-   can be provided using Range header field. This is an extension of
+   can be provided using Range header field.  This is an extension of
    what is defined in [RFC7233].
 
      PATCH /api/image/1 HTTP/1.1
@@ -162,8 +162,8 @@ Table of Contents
    When range patches are transmitted outside of HTTP session, a stand-alone
    range patch format can be used.  For example, in this format it can be
    stored in a file.  The format reuses structure from HTTP and consists
-   of headers separated from the patch body by an empty line. Only
-   Content-Range header is required. Example:
+   of headers separated from the patch body by an empty line.  Only
+   Content-Range header is required.  Example:
 
      Content-Range: json /foo/bar/3/baz
 
@@ -172,9 +172,25 @@ Table of Contents
    Additional headers can be provided.  This can be used even for
    multiple range patches.
 
+   Stand-alone range patches can be transmitted over HTTP as-is as well.
+   This can be used to provide the patch which has been used in a
+   previous PATCH request.  A Content-Type with "+patch" suffix
+   identifies such stand-alone range patch.  For example, the patch
+   used in the PATCH request example above could be retrieved as:
+
+     HTTP/1.1 200 OK
+     Date: Thu, 31 Oct 2019 07:51:08 GMT
+     Last-Modified: Thu, 18 Oct 2019 17:44:39 GMT
+     Content-Length: 62
+     Content-Type: application/json+patch
+
+     Content-Range: json=/foo/bar/3/baz
+
+     {"2": {"three": "flour"}}
+
 3.  Range Units
 
-   Range units define how content is parsed into a structure. They
+   Range units define how content is parsed into a structure.  They
    define a corresponding range specification which is a string
    describing range under the unit.
 
