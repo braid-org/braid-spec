@@ -21,10 +21,10 @@ Status of this Memo
    This Internet-Draft is submitted in full conformance with the
    provisions of BCP 78 and BCP 79.
 
-   Internet-Drafts are working documents of the Internet Engineering Task
-   Force (IETF), its areas, and its working groups.  Note that other
-   groups may also distribute working documents as Internet-Drafts.  The
-   list of current Internet-Drafts is at
+   Internet-Drafts are working documents of the Internet Engineering
+   Task Force (IETF), its areas, and its working groups.  Note that
+   other groups may also distribute working documents as
+   Internet-Drafts.  The list of current Internet-Drafts is at
    http://datatracker.ietf.org/drafts/current/.
 
    Internet-Drafts are draft documents valid for a maximum of six months
