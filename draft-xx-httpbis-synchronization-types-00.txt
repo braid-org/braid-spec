@@ -21,10 +21,10 @@ Status of this Memo
    This Internet-Draft is submitted in full conformance with the
    provisions of BCP 78 and BCP 79.
 
-   Internet-Drafts are working documents of the Internet Engineering Task
-   Force (IETF), its areas, and its working groups.  Note that other
-   groups may also distribute working documents as Internet-Drafts.  The
-   list of current Internet-Drafts is at
+   Internet-Drafts are working documents of the Internet Engineering
+   Task Force (IETF), its areas, and its working groups.  Note that
+   other groups may also distribute working documents as
+   Internet-Drafts.  The list of current Internet-Drafts is at
    http://datatracker.ietf.org/drafts/current/.
 
    Internet-Drafts are draft documents valid for a maximum of six months
@@ -71,16 +71,16 @@ Table of Contents
 
 
    When systems and protocols support different approaches a need to
-   identify those approaches arises.  This document defines how can those
-   different approaches to conflict resolution can be identified using
-   a standardized naming scheme.
+   identify those approaches arises.  This document defines how can
+   those different approaches to conflict resolution can be identified
+   using a standardized naming scheme.
 
 2.  Definitions
 
    For the purpose of this document we define resolution of conflicts as
-   synchronization.  There are different approaches to synchronize and we
-   define an identifier for each such approach a synchronization type.
-   Those synchronization types might have additional parameters.
+   synchronization.  There are different approaches to synchronize and
+   we define an identifier for each such approach a synchronization
+   type.  Those synchronization types might have additional parameters.
 
 3.  Synchronization Type Naming
 
@@ -167,10 +167,10 @@ Table of Contents
    without discussion or review.
 
    The IESG may reassign responsibility for a synchronization type.  The
-   most common case of this will be to enable changes to be made to types
-   where the author of the registration has died, moved out of contact,
-   or is otherwise unable to make changes that are important to the
-   community.
+   most common case of this will be to enable changes to be made to
+   types where the author of the registration has died, moved out of
+   contact, or is otherwise unable to make changes that are important to
+   the community.
 
 5.  Security Considerations
 
@@ -253,9 +253,9 @@ Table of Contents
    publication of this document.  Please review these documents
    carefully, as they describe your rights and restrictions with respect
    to this document.  Code Components extracted from this document must
-   include Simplified BSD License text as described in Section 4.e of the
-   Trust Legal Provisions and are provided without warranty as described
-   in the Simplified BSD License.
+   include Simplified BSD License text as described in Section 4.e of
+   the Trust Legal Provisions and are provided without warranty as
+   described in the Simplified BSD License.
 
 8.  References
 
