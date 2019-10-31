@@ -67,6 +67,8 @@ Table of Contents
    happen.  There are many different approaches to resolving such
    conflicts.  Currently popular approaches are using conflict-free
    replicated data types [CRDT] or operational transformation [OT].
+   o  Description
+
 
    When systems and protocols support different approaches a need to
    identify those approaches arises.  This document defines how can those
@@ -99,13 +101,76 @@ Table of Contents
 
 4.1.  Synchronization Type Registry
 
+   The "Synchronization Type Registry" defines the namespace for the
+   synchronization type names and refers to their corresponding
+   specifications.  The registry has been created and is now maintained
+   at <http://www.iana.org/assignments/synchronization-types>.
+
 4.1.1.  Procedure
+
+   Registration of a synchronization type MUST include the following
+   fields:
+
+   o  Type name
+
+   o  Required parameters
+
+   o  Optional parameters
+
+   o  Description
+
+   o  Security considerations
+
+   o  Interoperability considerations
+
+   o  Published specification
+
+   o  Person & email address to contact for further information
+
+   Values to be added to this namespace require IETF Review (see
+   [RFC5226], Section 4.1).
 
 4.1.2.  Registrations
 
 4.1.3.  Comments on Synchronization Type Registrations
 
+   Comments on registered synchronization types may be submitted by
+   members of the community to the IANA at iana@iana.org.  These
+   comments will be reviewed by the synchronization types reviewer and
+   then passed on to the "owner" of the synchronization type if
+   possible.  Submitters of comments may request that their comment be
+   attached to the synchronization type registration itself; if the
+   IANA, in consultation with the synchronization types reviewer,
+   approves, the comment will be made accessible in conjunction with the
+   type registration.
+
 4.1.4.  Change Procedures
+
+   Once a synchronization type has been published by the IANA, the owner
+   may request a change to its definition.  The same procedure that
+   would be appropriate for the original registration request is used to
+   process a change request.
+
+   Synchronization type registrations may not be deleted;
+   synchronization types that are no longer believed appropriate for use
+   can be declared OBSOLETE; such synchronization types will be clearly
+   marked in the list published by the IANA.
+
+   Significant changes to a synchronization type's definition should be
+   requested only when there are serious omissions or errors in the
+   published specification.  When review is required, a change request
+   may be denied if it renders entities that were valid under the
+   previous definition invalid under the new definition.
+
+   The owner of a synchronization type may pass responsibility to
+   another person or agency by informing the IANA; this can be done
+   without discussion or review.
+
+   The IESG may reassign responsibility for a synchronization type.  The
+   most common case of this will be to enable changes to be made to types
+   where the author of the registration has died, moved out of contact,
+   or is otherwise unable to make changes that are important to the
+   community.
 
 5.  Security Considerations
 
@@ -202,6 +267,10 @@ Table of Contents
    [RFC6838]  Freed, N., Klensin, J., and T. Hansen, "Media Type
               Specifications and Registration Procedures" BCP 13, RFC
               6838, January 2013.
+
+   [RFC5226]  Narten, T. and H. Alvestrand, "Guidelines for Writing an
+              IANA Considerations Section in RFCs", BCP 26, RFC 5226,
+              May 2008.
 
 8.2.  Informative References
 
