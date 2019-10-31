@@ -137,7 +137,7 @@ Table of Contents
 
    Multiple range patches can also be combined in one request. This is
    again done by reusing [RFC7233] for transferring multiple parts
-   using multipart/byteranges payload as described in section 4.1. of
+   using multipart/byteranges payload as described in Section 4.1. of
    [RFC7233].
 
    When issuing a PATCH request to a resource, multiple range patches
