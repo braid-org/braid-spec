@@ -12,11 +12,14 @@ Braid adds to HTTP:
 3. *Semantics* to PATCH requests
 4. *Multi-Party Consensus* to validate and prune history
 
-### Braid Patch — [`draft-xx-httpbis-braid-patch-00.txt`](https://raw.githubusercontent.com/braid-work/braid-spec/master/draft-xx-httpbis-braid-patch-00.txt)
+### Range Patch — [`draft-xx-httpbis-range-patch-00.txt`](https://raw.githubusercontent.com/braid-work/braid-spec/master/draft-xx-httpbis-range-patch-00.txt)
 
-Uniform syntax for expressing changes to state.  Web resources can mix and
-match synchronization algorithms with Content-Types.  Supports arbitrary CRDT
-or OT algorithms, and most Content-Types.
+Uniform approach for expressing changes to state over HTTP.
+
+### Synchronization Type — [`draft-xx-httpbis-synchronization-type-00.txt`](https://raw.githubusercontent.com/braid-work/braid-spec/master/draft-xx-httpbis-synchronization-type-00.txt)
+
+Definition of synchronization types, the structure of the synchronization type
+system, and IANA registration procedures for synchronization types.
 
 ### Linked JSON — [`draft-xx-httpbis-linked-json-00.txt`](https://raw.githubusercontent.com/braid-work/braid-spec/master/draft-xx-httpbis-linked-json-00.txt)
 
