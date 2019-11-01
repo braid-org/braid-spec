@@ -77,10 +77,16 @@ Table of Contents
 
 2.  Definitions
 
-   For the purpose of this document we define resolution of conflicts as
-   synchronization.  There are different approaches to synchronize and
-   we define an identifier for each such approach a synchronization
-   type.  Those synchronization types might have additional parameters.
+   For the purpose of this document we define "synchronization" as the
+   resolution of conflicts amongst patches.  There are multiple
+   approaches to resolving conflicts, and for two synchronizers to be
+   compatible, they must resolve them in the same way.  A
+   "Synchronization Type" is an identifier that defines a method of
+   resolving patches, along with a set of (optional) parameters.
+
+   A Synchronization Type MUST specify the equivalent of a function that
+   takes a set of parent versions as input and returns the state of the
+   resulting merged version.
 
 3.  Synchronization Type Naming
 
@@ -94,8 +100,9 @@ Table of Contents
 
    Example:
 
-     ot; type=json1
-     crdt; history=1001
+     automerge-counter
+     sharedb-json; variant=1
+     biggest-wins; sortby=versionid
 
 4.  IANA Considerations
 
