@@ -1,0 +1,427 @@
+Internet-Draft                                                 M. Toomim
+Expires: Mar 8, 2020                                   Invisible College
+Intended status: Proposed Standard                        M. Milutinovic
+                                                             UC Berkeley
+                                                             Nov 4, 2019
+
+                             Range Patch
+                   draft-xx-httpbis-range-patch-00
+
+Abstract
+
+   A uniform approach for expressing changes to state over HTTP.
+
+
+
+Status of this Memo
+
+   This Internet-Draft is submitted in full conformance with the
+   provisions of BCP 78 and BCP 79.
+
+   Internet-Drafts are working documents of the Internet Engineering
+   Task Force (IETF), its areas, and its working groups.  Note that
+   other groups may also distribute working documents as
+   Internet-Drafts.  The list of current Internet-Drafts is at
+   http://datatracker.ietf.org/drafts/current/.
+
+   Internet-Drafts are draft documents valid for a maximum of six months
+   and may be updated, replaced, or obsoleted by other documents at any
+   time.  It is inappropriate to use Internet-Drafts as reference
+   material or to cite them other than as "work in progress."
+
+   The list of current Internet-Drafts can be accessed at
+   https://www.ietf.org/1id-abstracts.html
+
+   The list of Internet-Draft Shadow Directories can be accessed at
+   https://www.ietf.org/shadow.html
+
+
+
+Table of Contents
+
+   1. Introduction ....................................................1
+   2. Range Patch .....................................................2
+      2.1. Multiple Range Patches .....................................3
+      2.2. Stand-Alone Range Patch ....................................4
+      2.3. URI Fragment Identifiers ...................................5
+   3. Range Units .....................................................6
+      3.1. JSON Range Unit ............................................7
+   4. IANA Considerations .............................................8
+      4.1. Range Unit Registration ....................................9
+      4.2. The +patch Structured Syntax Suffix .......................10
+   5. Security Considerations ........................................11
+   6. Conventions ....................................................12
+   7. Copyright Notice ...............................................13
+   8. References .....................................................14
+      8.1. Normative References ......................................15
+      8.2. Informative References ....................................16
+
+
+
+1.  Introduction
+
+   This documents describes a uniform approach for expressing changes to
+   state over HTTP.  It builds upon [RFC7233] and details how patches
+   can be defined using range units, ranges, and content.  Any patch is
+   expressed in the form:
+
+     "range X in units Y of the data was replaced with content Z"
+
+   Range units define how original content (being patched) should be
+   parsed to obtain a region of the content which is being patched, and
+   then how that region is replaced with new content.
+
+2.  Range Patch
+
+   [RFC7233] effectively already defines how a patch operating on byte
+   units can be represented over HTTP, using Content-Range,
+   Content-Type, and Content-Length HTTP headers.  Example:
+
+     HTTP/1.1 206 Partial Content
+     Date: Wed, 15 Nov 1995 06:25:24 GMT
+     Last-Modified: Wed, 15 Nov 1995 04:58:08 GMT
+     Content-Range: bytes 21010-47021/47022
+     Content-Length: 26012
+     Content-Type: image/gif
+
+     ... 26012 bytes of partial image data ...
+
+   The same approach can be used to describe a range inside content
+   interpreted not as bytes, but, for example, as JSON [RFC8259] or
+   JSON-compatible structure.  We define such JSON range unit in
+   Section 4.1.  Example:
+
+     HTTP/1.1 206 Partial Content
+     Date: Thu, 31 Oct 2019 07:51:08 GMT
+     Last-Modified: Thu, 18 Oct 2019 17:44:39 GMT
+     Content-Range: json /foo/bar/3/baz
+     Content-Length: 22
+     Content-Type: application/json
+
+     {"1": {"two": "tree"}}
+
+   Where full example JSON document operated on could be:
+
+     {"foo": {"bar": [
+       {"some": "thing"},
+       {"no": "thing"},
+       {"mo": "re"},
+       {"baz": {"1": {"two": "tree"}}}
+     ]}}
+
+   [RFC7233] defines and allows a Range header only for GET request
+   method.  In this document we define the behavior for other request
+   methods.  Which methods a given resource supports and which
+   methods accept range patches as defined in this document is left to
+   the application to define.
+
+   When issuing a non-GET request to a resource, a range patch can be
+   provided using Range header field.
+
+     PATCH /api/image/1 HTTP/1.1
+     Host: example.com
+     Range: bytes=21010-47021
+     Content-Length: 26012
+     Content-Type: image/gif
+
+     ... 26012 bytes of new partial image data ...
+
+   And for JSON:
+
+     PATCH /api/document/1 HTTP/1.1
+     Host: example.com
+     Range: json=/foo/bar/3/baz
+     Content-Length: 25
+     Content-Type: application/json
+
+     {"2": {"three": "flour"}}
+
+   A patch with empty contents corresponds to deletion of existing
+   content under the specified range.  A patch with non-empty contents
+   corresponds to replacement of existing content under the specified
+   range with new (provided) content.
+
+   When server supports Range header with non-GET requests, server MUST
+   NOT ignore the Range header field when used with a non-GET request.
+   When server does not support Range header with non-GET requests,
+   a server MUST generate a 416 (Range Not Satisfiable) or a 400 (Bad
+   Request) response when a non-GET request with a Range header is made.
+
+2.1.  Multiple Range Patches
+
+   Multiple range patches can also be combined in one request. This is
+   again done by reusing [RFC7233] for transferring multiple parts
+   using multipart/byteranges payload as described in Section 4.1. of
+   [RFC7233].
+
+   When issuing a PATCH request to a resource, multiple range patches
+   can be provided as well:
+
+     PATCH /api/document/1 HTTP/1.1
+     Host: example.com
+     Content-Length: 200
+     Content-Type: multipart/byteranges; boundary=THIS_STRING_SEPARATES
+
+     --THIS_STRING_SEPARATES
+     Content-Type: application/json
+     Range: json=/foo/bar/2/mo
+
+     42
+     --THIS_STRING_SEPARATES
+     Content-Type: application/json
+     Range: json=/foo/bar/1/no
+
+     "person"
+
+2.2.  Stand-Alone Range Patch
+
+   When range patches are transmitted outside of HTTP session, a
+   stand-alone range patch format can be used.  For example, in this
+   format a patch can be stored in a file, send to a mailing list, or a
+   code version control system can display the patch in the range patch
+   format.  The format reuses structure from HTTP and consists of
+   headers separated from the patch body by an empty line.  Only
+   Content-Range header is required.  Example:
+
+     Content-Range: json /foo/bar/3/baz
+
+     {"1": {"two": "tree"}}
+
+   Additional headers can be provided.  This can be used even for
+   multiple range patches.
+
+   Stand-alone range patches can be transmitted over HTTP as-is as well.
+   This can be used to provide the patch which has been used in a
+   previous PATCH request.  A Content-Type with "+patch" suffix
+   identifies such stand-alone range patch.  For example, the patch
+   used in the PATCH request example above could be retrieved as:
+
+     HTTP/1.1 200 OK
+     Date: Thu, 31 Oct 2019 07:51:08 GMT
+     Last-Modified: Thu, 18 Oct 2019 17:44:39 GMT
+     Content-Length: 62
+     Content-Type: application/json+patch
+
+     Content-Range: json /foo/bar/3/baz
+
+     {"2": {"three": "flour"}}
+
+   Stand-alone range patches are binary data.
+
+2.3.  URI Fragment Identifiers
+
+   For media types which support range patches, ranges can be used as
+   URI fragment identifies as well.  For example, URI:
+
+     /api/document/1#json=/foo/bar/0
+
+   identifies a fragment with the following content:
+
+     {"some": "thing"}
+
+   Multiple ranges are supported as well and they identify multiple
+   fragments:
+
+     /api/document/1#json=/foo/bar/0,/foo/bar/1
+
+3.  Range Units
+
+   Range units define how content is parsed into a structure.  They
+   define a corresponding range specification which is a string
+   describing range under the unit.
+
+   Different range units can be compatible with content expresses
+   through different media types.
+
+   Bytes range unit is already specified in [RFC7233].
+
+3.1.  JSON Range Unit
+
+   JSON range unit operates on JSON and JSON-compatible data structures.
+   Its range specification is based on JSON pointer as described in
+   [RFC6901].  The content of the range MUST always be a valid JSON
+   by itself.
+
+   JSON pointer provides capabilities to identify a single element
+   of a data structure.  Here we extend it to allow a range of elements
+   for arrays and strings, by extending the scheme how reference token
+   modifies which value is referenced from Section 4 of [RFC6901]:
+
+   o If the currently referenced value is a JSON array, the reference
+     token CAN be compromised of two sets of digits (according to the
+     ABNF syntax for array indices as specified in Section 4 of
+     [RFC6901]), delimited by a character "-".  Each set of digits
+     represent an unsigned base-10 integer value.  The second integer
+     value MUST be strictly larger than the first integer value,
+     otherwise an error condition is raised.  The new referenced value
+     is a new array with a subset of elements starting at the zero-based
+     index of the first integer value, and ending at the element before
+     the zero-based index of the second integer value (the first index
+     is inclusive, the second index is exclusive).  The range cannot
+     span non-existing array elements.
+
+   o If the currently referenced value is a JSON string, the scheme for
+     JSON arrays is used to index into a string and makes the new
+     referenced value a substring of the currently referenced value.
+     String indexing is done by code units.
+
+   A range of elements can be specified only as the last reference token
+   in JSON range.  It follows that a range of elements can be specified
+   only once.
+
+   For example, given the JSON document:
+
+     {
+       "foo": [
+         "bar",
+         "baz",
+         "bax"
+       ]
+     }
+
+   The following JSON strings evaluate to the accompanying JSON values:
+
+     "/foo"       ["bar", "baz"]
+     "/foo/0"     "bar"
+     "/foo/0-1"   ["bar"]
+     "/foo/1-3"   ["baz", "bax"]
+     "/foo/1-1"   // error
+     "/foo/1-0"   // error
+     "/foo/1-4"   // error
+     "/foo/1-3/0" // error
+     "/foo/0/1-3" "ar"
+
+4.  IANA Considerations
+
+4.1.  Range Unit Registration
+
+   This document registers the following range unit:
+
+   +-------------+---------------------------------------+-------------+
+   | Range Unit  | Description                           | Reference   |
+   | Name        |                                       |             |
+   +-------------+---------------------------------------+-------------+
+   | json        | a JSON pointer range on JSON and      | Section 3.1 |
+   |             | JSON-compatible data structures       |             |
+   +-------------+---------------------------------------+-------------+
+
+   The change controller is: "IETF (iesg@ietf.org) - Internet
+   Engineering Task Force".
+
+4.2.  The +patch Structured Syntax Suffix
+
+   This document registers the following media type structured syntax
+   suffix:
+
+   Name:  Range patch
+
+   +suffix:  +patch
+
+   References:  See Section 2.2 of this document.
+
+   Encoding considerations:  Stand-alone range patches are binary data.
+
+   Fragment identifier considerations:
+
+      The syntax and semantics of fragment identifiers specified for
+      +patch SHOULD be as specified for range patches themselves.  (At
+      publication of this document, there is no fragment identification
+      syntax defined for range patches themselves.)
+
+      The syntax and semantics for fragment identifiers for a specific
+      "xxx/yyy+patch" SHOULD be processed as follows:
+
+         For cases defined in +patch, where the fragment identifier
+         resolves per the +patch rules, then process as specified in
+         +patch.
+
+         For cases defined in +patch, where the fragment identifier does
+         not resolve per the +patch rules, then such fragment SHOULD
+         identifies a fragment which is obtained by intersection of the
+         fragment identifier and the underlying range patch range
+         specification for "xxx/yyy+patch".
+
+         For cases not defined in +patch, then such fragment SHOULD
+         identifies a fragment which is obtained by intersection of the
+         fragment identifier and the underlying range patch range
+         specification for "xxx/yyy+patch".
+
+   Interoperability considerations:  n/a
+
+   Security considerations:  See Section 5 of this document.
+
+   Contact:  IETF HTTP Working Group (ietf-http-wg@w3.org)
+
+   Author/Change controller:
+
+      IETF (iesg@ietf.org) - Internet Engineering Task Force
+
+5.  Security Considerations
+
+   Both GET and PATCH requests using a range patch are potentially
+   susceptible to denial-of-service attacks because the effort required
+   to compute the patch or apply the patch.
+
+
+
+6.  Conventions
+
+   The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
+   "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this
+   document are to be interpreted as described in [RFC2119].
+
+7.  Copyright Notice
+
+   Copyright (c) 2019 IETF Trust and the persons identified as the
+   document authors.  All rights reserved.
+
+   This document is subject to BCP 78 and the IETF Trust's Legal
+   Provisions Relating to IETF Documents
+   (http://trustee.ietf.org/license-info) in effect on the date of
+   publication of this document.  Please review these documents
+   carefully, as they describe your rights and restrictions with respect
+   to this document.  Code Components extracted from this document must
+   include Simplified BSD License text as described in Section 4.e of
+   the Trust Legal Provisions and are provided without warranty as
+   described in the Simplified BSD License.
+
+8.  References
+
+8.1.  Normative References
+
+   [RFC2119]  Bradner, S., "Key words for use in RFCs to Indicate
+              Requirement Levels", BCP 14, RFC 2119, March 1997.
+
+   [RFC7233]  Fielding, R., Lafon, Y., and J. Reschke, "Hypertext
+              Transfer Protocol (HTTP/1.1): Range Requests", RFC 7233,
+              June 2014.
+
+   [RFC6901]  Bryan, P., Zyp, K., and M. Nottingham, "JavaScript Object
+              Notation (JSON) Pointer", RFC 6901, April 2013.
+
+8.2.  Informative References
+
+   [RFC8259]  T. Bray, "The JavaScript Object Notation (JSON) Data
+              Interchange Format", RFC 8259, December 2017.
+
+Authors' Addresses
+
+   For more information, the authors of this document are best contacted
+   via Internet mail:
+
+   Michael Toomim
+   Invisible College, Berkeley
+   2053 Berkeley Way
+   Berkeley, CA 94704
+
+   EMail: toomim@gmail.com
+   Web:   https://invisible.college/@toomim
+
+
+   Mitar Milutinovic
+   UC Berkeley, EECS Department
+   775 Soda Hall #1776
+   Berkeley, CA 94720-1776
+
+   EMail: mitar.ietf@tnode.com
+   Web:   https://mitar.tnode.com/
