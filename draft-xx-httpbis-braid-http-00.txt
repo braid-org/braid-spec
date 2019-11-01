@@ -64,30 +64,41 @@ Status of this Memo
 
 Table of Contents
 
-   1.  Introduction  . . . . . . . . . . . . . . . . . . . . . . . . . 3
-   1.1.  Design Goals
-   1.2.  Use Cases and Related Work
-   1.2.1  Example: a Serverless Chat
-   2.  Subscriptions for GET   . . . . . . . . . . . . . . . . . . .  11
-   2.1.  Creating a Subscription
-   2.2.  Sending multiple updates per GET
-   2.3.  Continuing a Subscription
-   2.4.  Ending a Subscription
-   2.5.  Example: GET subscription that animates a GIF
-   3.  Versioning State  . . . . . . . . . . . . . . . . . . . . . .  15
-   4.  Patches
-   4.1.  The Version Data Structure
-   4.2.  Defining a new Patch Type
-   4.2.2.  Patch Behavior
-   5.  Optional: Multi-Party Consensus
-   5.1.  The ACK method
-   5.1.1.  Seen
-   5.1.1.  Valid
-   5.2.  The FISSURE method
-   5.3.  The MULTISET method
-   6.  Security Considerations . . . . . . . . . . . . . . . . . . .  23
-   7.  IANA Considerations . . . . . . . . . . . . . . . . . . . . .  23
-   8.  Copyright Notice  . . . . . . . . . . . . . . . . . . . . . .  23
+   1. Introduction ....................................................1
+      1.1. Design Goals ...............................................2
+      1.2. Use Cases and Related Work .................................3
+         1.2.1. Example: a Serverless Chat ............................4
+   2. Subscriptions for GET ...........................................5
+      2.1. Creating a Subscription ....................................6
+      2.2. Sending multiple updates per GET ...........................7
+      2.3. Continuing a Subscription ..................................8
+      2.4. Ending a Subscription ......................................9
+      2.5. Example: GET subscription that animates a GIF .............10
+      2.6. Errors ....................................................11
+   3. Versioning State ...............................................12
+      3.1. Interpreting Versions .....................................13
+      3.2. GET for Historical Versions ...............................14
+   4. Patches ........................................................15
+      4.1. The Version Data Structure ................................16
+      4.2. Defining a new Patch Type .................................17
+         4.2.1. Patch Behavior .......................................18
+   5. Optional: Multi-Party Consensus ................................19
+      5.1. The ACK method ............................................20
+         5.1.1. Seen .................................................21
+         5.1.2. Valid ................................................22
+         5.1.3. Example: Using validation to enable speculative edits 23
+      5.2. The FISSURE method ........................................24
+      5.3. The MULTISET method .......................................25
+      5.4. Sending messages from server to client ....................26
+         5.4.1. Server-sent ACKs .....................................27
+         5.4.2. Server-sent FISSURE and MULTISET .....................28
+   6. IANA Considerations ............................................29
+   7. Security Considerations ........................................30
+   8. Conventions ....................................................31
+   9. Copyright Notice ...............................................32
+   10. References ....................................................33
+      10.1. Normative References .....................................34
+      10.2. Informative References ...................................35
 
 
 
@@ -432,7 +443,7 @@ Table of Contents
    A patch/* content-type indicates that the content is a type of patch
    that satisfies the requirements of this section.
 
-4.2.2.  Patch Behavior
+4.2.1.  Patch Behavior
 
    A patch SHOULD satisfy:
 
@@ -607,7 +618,7 @@ Table of Contents
        Seen: local
        Version: <the version in the response>
 
-5.4.1.  Server-sent FISSURE and MULTISET
+5.4.2.  Server-sent FISSURE and MULTISET
 
    XXX Todo: add these to the response to a GET.  Distinguish each one
        with a header like Braid-Message: Fissure or Braid-Message:
