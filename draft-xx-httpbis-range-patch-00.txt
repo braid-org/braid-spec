@@ -172,9 +172,11 @@ Table of Contents
 
    When range patches are transmitted outside of HTTP session, a
    stand-alone range patch format can be used.  For example, in this
-   format it can be stored in a file.  The format reuses structure from
-   HTTP and consists of headers separated from the patch body by an
-   empty line.  Only Content-Range header is required.  Example:
+   format a patch can be stored in a file, send to a mailing list, or a
+   code version control system can display the patch in the range patch
+   format.  The format reuses structure from HTTP and consists of
+   headers separated from the patch body by an empty line.  Only
+   Content-Range header is required.  Example:
 
      Content-Range: json /foo/bar/3/baz
 
