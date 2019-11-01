@@ -20,7 +20,7 @@ Intended status: Proposed Standard                             G. Little
 Abstract
 
    Braid is a set of extensions to HTTP that transform it from a state
-   *transfer* protocol into a state *synchronization* protocol.
+   transfer protocol into a state synchronization protocol.
 
    Braid adds to HTTP:
 
@@ -466,7 +466,7 @@ Table of Contents
    o Validating changes.
 
    These features require a peer to know when a version has been (1)
-   *seen* by all editing peers, or (2) *validated* by all authoritative
+   seen by all editing peers, or (2) validated by all authoritative
    peers, respectively.  Peers report their knowledge of a version's
    Seenness or Validness via ACK messages.
 
