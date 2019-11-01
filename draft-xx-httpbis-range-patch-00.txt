@@ -136,6 +136,11 @@ Table of Contents
 
      {"2": {"three": "flour"}}
 
+   A patch with empty contents corresponds to deletion of existing
+   content under the specified range.  A patch with non-empty contents
+   corresponds to replacement of existing content under the specified
+   range with new (provided) content.
+
    When server supports Range header with non-GET requests, server MUST
    NOT ignore the Range header field when used with a non-GET request.
    When server does not support Range header with non-GET requests,
