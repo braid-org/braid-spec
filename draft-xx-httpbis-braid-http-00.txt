@@ -4,62 +4,61 @@ Intended status: Proposed Standard                             G. Little
                                                        Invisible College
                                                                R. Walker
                                                             Bard College
-                                                             X. Yourname
-                                                        Your Affiliation
                                                              Nov 4, 2019
 
-
-        \=/====\\  |//===\\=      /=\     =\==\|\=/== =|====\== 
+        \=/====\\  |//===\\=      /=\     =\==\|\=/== =|====\==
         ||/    |\\ ||\    |\\   /|| \|\       |//     //|    \\\
         |\\    |// |\\    |//  //|   \\\      \\\     /\/    |||
         \=|====|=  |/====/=\  /=\/====|=\     =\=     \\=    =/=
         //\    /\\ //|    |\\ |/|     |||     \\\     |||    |//
         |||    ||| |\\    |// |\/     \|/     /|\     |=\    |\\
-        =\=\==/=/  ==|    |\= ||=     /== ===/=|=\=== |==\===// 
+        =\=\==/=/  ==|    |\= ||=     /== ===/=|=\=== |==\===//
 
                   Braid-HTTP: Synchronization for HTTP
-                    draft-ietf-httbis-braid-http-00
+                    draft-xx-httpbis-braid-http-00
 
 Abstract
 
-  Braid is a set of extensions to HTTP that transform it from a state
-  *transfer* protocol into a state *synchronization* protocol.
+   Braid is a set of extensions to HTTP that transform it from a state
+   *transfer* protocol into a state *synchronization* protocol.
 
-  Braid adds to HTTP:
+   Braid adds to HTTP:
 
-     1. *Subscriptions* to GET requests
-     2. *Versioning* to resources
-     3. *Semantics* to PATCH requests
-     4. *Multi-party Consensus* to validate and prune history
+   o Subscriptions to GET requests.
 
-  These extensions enable a web resource to synchronize automatically
-  across multiple clients and servers, and guarantee consistency using a
-  OT or CRDT algorithm.
+   o Versioning to resources.
 
+   o Semantics to PATCH requests.
+
+   o Multi-party Consensus to validate and prune history.
+
+   These extensions enable a web resource to synchronize automatically
+   across multiple clients and servers, and guarantee consistency using a
+   OT or CRDT algorithm.
 
 
 
 Status of this Memo
 
-  This Internet-Draft is submitted in full conformance with the
-  provisions of BCP 78 and BCP 79.
-  
-  Internet-Drafts are working documents of the Internet Engineering Task
-  Force (IETF), its areas, and its working groups.  Note that other
-  groups may also distribute working documents as Internet-Drafts.  The
-  list of current Internet-Drafts is at
-  http://datatracker.ietf.org/drafts/current/.
+   This Internet-Draft is submitted in full conformance with the
+   provisions of BCP 78 and BCP 79.
 
-  Internet-Drafts are draft documents valid for a maximum of six months
-  and may be updated, replaced, or obsoleted by other documents at any
-  time.  It is inappropriate to use Internet-Drafts as reference
-  material or to cite them other than as "work in progress."
+   Internet-Drafts are working documents of the Internet Engineering
+   Task Force (IETF), its areas, and its working groups.  Note that
+   other groups may also distribute working documents as
+   Internet-Drafts.  The list of current Internet-Drafts is at
+   http://datatracker.ietf.org/drafts/current/.
 
-  The list of current Internet-Drafts can be accessed at
-  https://www.ietf.org/1id-abstracts.html
+   Internet-Drafts are draft documents valid for a maximum of six months
+   and may be updated, replaced, or obsoleted by other documents at any
+   time.  It is inappropriate to use Internet-Drafts as reference
+   material or to cite them other than as "work in progress."
 
-  The list of Internet-Draft Shadow Directories can be accessed at
-  https://www.ietf.org/shadow.html
+   The list of current Internet-Drafts can be accessed at
+   https://www.ietf.org/1id-abstracts.html
+
+   The list of Internet-Draft Shadow Directories can be accessed at
+   https://www.ietf.org/shadow.html
 
 
 
@@ -89,562 +88,578 @@ Table of Contents
    6.  Security Considerations . . . . . . . . . . . . . . . . . . .  23
    7.  IANA Considerations . . . . . . . . . . . . . . . . . . . . .  23
    8.  Copyright Notice  . . . . . . . . . . . . . . . . . . . . . .  23
-   9.  Author's Address  . . . . . . . . . . . . . . . . . . . . . .  23
 
 
 
 1.  Introduction
 
-  When a client GETs a resource over HTTP, the server provides the
-  latest version, but does *not* provide updates when the resource
-  changes.  This means that programmers have to implement workarounds
-  whenever they need to synchronize with data that changes.
+   When a client GETs a resource over HTTP, the server provides the
+   latest version, but does NOT provide updates when the resource
+   changes.  This means that programmers have to implement workarounds
+   whenever they need to synchronize with data that changes.
 
-  The web has a long history of these workarounds.  The original web
-  required users to click reload when a page changed.  In 2000,
-  XMLHTTPRequest made it possible to update just part of a page, running
-  a GET request behind the scenes.  But a GET request still could not
-  push updates.  To work around this, web programmers would poll the
-  resource, which was inefficient.  Long-polling was invented to
-  overcome the inefficiencies, which was standardized as SSE.  But SSE
-  provides semantics of an *event-stream*, and although a programmer can
-  encode a protocol within the event stream for updating a resource,
-  there is still no standard way to express the update of a resource.
-  In practice, programmers today often give up on using standards for
-  "data that changes", and instead write their own non-standard update
-  protocol over a WebSocket, or adopt a web framework that does this for
-  them.
+   The web has a long history of these workarounds.  The original web
+   required users to click reload when a page changed.  In 2000,
+   XMLHTTPRequest made it possible to update just part of a page,
+   running a GET request behind the scenes.  But a GET request still
+   could not push updates.  To work around this, web programmers would
+   poll the resource, which was inefficient.  Long-polling was invented
+   to overcome the inefficiencies, which was standardized as SSE.  But
+   SSE provides semantics of an event-stream, and although a programmer
+   can encode a protocol within the event stream for updating a
+   resource, there is still no standard way to express the update of a
+   resource. In practice, programmers today often give up on using
+   standards for "data that changes", and instead write their own
+   non-standard update protocol over a WebSocket, or adopt a web
+   framework that does this for them.
 
-  This document specifies how to add support for "state that changes" to
-  HTTP with a few small extensions.  Doing so transforms HTTP from a
-  *state transfer* protocol into a *state synchronization* protocol, and
-  extends the REST architecture into RESS: REpresentational State
-  Synchronization.
-
-
+   This document specifies how to add support for "state that changes"
+   to HTTP with a few small extensions.  Doing so transforms HTTP from a
+   state transfer protocol into a state synchronization protocol, and
+   extends the REST architecture into RESS: REpresentational State
+   Synchronization.
 
 1.1.  Design Goals
 
-  This spec is designed to be:
+   This spec is designed to be:
 
-   - backwards-compatible with existing HTTP
-   - easy to implement for simple synchronizers
-   - while also supporting arbitrary synchronization algorithms, such as
-     Operational Transform and CRDTs
+   o Backwards-compatible with existing HTTP.
+
+   o Easy to implement for simple synchronizers.
+
+   o While also supporting arbitrary synchronization algorithms, such as
+     Operational Transform and CRDTs.
 
 1.2.  Use Cases and Related Work
 
-  - The DAV standards:
-    - CalDAV
-    - CardDAV
-    - WebDAV
-  - W3C Push API: https://www.w3.org/TR/push-api/
-  - Email push
-    - JMAP
-    - IMAP Web Push
+   o The DAV standards:
 
-1.2.1  Example: a Serverless Chat
+     * CalDAV
 
-  A Braid web application can operate offline.  Multiple users can use
-  the app from an airplane, and their edits can synchronize when they
-  regain internet connections.  Additionally, the Braid protocol can be
-  expressed on a peer-to-peer transport (e.g. Braid-WebRTC) to support a
-  peer-to-peer synchronization without a server.  Braid-HTTP clients
-  could interoperate with Braid-WebRTC peers.  Thus, a chat application,
-  for instance, could be served and synchronized on Braid-HTTP, yet also
-  establish redundant peer-to-peer connections on Braid-WebRTC.  The
-  server could then be shut down, and users of the chat app could
-  continue to send messages to one another.
+     * CardDAV
 
-  Imagine the server serves the current set of trusted clients' IP
-  addresses at the /peers state.  Each client then subscribes to the
-  /peers state with:
+     * WebDAV
 
-      GET /peers
-      Subscribe: keep-alive
-      -------
-      [ {ip: '13.55.32.158', pubkey: 'x371...8382'}
-        {ip: '244.38.55.83', pubkey: 'o2u8...2s73'},
-        ...
-      ]
+   o W3C Push API: https://www.w3.org/TR/push-api/
 
-  Each peer can then choose some of those peers at random to establish a
-  WebRTC connection with.  It will then send Braid messages to that peer
-  over that connection.
+   o Email push
 
+     * JMAP
+
+     * IMAP Web Push
+
+   XXX Explain each of the uses cases and how does related work relates.
+       Add references. Move links to references.
+
+1.2.1.  Example: a Serverless Chat
+
+   A Braid web application can operate offline.  Multiple users can use
+   the app from an airplane, and their edits can synchronize when they
+   regain internet connections.  Additionally, the Braid protocol can be
+   expressed on a peer-to-peer transport (e.g. Braid-WebRTC) to support
+   a peer-to-peer synchronization without a server.  Braid-HTTP clients
+   could interoperate with Braid-WebRTC peers.  Thus, a chat
+   application, for instance, could be served and synchronized on
+   Braid-HTTP, yet also establish redundant peer-to-peer connections on
+   Braid-WebRTC.  The server could then be shut down, and users of the
+   chat app could continue to send messages to one another.
+
+   Imagine the server serves the current set of trusted clients' IP
+   addresses at the /peers state.  Each client then subscribes to the
+   /peers state with:
+
+     GET /peers
+     Subscribe: keep-alive
+     -------
+     [ {ip: '13.55.32.158', pubkey: 'x371...8382'}
+       {ip: '244.38.55.83', pubkey: 'o2u8...2s73'},
+       ...
+     ]
+
+   Each peer can then choose some of those peers at random to establish
+   a WebRTC connection with.  It will then send Braid messages to that
+   peer over that connection.
 
 2.  Subscriptions for GET
 
 2.1.  Creating a Subscription
 
-  The "Subscribe" header on a GET request modifies the method semantics
-  to request a subscription to future updates to the data, rather than
-  only the current version of the representation data.
+   The "Subscribe" header on a GET request modifies the method semantics
+   to request a subscription to future updates to the data, rather than
+   only the current version of the representation data.
 
-  A client MAY request a subscription by issuing a GET request
-  containing a Subscribe header:
+   A client MAY request a subscription by issuing a GET request
+   containing a Subscribe header:
 
-          Subscribe
-     or   Subscribe: keep-alive
-     or   Subscribe: keep-alive=<seconds>
+           Subscribe
+      or   Subscribe: keep-alive
+      or   Subscribe: keep-alive=<seconds>
 
-  If a server implements Subscribe, it MUST include a Subscribe header
-  in its response.  The server then SHOULD keep the connection open, and
-  send updates over it.
+   If a server implements Subscribe, it MUST include a Subscribe header
+   in its response.  The server then SHOULD keep the connection open,
+   and send updates over it.
 
-  In general, a server that implements subscriptions promises to keep
-  its subscribed clients up-to-date by sending changes until the client
-  closes the subscription.  A subscription is different than a GET
-  connection (e.g. a TCP connection, or HTTP/2 stream).  If a client
-  requests "Subscribe: keep-alive", then the subscription will be
-  remembered even after the GET connection closes.  A subscription can
-  be continued by the client issuing another GET with a Subscribe
-  header.
+   In general, a server that implements subscriptions promises to keep
+   its subscribed clients up-to-date by sending changes until the client
+   closes the subscription.  A subscription is different than a GET
+   connection (e.g. a TCP connection, or HTTP/2 stream).  If a client
+   requests "Subscribe: keep-alive", then the subscription will be
+   remembered even after the GET connection closes.  A subscription can
+   be continued by the client issuing another GET with a Subscribe
+   header.
 
 2.2.  Sending multiple updates per GET
 
-  To send multiple updates, a server concatenates multiple sub-responses
-  into a single response body.  Each sub-response MUST contain its own
-  headers and body.  Each sub-response's headers MUST contain a
+   To send multiple updates, a server concatenates multiple
+   sub-responses into a single response body.  Each sub-response MUST
+   contain its own headers and body.  Each sub-response's headers MUST
+   contain a
 
-          Content-Length: N
+      Content-Length: N
 
-  header, where N is specified in bytes.  The sub-response body MUST be
-  exactly N bytes, and be followed with a single newline.  Any data
-  after this newline begins the next sub-response's header.
+   header, where N is specified in bytes.  The sub-response body MUST be
+   exactly N bytes, and be followed with a single newline.  Any data
+   after this newline begins the next sub-response's header.
 
-  Each response MUST have both headers and a body.  The body MAY be
-  zero-length.
+   Each response MUST have both headers and a body.  The body MAY be
+   zero-length.
 
 2.3.  Continuing a Subscription
 
-  Even if a connection closes, a subscription might still be active.  If
-  a server's response headers for a connection contained:
+   Even if a connection closes, a subscription might still be active.
+   If a server's response headers for a connection contained:
 
-          Subscribe: keep-alive
-      or  Subscribe: keep-alive=<seconds>
+           Subscribe: keep-alive
+      or   Subscribe: keep-alive=<seconds>
 
-  Then the server SHOULD keep the subscription open even after the
-  connection closes.  This means that the server promises to keep enough
-  history to merge with the client when the client comes back online.
+   Then the server SHOULD keep the subscription open even after the
+   connection closes.  This means that the server promises to keep
+   enough history to merge with the client when the client comes back
+   online.
 
-  When the client reconnects, it MAY specify the most recent versions it
-  saw from the server using the Parents header (Section 3).  This tells
-  the server which versions of state to catch it up from.
+   When the client reconnects, it MAY specify the most recent versions
+   it saw from the server using the Parents header (Section 3).  This
+   tells the server which versions of state to catch it up from.
 
-  The server can suggest how long it will wait for the client by
-  responding with Subscribe: keep-alive=<seconds>.  A server SHOULD wait
-  at least <seconds> after a connection closes before dropping the
-  subscription, and clearing its history.
+   The server can suggest how long it will wait for the client by
+   responding with Subscribe: keep-alive=<seconds>.  A server SHOULD
+   wait at least <seconds> after a connection closes before dropping the
+   subscription, and clearing its history.
 
 2.4.  Ending a Subscription
 
-  Servers and clients MAY drop a subscription at any time, no matter the
-  value of keep-alive.  A client MAY reconnect by issuing a new GET
-  request with a new Subscribe header.
+   Servers and clients MAY drop a subscription at any time, no matter
+   the value of keep-alive.  A client MAY reconnect by issuing a new GET
+   request with a new Subscribe header.
 
-  If a subscription is set to keep-alive, then closing the TCP/QUIC
-  connection won't end the subscription.  Thus a client needs a way to
-  explicitly end the subscription.  In HTTP/1, this is by sending the
-  text "Forget\n" over the TCP connection.  In HTTP/2, this is by
-  issuing a CLOSE event to the GET request's stream.  Alternatively,
-  since today's web browsers do not support sending extra text after a
-  request body, the client can issue a fresh request specified as a
-  FORGET method.
-
+   If a subscription is set to keep-alive, then closing the TCP/QUIC
+   connection won't end the subscription.  Thus a client needs a way to
+   explicitly end the subscription.  In HTTP/1, this is by sending the
+   text "Forget\n" over the TCP connection.  In HTTP/2, this is by
+   issuing a CLOSE event to the GET request's stream.  Alternatively,
+   since today's web browsers do not support sending extra text after a
+   request body, the client can issue a fresh request specified as a
+   FORGET method.
 
 2.5.  Example: GET subscription that animates a GIF
 
-  In this example, a server streams changes to a GIF file in a sequence
-  of patches.  When the client renders the new state of the GIF after
-  each patch, a new frame of animation is displayed.
+   In this example, a server streams changes to a GIF file in a sequence
+   of patches.  When the client renders the new state of the GIF after
+   each patch, a new frame of animation is displayed.
 
-  Request:
-      GET /animated-braid.gif
-      Subscribe
+     Request:
+       GET /animated-braid.gif
+       Subscribe
 
-  Response:
-      OK 200
-      Subscribe
-      Cache-Control: no-cache, patch
-      Patch-Type: braid(bytes, sync9(array))
+     Response:
+       OK 200
+       Subscribe
+       Cache-Control: no-cache, patch
+       Patch-Type: braid(bytes, sync9(array))
 
-      Content-Type: image/gif                             -- Frame 1
-      Patch-Type: braid(bytes, sync9(array))
-      Content-Length: 1239
-      
-      [100:200] = <binary data>
+       Content-Type: image/gif                             -- Frame 1
+       Patch-Type: braid(bytes, sync9(array))
+       Content-Length: 1239
 
-      Content-Type: image/gif                             -- Frame 2
-      Patch-Type: braid(bytes, sync9(array))
-      Content-Length: 62638
+       [100:200] = <binary data>
 
-      [348:887] = <binary data>
+       Content-Type: image/gif                             -- Frame 2
+       Patch-Type: braid(bytes, sync9(array))
+       Content-Length: 62638
 
+       [348:887] = <binary data>
 
-  [Should we START the spec with examples?  Maybe in "Use Cases"?]
+   XXX Should we START the spec with examples?  Maybe in "Use Cases"?
 
 2.6.  Errors
 
-  XX Todo: What happens if the server decides to drop the history that a
-           client asks for?  How does it tell the client "sorry, I don't
-           have the history to synchronize with you."
-
-
+   XXX What happens if the server decides to drop the history that a
+       client asks for?  How does it tell the client "sorry, I don't
+       have the history to synchronize with you."
 
 3.  Versioning State
 
-  Patches change the state of a resource over time.  We define a
-  "Version" as a point in time.  At a particular version, the contents
-  of a particular resource is immutable -- it will never change.  Each
-  version has a unique ID (a string), and a set of patches from its
-  prior versions: its Parents.
+   Patches change the state of a resource over time.  We define a
+   "Version" as a point in time.  At a particular version, the contents
+   of a particular resource is immutable -- it will never change.  Each
+   version has a unique ID (a string), and a set of patches from its
+   prior versions: its Parents.
 
-        Version: a unique string identifying a point in time
-        Parents: a set of Version IDs
+   o Version: a unique string identifying a point in time
 
-  A Version can have multiple Parents because time on a network is a
-  DAG, due to the unavoidable presence of network latency.  It can be
-  physically impossible to distinguish the order of two events that
-  occur close in time.  Thus, the general form of time on a network is a
-  Directed Acyclic Graph.
+   o Parents: a set of Version IDs
 
-          a     All peers are aware of version (a).
-         / \
-        /   \
-       b     c  Two peers make simultaneous edits creating versions (b)
-        \   /   and (c) respectively, and time forks.
-         \ /
-          d     Once a peer sees both of the edits, time merges again.
-                Until a peer makes an edit with (b) and (c) as parents,
-                the merge is only implicit-- there is no need for to
-                assign an ID to it.
+   A Version can have multiple Parents because time on a network is a
+   DAG, due to the unavoidable presence of network latency.  It can be
+   physically impossible to distinguish the order of two events that
+   occur close in time.  Thus, the general form of time on a network is
+   a Directed Acyclic Graph.
 
-  Every change to state creates a new version.  This version has
-  Parents: the set of leaves in the DAG that were present when the new
-  version was created.  The new version is the Child of its parents.  We
-  can say that one version came before another only if the first version
-  is an Ancestor of the second.
-   
-  A Version also specifies a list of Patches, which, when applied to the
-  merger of Parents, creates the Version's state.
+         a     All peers are aware of version (a).
+        / \
+       /   \
+      b     c  Two peers make simultaneous edits creating versions (b)
+       \   /   and (c) respectively, and time forks.
+        \ /
+         d     Once a peer sees both of the edits, time merges again.
+               Until a peer makes an edit with (b) and (c) as parents,
+               the merge is only implicit-- there is no need for to
+               assign an ID to it.
 
-  When a peer makes an edit, it broadcasts the edit's version ID, its
-  parents version IDs, and the patches from its parents state to its
-  state.
+   Every change to state creates a new version.  This version has
+   Parents: the set of leaves in the DAG that were present when the new
+   version was created.  The new version is the Child of its parents.
+   We can say that one version came before another only if the first
+   version is an Ancestor of the second.
+
+   A Version also specifies a list of Patches, which, when applied to
+   the merger of Parents, creates the Version's state.
+
+   When a peer makes an edit, it broadcasts the edit's version ID, its
+   parents version IDs, and the patches from its parents state to its
+   state.
 
 3.1.  Interpreting Versions
 
-  Versions need their parents to be understood.
+   Versions need their parents to be understood.
 
 3.2.  GET for Historical Versions
 
-  GET requests can optionally contain a Version and/or Parents header.
+   GET requests can optionally contain a Version and/or Parents header.
 
-  If a GET request contains a Version header:
+   If a GET request contains a Version header:
 
-    - The Subscribe header MUST be absent
-    - The server SHOULD return a single response, containing that
-      version of the resource in its body
+   o The Subscribe header MUST be absent.
 
-  If a GET request contains a Parents header:
+   o The server SHOULD return a single response, containing that
+     version of the resource in its body.
 
-    - If the request does not also contain a Version, then the request
-      MUST also contain a Subscribe header, and the server SHOULD send a
-      set of versions connecting the Parents to the current Version, and
-      then subscribe the client to future updates.
+   If a GET request contains a Parents header:
 
-    - If the request also contains a Version, then the server SHOULD
-      respond with a set of versions that connect the specified Parents
-      with the specified Version, and then close the connection.
+   o If the request does not also contain a Version, then the request
+     MUST also contain a Subscribe header, and the server SHOULD send a
+     set of versions connecting the Parents to the current Version, and
+     then subscribe the client to future updates.
 
-  A server MAY refactor or rebase the version history that it provides
-  to a client, so long as it does not affect the resulting state, or the
-  result of the patch-type's merges.
+   o If the request also contains a Version, then the server SHOULD
+     respond with a set of versions that connect the specified Parents
+     with the specified Version, and then close the connection.
 
-  Note that the 'Version' header is similar to, but not the same as the
-  'ETag' header, because an ETag depends on the Content-Encoding.  For
-  instance, the same resource sent using gzip Content-Encoding will have
-  a different ETag, but the same Version.
+   A server MAY refactor or rebase the version history that it provides
+   to a client, so long as it does not affect the resulting state, or
+   the result of the patch-type's merges.
+
+   Note that the 'Version' header is similar to, but not the same as the
+   'ETag' header, because an ETag depends on the Content-Encoding.  For
+   instance, the same resource sent using gzip Content-Encoding will
+   have a different ETag, but the same Version.
 
 4.  Patches
 
 4.1.  The Version Data Structure
 
-  A client SHOULD send a new version in a PATCH, POST, or PUT request.
-  A server MAY send a version in the response or sub-response to a GET
-  request.  A version MAY contain any combination of the following
-  headers, with one restriction:
+   A client SHOULD send a new version in a PATCH, POST, or PUT request.
+   A server MAY send a version in the response or sub-response to a GET
+   request.  A version MAY contain any combination of the following
+   headers, with one restriction:
 
-      Patch-Type: <patch-type>
-      Cache-Control: no-cache, patch
-      Version: <versionid>
-      Parents: <versionid>, <versionid>, ...
+     Patch-Type: <patch-type>
+     Cache-Control: no-cache, patch
+     Version: <versionid>
+     Parents: <versionid>, <versionid>, ...
 
-  The restriction is that if Patch-Type is present, then the body
-  contains a patch, and the response MUST also specify Cache-Control:
-  no-cache, patch, to ensure that legacy systems do not cache the patch
-  as if it were the resource.
+   The restriction is that if Patch-Type is present, then the body
+   contains a patch, and the response MUST also specify Cache-Control:
+   no-cache, patch, to ensure that legacy systems do not cache the patch
+   as if it were the resource.
 
-    - If Patch-Type is not specified, or Cache-Control does not have
-      no-cache, then the request or response body SHOULD be interpreted
-      as a complete representation of the resource.
+   o If Patch-Type is not specified, or Cache-Control does not have
+     no-cache, then the request or response body SHOULD be interpreted
+     as a complete representation of the resource.
 
-    - If the Version header is not specified, then the recipient MAY
-      invent a new version ID for it, and MAY use that new ID in network
-      communications with others.
+   o If the Version header is not specified, then the recipient MAY
+     invent a new version ID for it, and MAY use that new ID in network
+     communications with others.
 
-    - If the Parents is not specified, then the recipient SHOULD
-      interpret the version to be new, built upon the latest versions
-      the recipient has.  The determination of which versions are
-      "latest" is up to the recipient.
-
-
+   o If the Parents is not specified, then the recipient SHOULD
+     interpret the version to be new, built upon the latest versions
+     the recipient has.  The determination of which versions are
+     "latest" is up to the recipient.
 
 4.2.  Defining a new Patch Type
 
-  A human MAY define a patch type by publishing a specification of its:
+   A human MAY define a patch type by publishing a specification of its:
 
-    - Patch-Type
-    - Data format
-    - and Behavior: the outcome after applying a sequence of patches to
-      a set of versions
+   o Patch-Type
 
-  The Patch-Type is an arbitrary string, such as:
+   o Data format
 
-      Patch-Type: braid
-      Patch-Type: automerge/json
-      Patch-Type: sharedb/rich-text
+   o and Behavior: the outcome after applying a sequence of patches to
+     a set of versions.
 
-  The Content-Type SHOULD start with patch/*, such as:
+   The Patch-Type is an arbitrary string, such as:
 
-      Content-Type: patch/braid
-      Content-Type: patch/automerge/json
-      Content-Type: patch/sharedb/rich-text
+     Patch-Type: braid
+     Patch-Type: automerge/json
+     Patch-Type: sharedb/rich-text
 
-  A patch/* content-type indicates that the content is a type of patch
-  that satisfies the requirements of this section.
+   The Content-Type SHOULD start with patch/*, such as:
+
+     Content-Type: patch/braid
+     Content-Type: patch/automerge/json
+     Content-Type: patch/sharedb/rich-text
+
+   A patch/* content-type indicates that the content is a type of patch
+   that satisfies the requirements of this section.
 
 4.2.2.  Patch Behavior
 
-  A patch SHOULD satisfy:
+   A patch SHOULD satisfy:
 
-     1.  If a set of patches originated from a version, and you apply
-         them to a copy of the version, you get the same new version
-         again.
+   o If a set of patches originated from a version, and you apply them
+     to a copy of the version, you get the same new version again.
 
-  A patch MAY satisfy:
+   A patch MAY satisfy:
 
-     2.  (Commute) If the same set of patches are applied in a different
-         order, the result is the same.
-
+   o (Commute) If the same set of patches are applied in a different
+     order, the result is the same.
 
 5.  Optional: Multi-Party Consensus
 
-  The protocol in this section is optional.  A client or server would
-  typically only need to implement them to support these two features
-  across a client/server or peer-to-peer network:
+   The protocol in this section is optional.  A client or server would
+   typically only need to implement them to support these two features
+   across a client/server or peer-to-peer network:
 
-       1. Pruning historical versions
-       2. Validating changes
+   o Pruning historical versions.
 
-  These features require a peer to know when a version has been (1)
-  *seen* by all editing peers, or (2) *validated* by all authoritative
-  peers, respectively.  Peers report their knowledge of a version's
-  Seenness or Validness via ACK messages.
+   o Validating changes.
 
-  In this section, we use the term "peer" instead of "client" or
-  "server", where the protocol applies uniformly to either.  We also use
-  the concept of a SET request as a stand-in for a PUT, POST, or PATCH
-  that contains a Version and Parents header.
+   These features require a peer to know when a version has been (1)
+   *seen* by all editing peers, or (2) *validated* by all authoritative
+   peers, respectively.  Peers report their knowledge of a version's
+   Seenness or Validness via ACK messages.
+
+   In this section, we use the term "peer" instead of "client" or
+   "server", where the protocol applies uniformly to either.  We also
+   use the concept of a SET request as a stand-in for a PUT, POST, or
+   PATCH that contains a Version and Parents header.
 
 5.1.  The ACK method
 
-  The ACK method has the following signature:
+   The ACK method has the following signature:
 
      ACK /<path>
-         Sender:    <peer-id>
-         Seen:      local | global
-         Valid:     local | global | abort
-         Version:   <version-id>
+       Sender:    <peer-id>
+       Seen:      local | global
+       Valid:     local | global | abort
+       Version:   <version-id>
 
-  An ACK request is issued to communicate both that a version has been
-  validated by a peer (local) or entire network (global), and/or that it
-  has been seen by the peer (local) or entire network (global).  An ACK
-  request:
+   An ACK request is issued to communicate both that a version has been
+   validated by a peer (local) or entire network (global), and/or that
+   it has been seen by the peer (local) or entire network (global).  An
+   ACK request:
 
-    - MUST specify the Sender and Version headers
-    - MUST specify at least one of the Valid or Seen headers
+   o MUST specify the Sender and Version headers.
 
-  [I think the 'Sender' should actually be a cookie.]
+   o MUST specify at least one of the Valid or Seen headers.
+
+   XXX I think the 'Sender' should actually be a cookie.
 
 5.1.1.  Seen
 
-  If a peer creates a version, then it SHOULD send a SET to all its
-  peers, and wait for an ACK Seen "local" or a SET with the same version
-  id from each peer before then sending an ACK Seen "global" to all its
-  peers.
+   If a peer creates a version, then it SHOULD send a SET to all its
+   peers, and wait for an ACK Seen "local" or a SET with the same
+   version id from each peer before then sending an ACK Seen "global" to
+   all its peers.
 
-  If a peer receives a version initially from a SET, then it SHOULD send
-  a SET to all other peers, and wait for an ACK Seen "local" or a SET
-  with the same version id from each of these peers before sending an
-  ACK Seen "local" back to the peer that sent the initial SET.
+   If a peer receives a version initially from a SET, then it SHOULD
+   send a SET to all other peers, and wait for an ACK Seen "local" or a
+   SET with the same version id from each of these peers before sending
+   an ACK Seen "local" back to the peer that sent the initial SET.
 
-  If a peer receives an ACK Seen "global", and this is new information,
-  then it SHOULD send an ACK Seen "global" to all its other peers.
+   If a peer receives an ACK Seen "global", and this is new information,
+   then it SHOULD send an ACK Seen "global" to all its other peers.
 
 5.1.2.  Valid
 
-
+   XXX Fill in.
 
 5.1.3.  Example: Using validation to enable speculative edits
 
-
+   XXX Fill in.
 
 5.2.  The FISSURE method
 
-  A Fissure occurs whenever a connection between two peers is broken
-  uncleanly.
+   A Fissure occurs whenever a connection between two peers is broken
+   uncleanly.
 
-  Both sides of a broken connection will broadcast an equal but opposite
-  Fissure message, along with the set of outstanding versions, to inform
-  the rest of the network.  Any peer receiving a Fissure will hold onto
-  the message, and the outstanding versions, until it receives the
-  opposite side of the Fissure.  A Fissure message also resets any
-  outstanding acknowledgement waves.
+   Both sides of a broken connection will broadcast an equal but
+   opposite Fissure message, along with the set of outstanding versions,
+   to inform the rest of the network.  Any peer receiving a Fissure will
+   hold onto the message, and the outstanding versions, until it
+   receives the opposite side of the Fissure.  A Fissure message also
+   resets any outstanding acknowledgement waves.
 
-  When a server receives a FISSURE message, it will incorporate this
-  Fissure information into itself, and if it hasn't seen it already, it
-  will also repeat the message to all other peers.
+   When a server receives a FISSURE message, it will incorporate this
+   Fissure information into itself, and if it hasn't seen it already, it
+   will also repeat the message to all other peers.
 
-  A fissure represents a disconnection between two peers.  In fact, each
-  disconnection creates two fissure objects, one on each side of the
-  disconnection.  These fissure objects share a fissure id, but have
-  opposite Side-A and Side-B.  A fissure object also has a list of
-  versions which were not globally acknowledged at the time of the
-  fissure. Note that these versions may be different between the two
-  fissure objects associated with the same disconnection event.  Each
-  fissure object also has a list of parent fissure ids, which represent
-  the other fissures known at the time of this fissure.
+   A fissure represents a disconnection between two peers.  In fact,
+   each disconnection creates two fissure objects, one on each side of
+   the disconnection.  These fissure objects share a fissure id, but
+   have opposite Side-A and Side-B.  A fissure object also has a list of
+   versions which were not globally acknowledged at the time of the
+   fissure. Note that these versions may be different between the two
+   fissure objects associated with the same disconnection event.  Each
+   fissure object also has a list of parent fissure ids, which represent
+   the other fissures known at the time of this fissure.
 
-    FISSURE /<path>
-        Sender: "xyz"                   // peer id
-        Id: "xyz"                       // fissure id
-        Side-A: "xyz"                   // peer id
-        Side-B: "xyz"                   // peer id
-        Versions: ["xyz", "xyz", ...]   // array of version ids to keep
-        Parents: ["xyz", "xyz", ...]    // array of fissure ids
+     FISSURE /<path>
+       Sender: "xyz"                   // peer id
+       Id: "xyz"                       // fissure id
+       Side-A: "xyz"                   // peer id
+       Side-B: "xyz"                   // peer id
+       Versions: ["xyz", "xyz", ...]   // array of version ids to keep
+       Parents: ["xyz", "xyz", ...]    // array of fissure ids
 
-  The fissure information is used when pruning.  The basic idea is this:
-  if a version is within the version set of some fissure, then it may
-  not be pruned.  When can we prune it then?  Well, we must first prune
-  the fissure, and we can prune a fissure if we become aware of both
-  sides of the fissure (the two fissure objects with the same id, but
-  opposite Side-A and Side-B), and also we are not aware of any fissures
-  which are children of this fissure.  Once the fissure is gone, we can
-  prune the versions that it was protecting, as well as possibly prune
-  other fissures that this fissure was a child of.
-    
+   The fissure information is used when pruning.  The basic idea is
+   this: if a version is within the version set of some fissure, then it
+   may not be pruned.  When can we prune it then?  Well, we must first
+   prune the fissure, and we can prune a fissure if we become aware of
+   both sides of the fissure (the two fissure objects with the same id,
+   but opposite Side-A and Side-B), and also we are not aware of any
+   fissures which are children of this fissure.  Once the fissure is
+   gone, we can prune the versions that it was protecting, as well as
+   possibly prune other fissures that this fissure was a child of.
 
 5.3.  The MULTISET method
 
-  There are two kinds of MULTISET:
+   There are two kinds of MULTISET:
 
-  1. Initial MULTISET, sent in response to GET.
+   o Initial MULTISET, sent in response to GET.
 
-     This MULTISET does not contain Min-Leaves or Max-Leaves. When a
-     peer receives an initial MULTISET, it will consume it, and send a
-     new MULTISET to all its other peers. The new MULTISET will only
-     contain the versions and fissures that were new to this
-     peer. Also, it will send Min-Leaves and Max-Leaves, where
-     Min-Leaves is a list of the leaves of the set intersection of this
-     peer's versions with the incoming versions, and Max-Leaves is a
-     list of the leaves of the set union.
+      This MULTISET does not contain Min-Leaves or Max-Leaves. When a
+      peer receives an initial MULTISET, it will consume it, and send a
+      new MULTISET to all its other peers. The new MULTISET will only
+      contain the versions and fissures that were new to this
+      peer. Also, it will send Min-Leaves and Max-Leaves, where
+      Min-Leaves is a list of the leaves of the set intersection of this
+      peer's versions with the incoming versions, and Max-Leaves is a
+      list of the leaves of the set union.
 
-  2. Non-initial MULTISET, sent in response to MULTISET
+   o Non-initial MULTISET, sent in response to MULTISET.
 
-     This MULTISET does contain Min-Leaves and Max-Leaves. When a peer
-     receives such a MULTISET, it will consume it, and send a new
-     MULTISET to all its other peers just like above, except that it
-     won't calculate a new Min-Leaves and Max-Leaves, it will just
-     forward the values it receives for these.
+      This MULTISET does contain Min-Leaves and Max-Leaves. When a peer
+      receives such a MULTISET, it will consume it, and send a new
+      MULTISET to all its other peers just like above, except that it
+      won't calculate a new Min-Leaves and Max-Leaves, it will just
+      forward the values it receives for these.
 
-  The purpose of Min-Leaves is to tell everyone to
-  un-globally-acknowledge anything newer than these versions (since
-  these versions are no longer globally acknowledged given that this
-  newcommer hasn't heard of them yet).  The purpose of Max-Leaves is to
-  tell everyone to ignore any in-flight global acknowledgements for any
-  versions within Max-Leaves, meaning the system will wait for a version
-  newer than Max-Leaves to become globally acknowledged in order to know
-  that it has been acknowledged by this newcommer as well.
+   The purpose of Min-Leaves is to tell everyone to
+   un-globally-acknowledge anything newer than these versions (since
+   these versions are no longer globally acknowledged given that this
+   newcommer hasn't heard of them yet).  The purpose of Max-Leaves is to
+   tell everyone to ignore any in-flight global acknowledgements for any
+   versions within Max-Leaves, meaning the system will wait for a
+   version newer than Max-Leaves to become globally acknowledged in
+   order to know that it has been acknowledged by this newcommer as well.
 
-    MULTISET /<path>
-        Sender: "xyz"                   // peer id
-        Versions: [{version_id, parents, patches}, ...]
-        Fissures: [{fissure_id, side_a, side_b, versions, parents}, ...]
-        Min-Leaves: ["xyz", "xyz", ...] // leaves of intersection
-        Max-Leaves: ["xyz", "xyz", ...] // leaves of union
-
+     MULTISET /<path>
+       Sender: "xyz"                   // peer id
+       Versions: [{version_id, parents, patches}, ...]
+       Fissures: [{fissure_id, side_a, side_b, versions, parents}, ...]
+       Min-Leaves: ["xyz", "xyz", ...] // leaves of intersection
+       Max-Leaves: ["xyz", "xyz", ...] // leaves of union
 
 5.4.  Sending messages from server to client
 
-  Since HTTP requests all must be initiated by the client, we need
-  alternate methods for a server to push an ACK, FISSURE, or MULTISET
-  message back to a client.
+   Since HTTP requests all must be initiated by the client, we need
+   alternate methods for a server to push an ACK, FISSURE, or MULTISET
+   message back to a client.
 
 5.4.1.  Server-sent ACKs
 
-  If a response 200 to a POST, PUT, or PATCH request contains a Version,
-  it MUST be interpreted as:
+   If a response 200 to a POST, PUT, or PATCH request contains a Version,
+   it MUST be interpreted as:
 
-    ACK /<path>
-        Valid: local
-        Seen: local
-        Version: <the version in the response>
+     ACK /<path>
+       Valid: local
+       Seen: local
+       Version: <the version in the response>
 
 5.4.1.  Server-sent FISSURE and MULTISET
-  
-  XXX Todo: add these to the response to a GET.  Distinguish each one
-  with a header like Braid-Message: Fissure or Braid-Message: Multiset.
 
-6. Security Considerations
+   XXX Todo: add these to the response to a GET.  Distinguish each one
+       with a header like Braid-Message: Fissure or Braid-Message:
+       Multiset.
 
-  XXX Todo
+6. IANA Considerations
 
+   XXX Todo
 
-7. IANA Considerations
+7. Security Considerations
 
-  XXX Todo
+   XXX Todo
 
+
 
-8. Copyright Notice
+8.  Copyright Notice
 
-  Copyright (c) 2019 IETF Trust and the persons identified as the
-  document authors.  All rights reserved.
+   Copyright (c) 2019 IETF Trust and the persons identified as the
+   document authors.  All rights reserved.
 
-  This document is subject to BCP 78 and the IETF Trust's Legal
-  Provisions Relating to IETF Documents
-  (http://trustee.ietf.org/license-info) in effect on the date of
-  publication of this document.  Please review these documents
-  carefully, as they describe your rights and restrictions with respect
-  to this document.  Code Components extracted from this document must
-  include Simplified BSD License text as described in Section 4.e of the
-  Trust Legal Provisions and are provided without warranty as described
-  in the Simplified BSD License.
+   This document is subject to BCP 78 and the IETF Trust's Legal
+   Provisions Relating to IETF Documents
+   (http://trustee.ietf.org/license-info) in effect on the date of
+   publication of this document.  Please review these documents
+   carefully, as they describe your rights and restrictions with respect
+   to this document.  Code Components extracted from this document must
+   include Simplified BSD License text as described in Section 4.e of
+   the Trust Legal Provisions and are provided without warranty as
+   described in the Simplified BSD License.
 
+Authors' Addresses
 
-9. Author's Address
+   For more information, the authors of this document are best contacted
+   via Internet mail:
 
-  Michael Toomim
-  Invisible College, Berkeley
-  Email: toomim@gmail.com
-  Web:   https://invisible.college/@toomim
+   Michael Toomim
+   Invisible College, Berkeley
+   2053 Berkeley Way
+   Berkeley, CA 94704
 
-  Greg Little
-  Invisible College, Berkeley
-  Email: glittle@gmail.com
-  Web:   https://glittle.org/
+   EMail: toomim@gmail.com
+   Web:   https://invisible.college/@toomim
 
-  Rafie Walker
-  Bard College
-  Email: slickytail.mc@gmail.com
+   Greg Little
+   Invisible College, Berkeley
+   2053 Berkeley Way
+   Berkeley, CA 94704
+
+   EMail: glittle@gmail.com
+   Web:   https://glittle.org/
+
+   Rafie Walker
+   Bard College
+
+   EMail: slickytail.mc@gmail.com
