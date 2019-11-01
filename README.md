@@ -10,6 +10,7 @@ Braid adds to HTTP:
 1. *Subscriptions* to GET requests
 2. *Versioning* to resources
 3. *Ranges* to PUT/PATCH requests
+4. *Synchronization* of simultaneous requests.
 
 ### Range Patch — [`draft-xx-httpbis-range-patch-00.txt`](https://raw.githubusercontent.com/braid-work/braid-spec/master/draft-xx-httpbis-range-patch-00.txt)
 
