@@ -24,13 +24,9 @@ Abstract
 
    Braid adds to HTTP:
 
-   o Subscriptions to GET requests.
-
-   o Versioning to resources.
-
-   o Semantics to PATCH requests.
-
-   o Multi-party Consensus to validate and prune history.
+     1. Subscriptions to GET requests.
+     2. Versioning to resources.
+     3. Semantics to PATCH requests.
 
    These extensions enable a web resource to synchronize automatically
    across multiple clients and servers, and guarantee consistency using a
@@ -82,23 +78,13 @@ Table of Contents
       4.1. The Version Data Structure ................................16
       4.2. Defining a new Patch Type .................................17
          4.2.1. Patch Behavior .......................................18
-   5. Optional: Multi-Party Consensus ................................19
-      5.1. The ACK method ............................................20
-         5.1.1. Seen .................................................21
-         5.1.2. Valid ................................................22
-         5.1.3. Example: Using validation to enable speculative edits 23
-      5.2. The FISSURE method ........................................24
-      5.3. The MULTISET method .......................................25
-      5.4. Sending messages from server to client ....................26
-         5.4.1. Server-sent ACKs .....................................27
-         5.4.2. Server-sent FISSURE and MULTISET .....................28
-   6. IANA Considerations ............................................29
-   7. Security Considerations ........................................30
-   8. Conventions ....................................................31
-   9. Copyright Notice ...............................................32
-   10. References ....................................................33
-      10.1. Normative References .....................................34
-      10.2. Informative References ...................................35
+   5. IANA Considerations ............................................29
+   6. Security Considerations ........................................30
+   7. Conventions ....................................................31
+   8. Copyright Notice ...............................................32
+   9. References ....................................................33
+      9.1. Normative References .....................................34
+      9.2. Informative References ...................................35
 
 
 
@@ -455,192 +441,23 @@ Table of Contents
    o (Commute) If the same set of patches are applied in a different
      order, the result is the same.
 
-5.  Optional: Multi-Party Consensus
-
-   The protocol in this section is optional.  A client or server would
-   typically only need to implement them to support these two features
-   across a client/server or peer-to-peer network:
-
-   o Pruning historical versions.
-
-   o Validating changes.
-
-   These features require a peer to know when a version has been (1)
-   seen by all editing peers, or (2) validated by all authoritative
-   peers, respectively.  Peers report their knowledge of a version's
-   Seenness or Validness via ACK messages.
-
-   In this section, we use the term "peer" instead of "client" or
-   "server", where the protocol applies uniformly to either.  We also
-   use the concept of a SET request as a stand-in for a PUT, POST, or
-   PATCH that contains a Version and Parents header.
-
-5.1.  The ACK method
-
-   The ACK method has the following signature:
-
-     ACK /<path>
-       Sender:    <peer-id>
-       Seen:      local | global
-       Valid:     local | global | abort
-       Version:   <version-id>
-
-   An ACK request is issued to communicate both that a version has been
-   validated by a peer (local) or entire network (global), and/or that
-   it has been seen by the peer (local) or entire network (global).  An
-   ACK request:
-
-   o MUST specify the Sender and Version headers.
-
-   o MUST specify at least one of the Valid or Seen headers.
-
-   XXX I think the 'Sender' should actually be a cookie.
-
-5.1.1.  Seen
-
-   If a peer creates a version, then it SHOULD send a SET to all its
-   peers, and wait for an ACK Seen "local" or a SET with the same
-   version id from each peer before then sending an ACK Seen "global" to
-   all its peers.
-
-   If a peer receives a version initially from a SET, then it SHOULD
-   send a SET to all other peers, and wait for an ACK Seen "local" or a
-   SET with the same version id from each of these peers before sending
-   an ACK Seen "local" back to the peer that sent the initial SET.
-
-   If a peer receives an ACK Seen "global", and this is new information,
-   then it SHOULD send an ACK Seen "global" to all its other peers.
-
-5.1.2.  Valid
-
-   XXX Fill in.
-
-5.1.3.  Example: Using validation to enable speculative edits
-
-   XXX Fill in.
-
-5.2.  The FISSURE method
-
-   A Fissure occurs whenever a connection between two peers is broken
-   uncleanly.
-
-   Both sides of a broken connection will broadcast an equal but
-   opposite Fissure message, along with the set of outstanding versions,
-   to inform the rest of the network.  Any peer receiving a Fissure will
-   hold onto the message, and the outstanding versions, until it
-   receives the opposite side of the Fissure.  A Fissure message also
-   resets any outstanding acknowledgement waves.
-
-   When a server receives a FISSURE message, it will incorporate this
-   Fissure information into itself, and if it hasn't seen it already, it
-   will also repeat the message to all other peers.
-
-   A fissure represents a disconnection between two peers.  In fact,
-   each disconnection creates two fissure objects, one on each side of
-   the disconnection.  These fissure objects share a fissure id, but
-   have opposite Side-A and Side-B.  A fissure object also has a list of
-   versions which were not globally acknowledged at the time of the
-   fissure. Note that these versions may be different between the two
-   fissure objects associated with the same disconnection event.  Each
-   fissure object also has a list of parent fissure ids, which represent
-   the other fissures known at the time of this fissure.
-
-     FISSURE /<path>
-       Sender: "xyz"                   // peer id
-       Id: "xyz"                       // fissure id
-       Side-A: "xyz"                   // peer id
-       Side-B: "xyz"                   // peer id
-       Versions: ["xyz", "xyz", ...]   // array of version ids to keep
-       Parents: ["xyz", "xyz", ...]    // array of fissure ids
-
-   The fissure information is used when pruning.  The basic idea is
-   this: if a version is within the version set of some fissure, then it
-   may not be pruned.  When can we prune it then?  Well, we must first
-   prune the fissure, and we can prune a fissure if we become aware of
-   both sides of the fissure (the two fissure objects with the same id,
-   but opposite Side-A and Side-B), and also we are not aware of any
-   fissures which are children of this fissure.  Once the fissure is
-   gone, we can prune the versions that it was protecting, as well as
-   possibly prune other fissures that this fissure was a child of.
-
-5.3.  The MULTISET method
-
-   There are two kinds of MULTISET:
-
-   o Initial MULTISET, sent in response to GET.
-
-      This MULTISET does not contain Min-Leaves or Max-Leaves. When a
-      peer receives an initial MULTISET, it will consume it, and send a
-      new MULTISET to all its other peers. The new MULTISET will only
-      contain the versions and fissures that were new to this
-      peer. Also, it will send Min-Leaves and Max-Leaves, where
-      Min-Leaves is a list of the leaves of the set intersection of this
-      peer's versions with the incoming versions, and Max-Leaves is a
-      list of the leaves of the set union.
-
-   o Non-initial MULTISET, sent in response to MULTISET.
-
-      This MULTISET does contain Min-Leaves and Max-Leaves. When a peer
-      receives such a MULTISET, it will consume it, and send a new
-      MULTISET to all its other peers just like above, except that it
-      won't calculate a new Min-Leaves and Max-Leaves, it will just
-      forward the values it receives for these.
-
-   The purpose of Min-Leaves is to tell everyone to
-   un-globally-acknowledge anything newer than these versions (since
-   these versions are no longer globally acknowledged given that this
-   newcommer hasn't heard of them yet).  The purpose of Max-Leaves is to
-   tell everyone to ignore any in-flight global acknowledgements for any
-   versions within Max-Leaves, meaning the system will wait for a
-   version newer than Max-Leaves to become globally acknowledged in
-   order to know that it has been acknowledged by this newcommer as well.
-
-     MULTISET /<path>
-       Sender: "xyz"                   // peer id
-       Versions: [{version_id, parents, patches}, ...]
-       Fissures: [{fissure_id, side_a, side_b, versions, parents}, ...]
-       Min-Leaves: ["xyz", "xyz", ...] // leaves of intersection
-       Max-Leaves: ["xyz", "xyz", ...] // leaves of union
-
-5.4.  Sending messages from server to client
-
-   Since HTTP requests all must be initiated by the client, we need
-   alternate methods for a server to push an ACK, FISSURE, or MULTISET
-   message back to a client.
-
-5.4.1.  Server-sent ACKs
-
-   If a response 200 to a POST, PUT, or PATCH request contains a Version,
-   it MUST be interpreted as:
-
-     ACK /<path>
-       Valid: local
-       Seen: local
-       Version: <the version in the response>
-
-5.4.2.  Server-sent FISSURE and MULTISET
-
-   XXX Todo: add these to the response to a GET.  Distinguish each one
-       with a header like Braid-Message: Fissure or Braid-Message:
-       Multiset.
-
-6. IANA Considerations
+5. IANA Considerations
 
    XXX Todo
 
-7. Security Considerations
+6. Security Considerations
 
    XXX Todo
 
 
 
-8.  Conventions
+7.  Conventions
 
    The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
    "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this
    document are to be interpreted as described in [RFC2119].
 
-9.  Copyright Notice
+8.  Copyright Notice
 
    Copyright (c) 2019 IETF Trust and the persons identified as the
    document authors.  All rights reserved.
@@ -655,14 +472,14 @@ Table of Contents
    the Trust Legal Provisions and are provided without warranty as
    described in the Simplified BSD License.
 
-10.  References
+9.  References
 
-10.1.  Normative References
+9.1.  Normative References
 
    [RFC2119]  Bradner, S., "Key words for use in RFCs to Indicate
               Requirement Levels", BCP 14, RFC 2119, March 1997.
 
-10.2.  Informative References
+9.2.  Informative References
 
    XXX Add them.
 
