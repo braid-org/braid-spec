@@ -190,8 +190,8 @@ Table of Contents
      {"1": {"two": "tree"}}
 
    Additional headers can be provided.  This can be used even for
-   multiple range patches.  In such the patch starts with Content-Type
-   header defining the boundary.  Example:
+   multiple range patches.  In such case the patch starts with
+   Content-Type header defining the boundary.  Example:
 
      Content-Type: multipart/byteranges; boundary=THIS_STRING_SEPARATES
 
