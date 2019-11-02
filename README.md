@@ -16,11 +16,10 @@ Braid adds to HTTP:
 
 A uniform approach for expressing changes to state over HTTP.
 
-### Synchronization Types — [`draft-xx-httpbis-synchronization-types-00.txt`](https://raw.githubusercontent.com/braid-work/braid-spec/master/draft-xx-httpbis-synchronization-types-00.txt)
+### Sync Types — [`draft-xx-httpbis-synchronization-types-00.txt`](https://raw.githubusercontent.com/braid-work/braid-spec/master/draft-xx-httpbis-sync-types-00.txt)
 
-This document defines synchronization types, the structure of the
-synchronization type system, and IANA registration procedures for
-synchronization types.
+This document defines Sync Types, the structure of the Sync Type system, and
+IANA registration procedures for Sync Types.
 
 ### Linked JSON — [`draft-xx-httpbis-linked-json-00.txt`](https://raw.githubusercontent.com/braid-work/braid-spec/master/draft-xx-httpbis-linked-json-00.txt)
 
