@@ -260,6 +260,10 @@ Table of Contents
    A zero-length range is a byte offset used to identify a location
    immediately before which new content can be inserted with a patch.
 
+   Additionally, we note that the range "-0" is allowed, is a
+   zero-length range, and identifies a location immediately after the
+   last byte of data.
+
 3.2.  JSON Range Unit
 
    JSON range unit operates on JSON and JSON-compatible data structures.
