@@ -47,15 +47,16 @@ Table of Contents
    3. Range Units .....................................................6
       3.1. Bytes Range Unit ...........................................7
       3.2. JSON Range Unit ............................................8
-   4. IANA Considerations .............................................9
-      4.1. Range Unit Registration ...................................10
-      4.2. The +patch Structured Syntax Suffix .......................11
-   5. Security Considerations ........................................12
-   6. Conventions ....................................................13
-   7. Copyright Notice ...............................................14
-   8. References .....................................................15
-      8.1. Normative References ......................................16
-      8.2. Informative References ....................................17
+      3.3. Lines Range Unit ...........................................9
+   4. IANA Considerations ............................................10
+      4.1. Range Unit Registrations ..................................11
+      4.2. The +patch Structured Syntax Suffix .......................12
+   5. Security Considerations ........................................13
+   6. Conventions ....................................................14
+   7. Copyright Notice ...............................................15
+   8. References .....................................................16
+      8.1. Normative References ......................................17
+      8.2. Informative References ....................................18
 
 
 
@@ -264,7 +265,7 @@ Table of Contents
    JSON range unit operates on JSON and JSON-compatible data structures.
    Its range specification is based on JSON pointer as described in
    [RFC6901].  The content of the range MUST always be a valid JSON
-   by itself.
+   by itself.  JSON range unit is identified with "json".
 
    JSON pointer provides capabilities to identify a single element
    of a data structure.  Here we extend it to allow a range of elements
@@ -327,11 +328,53 @@ Table of Contents
    utility, but serve as a zero-length range to identify a location
    immediately before which new content can be inserted with a patch.
 
+3.3.  Lines Range Unit
+
+   For textual contents lines range unit operates on lines.  Line
+   positions are numbered starting with zero (with line position zero
+   always being identical with character position zero). Ranges
+   identified by lines include the line endings.  If a content does not
+   contain any line endings, then it consists of a single (the first)
+   line.
+
+   Implementers should be aware of the fact that line endings in textual
+   contents can be represented by other characters or character
+   sequences than CR+LF.  Besides the CR and LF, there are also NEL and
+   CR+NEL.  In general, the encoding of line endings can also depend on
+   the character encoding of textual contents, and implementations have
+   to take this into account where necessary.
+
+   Lines range unit is identified with "lines".  Lines range
+   specification is defined by:
+
+     lines-range-spec = first-line "-" second-line
+     first-line = 1*DIGIT
+     second-line = 1*DIGIT
+
+   Each lines range consists of two sets of digits, delimited by a
+   character "-". Each set of digits represent an unsigned base-10
+   integer value.  The first integer value MUST be smaller than the
+   number of lines in contents, except when it is equal to the second
+   integer value and is equal to the number of lines in contents.  The
+   second integer value MUST be smaller than or equal to the number of
+   lines in contents. The second integer value MUST be larger than or
+   equal to the first integer value.
+
+   The range are lines starting at the line corresponding to the first
+   integer value, and ending at the line before the line corresponding
+   to the second integer value (the first integer is inclusive, the
+   second integer is exclusive).
+
+   Lines range where the first and second integer value are equal are
+   empty and are on its own of little utility, but serve as a
+   zero-length range to identify a location immediately before which new
+   content can be inserted with a patch.
+
 4.  IANA Considerations
 
-4.1.  Range Unit Registration
+4.1.  Range Unit Registrations
 
-   This document registers the following range unit:
+   This document registers the following range units:
 
    +-------------+---------------------------------------+-------------+
    | Range Unit  | Description                           | Reference   |
@@ -339,6 +382,8 @@ Table of Contents
    +-------------+---------------------------------------+-------------+
    | json        | a JSON pointer range on JSON and      | Section 3.2 |
    |             | JSON-compatible data structures       |             |
+   +-------------+---------------------------------------+-------------+
+   | lines       | a range of lines of textual contents  | Section 3.3 |
    +-------------+---------------------------------------+-------------+
 
    The change controller is: "IETF (iesg@ietf.org) - Internet
