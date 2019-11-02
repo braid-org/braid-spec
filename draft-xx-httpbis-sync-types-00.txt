@@ -67,8 +67,6 @@ Table of Contents
    happen.  There are many different approaches to resolving such
    conflicts.  Currently popular approaches are using conflict-free
    replicated data types [CRDT] or operational transformation [OT].
-   o  Description
-
 
    When systems and protocols support different approaches a need to
    identify those approaches arises.  This document defines how can
@@ -78,15 +76,9 @@ Table of Contents
 2.  Definitions
 
    For the purpose of this document we define "synchronization" as the
-   resolution of conflicts amongst patches.  There are multiple
-   approaches to resolving conflicts, and for two synchronizers to be
-   compatible, they must resolve them in the same way.  A "Sync Type" is
-   an identifier that defines a method of resolving patches, along with
-   a set of (optional) parameters.
-
-   A Sync Type MUST specify the equivalent of a function that takes a
-   set of parent versions as input and returns the state of the
-   resulting merged version.
+   resolution of conflicts.  There are multiple approaches to resolving
+   conflicts and we define "Sync Type" an identifier that corresponds to
+   an approach of resolving conflicts.
 
 3.  Sync Type Naming
 
