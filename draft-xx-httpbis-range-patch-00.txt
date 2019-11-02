@@ -113,7 +113,7 @@ Table of Contents
    method.  In this document we define the behavior for other request
    methods.  Which methods a given resource supports and which
    methods accept range patches as defined in this document is left to
-   the application to define.
+   the server to define.
 
    When issuing a non-GET request to a resource, a range patch can be
    provided using Range header field.
