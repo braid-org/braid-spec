@@ -143,10 +143,11 @@ Table of Contents
    to replacing existing content at the range with new content.
 
    When server supports Range header with non-GET requests, server MUST
-   NOT ignore the Range header field when used with a non-GET request.
-   When server does not support Range header with non-GET requests,
-   a server MUST generate a 416 (Range Not Satisfiable) or a 400 (Bad
-   Request) response when a non-GET request with a Range header is made.
+   NOT ignore the Range header when used with a non-GET request.  When
+   server does not support Range header with non-GET requests, a server
+   MUST generate a 416 (Range Not Satisfiable) or a 400 (Bad Request)
+   response when a non-GET request with a Range header is made.  Proxies
+   MUST NOT drop Range header for non-GET requests.
 
 2.1.  Multiple Range Patches
 
