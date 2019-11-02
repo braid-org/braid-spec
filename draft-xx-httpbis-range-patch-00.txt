@@ -262,7 +262,7 @@ Table of Contents
 
    Additionally, we note that the range "-0" is allowed, is a
    zero-length range, and identifies a location immediately after the
-   last byte of data.
+   last byte of data.  This allows appending bytes to data.
 
 3.2.  JSON Range Unit
 
@@ -277,7 +277,7 @@ Table of Contents
    modifies which value is referenced from Section 4 of [RFC6901]:
 
    o If the currently referenced value is a JSON array, the reference
-     token CAN be compromised of two sets of digits (according to the
+     token can be compromised of two sets of digits (according to the
      ABNF syntax for array indices as specified in Section 4 of
      [RFC6901]), delimited by the character "-".  Each set of digits
      represent an unsigned base-10 integer value.  The first integer
@@ -294,10 +294,11 @@ Table of Contents
      exclusive).
 
    o If the currently referenced value is a JSON array, the reference
-     token CAN be the character "-".  The new referenced value is a
+     token can be the character "-".  The new referenced value is a
      zero-length array corresponding to the position immediately after
      the end of the current array.  This design makes such JSON pointer
      compatible with the use of JSON pointers in JSON Patch [RFC6902].
+     This allows appending array elements to an array.
 
    o If the currently referenced value is a JSON string, the scheme for
      JSON arrays is used to index into a string and makes the new
@@ -363,11 +364,10 @@ Table of Contents
    Each lines range consists of two sets of digits, delimited by a
    character "-". Each set of digits represent an unsigned base-10
    integer value.  The first integer value MUST be smaller than the
-   number of lines in contents, except when it is equal to the second
-   integer value and is equal to the number of lines in contents.  The
-   second integer value MUST be smaller than or equal to the number of
-   lines in contents. The second integer value MUST be larger than or
-   equal to the first integer value.
+   number of lines in contents.  The second integer value MUST be
+   smaller than or equal to the number of lines in contents. The second
+   integer value MUST be larger than or equal to the first integer
+   value.
 
    The range are lines starting at the line corresponding to the first
    integer value, and ending at the line before the line corresponding
@@ -378,6 +378,11 @@ Table of Contents
    empty and are on its own of little utility, but serve as a
    zero-length range to identify a location immediately before which new
    content can be inserted with a patch.
+
+   Additionally, lines range specification can be the character "-",
+   representing a zero-length range, and identifies a location
+   immediately after the last line of textual contents.  This allows
+   appending lines to textual contents.
 
 4.  IANA Considerations
 
