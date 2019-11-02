@@ -275,21 +275,25 @@ Table of Contents
    o If the currently referenced value is a JSON array, the reference
      token CAN be compromised of two sets of digits (according to the
      ABNF syntax for array indices as specified in Section 4 of
-     [RFC6901]), delimited by a character "-".  Each set of digits
+     [RFC6901]), delimited by the character "-".  Each set of digits
      represent an unsigned base-10 integer value.  The first integer
-     value MUST be smaller than the number of elements in the array,
-     except when it is equal to the second integer value and is equal to
-     the number of elements in the array.  The second integer value MUST
-     be smaller than or equal to the number of elements in the array.
-     The second integer value MUST be larger than or equal to the first
-     integer value.  If any of these requirements are violated, an error
-     condition is raised.
+     value MUST be smaller than the number of elements in the array. The
+     second integer value MUST be smaller than or equal to the number of
+     elements in the array. The second integer value MUST be larger than
+     or equal to the first integer value.  If any of these requirements
+     are violated, an error condition is raised.
 
      The new referenced value is a new array with a subset of elements
      starting at the zero-based index of the first integer value, and
      ending at the element before the zero-based index of the second
      integer value (the first index is inclusive, the second index is
      exclusive).
+
+   o If the currently referenced value is a JSON array, the reference
+     token CAN be the character "-".  The new referenced value is a
+     zero-length array corresponding to the position immediately after
+     the end of the current array.  This design makes such JSON pointer
+     compatible with the use of JSON pointers in JSON Patch [RFC6902].
 
    o If the currently referenced value is a JSON string, the scheme for
      JSON arrays is used to index into a string and makes the new
@@ -317,16 +321,17 @@ Table of Contents
      "/foo/0-1"   ["bar"]
      "/foo/1-3"   ["baz", "bax"]
      "/foo/1-1"   []
-     "/foo/3-3"   []
+     "/foo/-"     []
+     "/foo/3-3"   // error
      "/foo/4-4"   // error
      "/foo/1-0"   // error
      "/foo/1-4"   // error
      "/foo/1-3/0" // error
      "/foo/0/1-3" "ar"
 
-   JSON ranges "/foo/1-1" and "/foo/3-3" are on its own of little
-   utility, but serve as a zero-length range to identify a location
-   immediately before which new content can be inserted with a patch.
+   JSON ranges "/foo/1-1" and "/foo/-" are on its own of little utility,
+   but serve as a zero-length range to identify a location immediately
+   before which new content can be inserted with a patch.
 
 3.3.  Lines Range Unit
 
@@ -479,6 +484,9 @@ Table of Contents
 
    [RFC6901]  Bryan, P., Zyp, K., and M. Nottingham, "JavaScript Object
               Notation (JSON) Pointer", RFC 6901, April 2013.
+
+   [RFC6902]  Bryan, P.,  and M. Nottingham, "JavaScript Object Notation
+              (JSON) Patch", RFC 6902, April 2013.
 
 8.2.  Informative References
 
