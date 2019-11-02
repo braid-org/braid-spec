@@ -190,7 +190,19 @@ Table of Contents
      {"1": {"two": "tree"}}
 
    Additional headers can be provided.  This can be used even for
-   multiple range patches.
+   multiple range patches.  In such the patch starts with Content-Type
+   header defining the boundary.  Example:
+
+     Content-Type: multipart/byteranges; boundary=THIS_STRING_SEPARATES
+
+     --THIS_STRING_SEPARATES
+     Content-Range: json /foo/bar/2/mo
+
+     42
+     --THIS_STRING_SEPARATES
+     Content-Range: json /foo/bar/1/no
+
+     "person"
 
    Stand-alone range patches can be transmitted over HTTP as-is as well.
    This can be used to provide the patch which has been used in a
