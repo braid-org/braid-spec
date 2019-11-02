@@ -45,16 +45,17 @@ Table of Contents
       2.2. Stand-Alone Range Patch ....................................4
       2.3. URI Fragment Identifiers ...................................5
    3. Range Units .....................................................6
-      3.1. JSON Range Unit ............................................7
-   4. IANA Considerations .............................................8
-      4.1. Range Unit Registration ....................................9
-      4.2. The +patch Structured Syntax Suffix .......................10
-   5. Security Considerations ........................................11
-   6. Conventions ....................................................12
-   7. Copyright Notice ...............................................13
-   8. References .....................................................14
-      8.1. Normative References ......................................15
-      8.2. Informative References ....................................16
+      3.1. Bytes Range Unit ...........................................7
+      3.2. JSON Range Unit ............................................8
+   4. IANA Considerations .............................................9
+      4.1. Range Unit Registration ...................................10
+      4.2. The +patch Structured Syntax Suffix .......................11
+   5. Security Considerations ........................................12
+   6. Conventions ....................................................13
+   7. Copyright Notice ...............................................14
+   8. References .....................................................15
+      8.1. Normative References ......................................16
+      8.2. Informative References ....................................17
 
 
 
@@ -248,9 +249,17 @@ Table of Contents
    Different range units can be compatible with content expresses
    through different media types.
 
-   Bytes range unit is already specified in [RFC7233].
+3.1.  Bytes Range Unit
 
-3.1.  JSON Range Unit
+   Bytes range unit is already specified in [RFC7233].  We extend it
+   by allowing a zero-length range using a zero-length-byte-range-spec.
+
+     zero-length-byte-range-spec = 1*DIGIT
+
+   A zero-length range is a byte offset used to identify a location
+   immediately before which new content can be inserted with a patch.
+
+3.2.  JSON Range Unit
 
    JSON range unit operates on JSON and JSON-compatible data structures.
    Its range specification is based on JSON pointer as described in
@@ -328,7 +337,7 @@ Table of Contents
    | Range Unit  | Description                           | Reference   |
    | Name        |                                       |             |
    +-------------+---------------------------------------+-------------+
-   | json        | a JSON pointer range on JSON and      | Section 3.1 |
+   | json        | a JSON pointer range on JSON and      | Section 3.2 |
    |             | JSON-compatible data structures       |             |
    +-------------+---------------------------------------+-------------+
 
