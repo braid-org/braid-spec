@@ -138,9 +138,10 @@ Table of Contents
 
    A patch with empty contents corresponds to deletion of existing
    content at the specified range.  A patch with a zero-length range but
-   non-empty contents corresponds to inserting content at a location.  A
-   patch with non-empty contents at a non-zero-length range corresponds
-   to replacing existing content at the range with new content.
+   non-empty contents corresponds to inserting content immediately
+   before the location of the zero-length range.  A patch with non-empty
+   contents at a non-zero-length range corresponds to replacing existing
+   content at the range with new content.
 
    When server supports Range header with non-GET requests, server MUST
    NOT ignore the Range header when used with a non-GET request.  When
@@ -265,14 +266,20 @@ Table of Contents
      token CAN be compromised of two sets of digits (according to the
      ABNF syntax for array indices as specified in Section 4 of
      [RFC6901]), delimited by a character "-".  Each set of digits
-     represent an unsigned base-10 integer value.  The second integer
-     value MUST be strictly larger than the first integer value,
-     otherwise an error condition is raised.  The new referenced value
-     is a new array with a subset of elements starting at the zero-based
-     index of the first integer value, and ending at the element before
-     the zero-based index of the second integer value (the first index
-     is inclusive, the second index is exclusive).  The range cannot
-     span non-existing array elements.
+     represent an unsigned base-10 integer value.  The first integer
+     value MUST be smaller than the number of elements in the array,
+     except when it is equal to the second integer value and is equal to
+     the number of elements in the array.  The second integer value MUST
+     be smaller than or equal to the number of elements in the array.
+     The second integer value MUST be larger than or equal to the first
+     integer value.  If any of these requirements are violated, an error
+     condition is raised.
+
+     The new referenced value is a new array with a subset of elements
+     starting at the zero-based index of the first integer value, and
+     ending at the element before the zero-based index of the second
+     integer value (the first index is inclusive, the second index is
+     exclusive).
 
    o If the currently referenced value is a JSON string, the scheme for
      JSON arrays is used to index into a string and makes the new
@@ -299,11 +306,17 @@ Table of Contents
      "/foo/0"     "bar"
      "/foo/0-1"   ["bar"]
      "/foo/1-3"   ["baz", "bax"]
-     "/foo/1-1"   // error
+     "/foo/1-1"   []
+     "/foo/3-3"   []
+     "/foo/4-4"   // error
      "/foo/1-0"   // error
      "/foo/1-4"   // error
      "/foo/1-3/0" // error
      "/foo/0/1-3" "ar"
+
+   JSON ranges "/foo/1-1" and "/foo/3-3" are on its own of little
+   utility, but serve as a zero-length range to identify a location
+   immediately before which new content can be inserted with a patch.
 
 4.  IANA Considerations
 
