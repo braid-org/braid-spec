@@ -218,6 +218,8 @@ Table of Contents
    [JSONLD]   Sporny, M., Longley, D., Kellogg, G., Lanthaler, M., and
               N. Lindström, "JSON-LD", January 2014.
 
+   https://tools.ietf.org/html/draft-ucarion-json-schema-language-02
+
 Author's Address
 
    For more information, the author of this document are best contacted

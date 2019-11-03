@@ -5,14 +5,14 @@ Intended status: Proposed Standard                        M. Milutinovic
                                                              Nov 4, 2019
 
 
-                               Sync Types
-                     draft-xx-httpbis-sync-types-00
+                              Merge Types
+                    draft-xx-httpbis-merge-types-00
 
 Abstract
 
-   Sync Types define how to merge patches to a data structure.  This
-   document defines Sync Types, the structure of the Sync Type system,
-   and IANA registration procedures for Sync Types.
+   Merge Types define how to merge patches to a data structure.  This
+   document defines Merge Types, the structure of the Merge Type system,
+   and IANA registration procedures for Merge Types.
 
 
 
@@ -77,16 +77,16 @@ Table of Contents
 
    For the purpose of this document we define "synchronization" as the
    resolution of conflicts.  There are multiple approaches to resolving
-   conflicts and we define "Sync Type" an identifier that corresponds to
-   an approach of resolving conflicts.
+   conflicts and we define "Merge Type" an identifier that corresponds
+   to an approach of resolving conflicts.
 
-3.  Sync Type Naming
+3.  Merge Type Naming
 
-   Naming of Sync Type follows naming requirements of media types as
+   Naming of Merge Type follows naming requirements of media types as
    described in Section 4.2. of [RFC6838] with the following exception:
-   Sync Type names consist only of a type-name without a sub-type.
+   Merge Type names consist only of a type-name without a sub-type.
 
-   Similarly, Sync Type parameters follow Section 4.3. of [RFC6838].
+   Similarly, Merge Type parameters follow Section 4.3. of [RFC6838].
 
    Example:
 
@@ -96,16 +96,16 @@ Table of Contents
 
 4.  IANA Considerations
 
-4.1.  Sync Type Registry
+4.1.  Merge Type Registry
 
-   The "Sync Type Registry" defines the namespace for the
+   The "Merge Type Registry" defines the namespace for the
    synchronization type names and refers to their corresponding
    specifications.  The registry has been created and is now maintained
    at <http://www.iana.org/assignments/sync-types>.
 
 4.1.1.  Procedure
 
-   Registration of a Sync Type MUST include the following fields:
+   Registration of a Merge Type MUST include the following fields:
 
    o  Type name
 
@@ -128,39 +128,39 @@ Table of Contents
 
 4.1.2.  Registrations
 
-4.1.3.  Comments on Sync Type Registrations
+4.1.3.  Comments on Merge Type Registrations
 
-   Comments on registered Sync Types may be submitted by members of the
+   Comments on registered Merge Types may be submitted by members of the
    community to the IANA at iana@iana.org.  These comments will be
-   reviewed by the Sync Types reviewer and then passed on to the "owner"
-   of the Sync Type if possible.  Submitters of comments may request
-   that their comment be attached to the Sync Type registration itself;
-   if the IANA, in consultation with the Sync Types reviewer, approves,
-   the comment will be made accessible in conjunction with the type
-   registration.
+   reviewed by the Merge Types reviewer and then passed on to the
+   "owner" of the Merge Type if possible.  Submitters of comments may
+   request that their comment be attached to the Merge Type registration
+   itself; if the IANA, in consultation with the Merge Types reviewer,
+   approves, the comment will be made accessible in conjunction with the
+   type registration.
 
 4.1.4.  Change Procedures
 
-   Once a Sync Type has been published by the IANA, the owner may
+   Once a Merge Type has been published by the IANA, the owner may
    request a change to its definition.  The same procedure that would be
    appropriate for the original registration request is used to process
    a change request.
 
-   Sync Type registrations may not be deleted; Sync Types that are no
+   Merge Type registrations may not be deleted; Merge Types that are no
    longer believed appropriate for use can be declared OBSOLETE; such
-   Sync Types will be clearly marked in the list published by the IANA.
+   Merge Types will be clearly marked in the list published by the IANA.
 
-   Significant changes to a Sync Type's definition should be requested
+   Significant changes to a Merge Type's definition should be requested
    only when there are serious omissions or errors in the published
    specification.  When review is required, a change request may be
    denied if it renders entities that were valid under the previous
    definition invalid under the new definition.
 
-   The owner of a Sync Type may pass responsibility to another person or
-   agency by informing the IANA; this can be done without discussion or
-   review.
+   The owner of a Merge Type may pass responsibility to another person
+   or agency by informing the IANA; this can be done without discussion
+   or review.
 
-   The IESG may reassign responsibility for a Sync Type.  The most
+   The IESG may reassign responsibility for a Merge Type.  The most
    common case of this will be to enable changes to be made to types
    where the author of the registration has died, moved out of contact,
    or is otherwise unable to make changes that are important to the
@@ -172,53 +172,54 @@ Table of Contents
    Types.  However, regardless of what security analysis has or has not
    been done, all descriptions of security issues MUST be as accurate as
    possible.  In particular, the security considerations MUST NOT state
-   that there are "no security issues associated with this Sync Type".
-   Security considerations for Sync Types MAY say that "the security
-   issues associated with this Sync Type have not been assessed".
+   that there are "no security issues associated with this Merge Type".
+   Security considerations for Merge Types MAY say that "the security
+   issues associated with this Merge Type have not been assessed".
 
-   There is absolutely no requirement that Sync Types registered be
+   There is absolutely no requirement that Merge Types registered be
    secure or completely free from risks.  Nevertheless, all known
-   security risks MUST be identified in the registration of a Sync Type.
+   security risks MUST be identified in the registration of a Merge
+   Type.
 
    The security considerations section of all registrations is subject
    to continuing evaluation and modification, and in particular MAY be
-   extended by use of the "comments on Sync Types" mechanism described
+   extended by use of the "comments on Merge Types" mechanism described
    in Section 4.1.3 above.
 
    Some of the issues that need to be examined and described in a
-   security analysis of a Sync Type are:
+   security analysis of a Merge Type are:
 
-   o  Sync Types might assume particular structure of synchronized data,
+   o  Merge Types might assume particular structure of synchronized data,
       order of operations over that data, and/or presence of additional
       metadata like counters and timestamps.  Any security analysis MUST
       investigate security consequences when those assumptions are not
       satisfied.
 
-   o  Sync Types might utilize different approaches to assure
+   o  Merge Types might utilize different approaches to assure
       deterministic results.  Any security analysis MUST investigate any
       limitations of those approaches which might lead to
       non-deterministic results.
 
-   o  Sync Types might utilize randomness.  Any security analysis MUST
+   o  Merge Types might utilize randomness.  Any security analysis MUST
       investigate any security consequences when quality of randomness
       is tampered with, randomness being predictable or even
       controllable by an attacker.
 
-   o  Sync Types might operate in a way which, while not directly
+   o  Merge Types might operate in a way which, while not directly
       harmful, may result in disclosure of information that either
       facilitates a subsequent attack or else violates user's privacy in
       some way.
 
-   o  A Sync Type might provide an opportunity for sending a small
+   o  A Merge Type might provide an opportunity for sending a small
       amount of data that, when received and evaluated, expands
-      enormously to consume all of the user's resources.  All Sync Types
-      SHOULD state whether or not they provide such opportunities; if
-      they do, they SHOULD discuss what steps need to be taken to avoid
-      such attacks.
+      enormously to consume all of the user's resources.  All Merge
+      Types SHOULD state whether or not they provide such opportunities;
+      if they do, they SHOULD discuss what steps need to be taken to
+      avoid such attacks.
 
-   o  A Sync Type might be targeted for applications that require some
+   o  A Merge Type might be targeted for applications that require some
       sort of security assurance but don't provide the necessary
-      security mechanisms themselves.  For example, a Sync Type could be
+      security mechanisms themselves.  For example, a Merge Type could be
       defined for operation on sensitive medical information that in
       turn requires external confidentiality and integrity protection
       services, or which is designed for use only within a secure
