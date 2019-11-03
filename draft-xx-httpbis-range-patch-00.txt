@@ -54,12 +54,13 @@ Table of Contents
    4. IANA Considerations ............................................10
       4.1. Range Unit Registrations ..................................11
       4.2. The +patch Structured Syntax Suffix .......................12
-   5. Security Considerations ........................................13
-   6. Conventions ....................................................14
-   7. Copyright Notice ...............................................15
-   8. References .....................................................16
-      8.1. Normative References ......................................17
-      8.2. Informative References ....................................18
+   5. Checking Capabilities ..........................................13
+   6. Security Considerations ........................................13
+   7. Conventions ....................................................14
+   8. Copyright Notice ...............................................15
+   9. References .....................................................16
+      9.1. Normative References ......................................17
+      9.2. Informative References ....................................18
 
 
 
@@ -109,7 +110,7 @@ Table of Contents
      Host: example.com
      Accept: application/json
      Range: json=/foo/bar/3/baz
-   
+
    And receive the following response:
 
      HTTP/1.1 206 Partial Content
@@ -394,54 +395,10 @@ Table of Contents
    immediately after the last line of textual contents.  This allows
    appending lines to textual contents.
 
-4.  Checking capabilities
 
-   A server may decide whether or not to support range patches.  The
-   default behavior of servers is simply to ignore unknown or unsupported
-   headers.  In the case of a range patch, this implies that a request
-   issuing a patch to a specific subsection of a resource might
-   be interpreted by a server as a request to overwrite the entire
-   resource with the patch.  This will leave the resource in an invalid 
-   state.
+4.  IANA Considerations
 
-   To determine whether or not the server can fulfill such a request 
-   correctly, the requester may first issue an OPTIONS request:
-
-     OPTIONS /foo/xyzzy
-     Range-Request-Method: PATCH
-     Range-Request-Unit: json,bytes
-     Range-Request-Span: /some/subpath/0-9
-
-   To which the server may reply in the affirmative:
-
-     HTTP/1.1 204 No Content
-     Connection: keep-alive
-     Range-Request-Allow-Methods: PATCH
-     Range-Request-Allow-Units: json,bytes
-     Range-Request-Allow-Span: /some/subpath/0-9
-
-   In the partial negative:
-
-     HTTP/1.1 204 No Content
-     Connection: keep-alive
-     Range-Request-Allow-Methods: PATCH
-     Range-Request-Allow-Units: json
-     Range-Request-Allow-Span: /some/subpath/2-5
-
-   Or in the complete negative:
-
-     HTTP/1.1 204 No Content
-     Connection: keep-alive
-     Range-Request-Allow-Methods: 
-     Range-Request-Allow-Units: 
-     Range-Request-Allow-Span: 
-
-   Empty header fields are allowed per [RFC2616] section 2.1.
-
-
-5.  IANA Considerations
-
-5.1.  Range Unit Registrations
+4.1.  Range Unit Registrations
 
    This document registers the following range units:
 
@@ -458,7 +415,7 @@ Table of Contents
    The change controller is: "IETF (iesg@ietf.org) - Internet
    Engineering Task Force".
 
-5.2.  The +patch Structured Syntax Suffix
+4.2.  The +patch Structured Syntax Suffix
 
    This document registers the following media type structured syntax
    suffix:
@@ -505,6 +462,53 @@ Table of Contents
    Author/Change controller:
 
       IETF (iesg@ietf.org) - Internet Engineering Task Force
+
+
+5.  Checking Capabilities
+
+   A server may decide whether or not to support range patches.  The
+   default behavior of servers is simply to ignore unknown or unsupported
+   headers.  In the case of a range patch, this implies that a request
+   issuing a patch to a specific subsection of a resource might
+   be interpreted by a server as a request to overwrite the entire
+   resource with the patch.  This will leave the resource in an invalid
+   state.
+
+   To determine whether or not the server can fulfill such a request
+   correctly, the requester may first issue an OPTIONS request:
+
+     OPTIONS /foo/xyzzy
+     Range-Request-Method: PATCH
+     Range-Request-Unit: json,bytes
+     Range-Request-Span: /some/subpath/0-9
+
+   To which the server may reply in the affirmative:
+
+     HTTP/1.1 204 No Content
+     Connection: keep-alive
+     Range-Request-Allow-Methods: PATCH
+     Range-Request-Allow-Units: json,bytes
+     Range-Request-Allow-Span: /some/subpath/0-9
+
+   In the partial negative:
+
+     HTTP/1.1 204 No Content
+     Connection: keep-alive
+     Range-Request-Allow-Methods: PATCH
+     Range-Request-Allow-Units: json
+     Range-Request-Allow-Span: /some/subpath/2-5
+
+   Or in the complete negative:
+
+     HTTP/1.1 204 No Content
+     Connection: keep-alive
+     Range-Request-Allow-Methods:
+     Range-Request-Allow-Units:
+     Range-Request-Allow-Span:
+
+   Empty header fields are allowed per [RFC2616] section 2.1.
+
+
 
 6.  Security Considerations
 
@@ -589,7 +593,7 @@ Authors' Addresses
    Invisible College, Berkeley
    2053 Berkeley Way
    Berkeley, CA 94704
-   
+
    EMail: bryn@signals.io
    Web:   https://invisible.college/@bryn
 
