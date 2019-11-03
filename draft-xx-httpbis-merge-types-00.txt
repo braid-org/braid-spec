@@ -44,12 +44,12 @@ Table of Contents
 
    1. Introduction ....................................................1
    2. Definitions .....................................................2
-   3. Synchronization Type Naming .....................................3
+   3. Merge Type Naming ...............................................3
    4. IANA Considerations .............................................4
-      4.1. Synchronization Type Registry ..............................5
+      4.1. Merge Type Registry ........................................5
            4.1.1. Procedure ...........................................6
            4.1.2. Registrations .......................................7
-           4.1.3. Comments on Synchronization Type Registrations ......8
+           4.1.3. Comments on Merge Type Registrations ................8
            4.1.4. Change Procedures ...................................9
    5. Security Considerations ........................................10
    6. Conventions ....................................................11
@@ -98,10 +98,10 @@ Table of Contents
 
 4.1.  Merge Type Registry
 
-   The "Merge Type Registry" defines the namespace for the
-   synchronization type names and refers to their corresponding
-   specifications.  The registry has been created and is now maintained
-   at <http://www.iana.org/assignments/sync-types>.
+   The "Merge Type Registry" defines the namespace for the merge type
+   names and refers to their corresponding specifications.  The registry
+   has been created and is now maintained at
+   <http://www.iana.org/assignments/merge-types>.
 
 4.1.1.  Procedure
 
@@ -168,13 +168,14 @@ Table of Contents
 
 5.  Security Considerations
 
-   An analysis of security issues SHOULD be done for all registered Sync
-   Types.  However, regardless of what security analysis has or has not
-   been done, all descriptions of security issues MUST be as accurate as
-   possible.  In particular, the security considerations MUST NOT state
-   that there are "no security issues associated with this Merge Type".
-   Security considerations for Merge Types MAY say that "the security
-   issues associated with this Merge Type have not been assessed".
+   An analysis of security issues SHOULD be done for all registered
+   Merge Types.  However, regardless of what security analysis has or
+   has not been done, all descriptions of security issues MUST be as
+   accurate as possible.  In particular, the security considerations
+   MUST NOT state that there are "no security issues associated with
+   this Merge Type".  Security considerations for Merge Types MAY say
+   that "the security issues associated with this Merge Type have not
+   been assessed".
 
    There is absolutely no requirement that Merge Types registered be
    secure or completely free from risks.  Nevertheless, all known
@@ -189,42 +190,10 @@ Table of Contents
    Some of the issues that need to be examined and described in a
    security analysis of a Merge Type are:
 
-   o  Merge Types might assume particular structure of synchronized data,
-      order of operations over that data, and/or presence of additional
-      metadata like counters and timestamps.  Any security analysis MUST
-      investigate security consequences when those assumptions are not
-      satisfied.
-
-   o  Merge Types might utilize different approaches to assure
-      deterministic results.  Any security analysis MUST investigate any
-      limitations of those approaches which might lead to
-      non-deterministic results.
-
-   o  Merge Types might utilize randomness.  Any security analysis MUST
-      investigate any security consequences when quality of randomness
-      is tampered with, randomness being predictable or even
-      controllable by an attacker.
-
    o  Merge Types might operate in a way which, while not directly
       harmful, may result in disclosure of information that either
       facilitates a subsequent attack or else violates user's privacy in
       some way.
-
-   o  A Merge Type might provide an opportunity for sending a small
-      amount of data that, when received and evaluated, expands
-      enormously to consume all of the user's resources.  All Merge
-      Types SHOULD state whether or not they provide such opportunities;
-      if they do, they SHOULD discuss what steps need to be taken to
-      avoid such attacks.
-
-   o  A Merge Type might be targeted for applications that require some
-      sort of security assurance but don't provide the necessary
-      security mechanisms themselves.  For example, a Merge Type could be
-      defined for operation on sensitive medical information that in
-      turn requires external confidentiality and integrity protection
-      services, or which is designed for use only within a secure
-      environment.  Types SHOULD always document whether or not they
-      need such services in their security considerations.
 
 
 
