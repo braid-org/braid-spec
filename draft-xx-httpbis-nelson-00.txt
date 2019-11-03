@@ -2,17 +2,17 @@ Internet-Draft                                                 M. Toomim
 Expires: Mar 8, 2020                                   Invisible College
 Intended status: Proposed Standard                           Nov 4, 2019
 
-                              Linked JSON
-                    draft-xx-httpbis-linked-json-00
+                                 NelSON
+                       draft-xx-httpbis-nelson-00
 
 Abstract
 
-   Linked JSON is an extension to JSON that defines a new datatype: a
-   "Link".  A Link has a URI, and may have metadata.
+   NelSON is "JSON as Ted Nelson would design it."
 
-   Links allow JSON objects to compose across websites, supporting
-   transclusion.  Optional metadata on links can be used to specify a
-   specific version or sub-slice of data to link to.
+   NelSON is an extension to JSON where any region can be framed with a
+   URI and HTTP Metadata.  Regions with the same URI refer to the same
+   content, and can be transcluded into other regions, with metadata
+   specifying how they connect.
 
 
 
@@ -61,40 +61,49 @@ Table of Contents
 
 1.  Introduction
 
-   JSON documents often include URIs, or references to other documents,
-   as strings.  It is often useful to distinguish which strings actually
+   NelSON is an extension of JSON, where any object with a field named
+   "uri" is a special Hypermedia wrapper, which can specify a URI link
+   for the region of JSON it wraps and optional metadata:
+
+         { uri: "/this-ietf-spec", val: "Framed JSON is JSON with ..." }
+
+   NelSON is valid JSON.  A NelSON Hypermedia wrapper can be used to
+   insert a link inside JSON.  For instance, in the JSON for a book, one
+   could include a link to the author:
+
+         {
+           "book-name": "The way things work",
+           "author":    { "uri": "/david-macaulay" }
+           "image"      { "uri": "/the-way-things-work.jpg", ContentType: "image/png" },
+         }
+
+   val is optional.  If not present, it's just a pointer.  It may be
+   present, and refer to a cache of the data.  If uri: null, then it
+   SHOULD have a val.
+
+   NelSON can be used to distinguish which strings in JSON actually
    represent URIs, for example, to fetch and include the contents of
    links, or to translate relative to absolute URIs.
 
-   Linked JSON is an extension of JSON that adds a Link datatype, so that
-   URIs can be distinguished from ordinary strings.
-
 1.1.  Syntax
 
-   A Link is encoded as a JSON object with a field named "link":
+   A NelSON Hypermedia wrapper is encoded as a JSON object with a field
+   named "uri":
 
-     { "link": "/david-macaulay" }
+     { "uri": "/david-macaulay" }
 
-   Any object with a field named "link" is interpreted as a Link.  The
-   value of the link field MUST be a string containing a URI [RFC3986].
+   Any object with a field named "uri" is interpreted as a wrapper.  The
+   value of the uri field MUST be either a string containing a URI
+   [RFC3986], or null.
 
-   Links MAY be embedded within arbitrary JSON:
+1.2.  Escape Syntax
 
-     {
-       "book-name": "The way things work",
-       "image"      { "link": "/the-way-things-work.jpg" },
-       "author":    { "link": "/david-macaulay" }
-     }
-
-1.2.  Escaping
-
-   To encode a field named "link" *without* creating a Link, prefix the
+   To include an actual object with a field "uri", you must escape the
    field with an underscore:
 
-     { "_link": "this is not a link" }
+         { "_uri": "foo" }
 
-   To encode "_link", prefix it with two underscores: "__link".  To
-   encode "__link", use "___link", and so on.
+   A field named "_uri" is escaped as "__uri", and so on.
 
 1.3.  Metadata
 
@@ -123,14 +132,14 @@ Table of Contents
 
    This draft borrows from [JSONREF], but makes the following changes:
 
-   o It names the special field "link" instead of "$ref".
+     - It names the special field "link" instead of "$ref".
 
-   o It provides an escape hatch for when users need to encode the
-     string "link".
+     - It provides an escape hatch for when users need to encode the
+       string "link".
 
-   o It allows metadata to be specified on links.
+     - It allows metadata to be specified on links.
 
-   o The contents of a link need not be JSON.
+     - The contents of a link need not be JSON.
 
    This enables software to automatically differentiate Links from
    strings.  Software could then automatically fetch, cache, and
