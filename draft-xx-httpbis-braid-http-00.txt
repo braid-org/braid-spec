@@ -24,10 +24,11 @@ Abstract
 
    Braid adds to HTTP:
 
-     1. Subscriptions to GET requests.
-     2. Versioning to resources.
-     3. Ranges to PUT/PATCH requests.
-     4. Synchronization of simultaneous requests.
+     1. Subscriptions to GET requests
+     2. Versioning to resources
+     3. Ranges to PUT and PATCH requests
+     4. Synchronization of simultaneous requests
+     5. Containment of resources
 
    These extensions enable a web resource to synchronize automatically
    across multiple clients and servers, and guarantee consistency using a

@@ -9,8 +9,9 @@ add Synchronization to HTTP.  They are authored in three documents:
 Braid adds to HTTP:
 1. *Subscriptions* to GET requests
 2. *Versioning* to resources
-3. *Ranges* to PUT/PATCH requests
-4. *Synchronization* of simultaneous requests.
+3. *Ranges* to PUT and PATCH requests
+4. *Synchronization* of simultaneous requests
+5. *Containment* of resources
 
 ### Range Patch — [`draft-xx-httpbis-range-patch-00.txt`](https://raw.githubusercontent.com/braid-work/braid-spec/master/draft-xx-httpbis-range-patch-00.txt)
 
