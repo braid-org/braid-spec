@@ -4,6 +4,8 @@ Intended status: Proposed Standard                             G. Little
                                                        Invisible College
                                                                R. Walker
                                                             Bard College
+                                                              B. Bellomy
+                                                       Invisible College
                                                              Nov 4, 2019
 
         \=/====\\  |//===\\=      /=\     =\==\|\=/== =|====\==
@@ -29,6 +31,7 @@ Abstract
      3. Ranges to PUT and PATCH requests
      4. Synchronization of simultaneous requests
      5. Containment of resources
+     6. Disaggregation of resource identity from resource location
 
    These extensions enable a web resource to synchronize automatically
    across multiple clients and servers, and guarantee consistency using a
@@ -110,7 +113,9 @@ Table of Contents
    resource. In practice, programmers today often give up on using
    standards for "data that changes", and instead write their own
    non-standard update protocol over a WebSocket, or adopt a web
-   framework that does this for them.
+   framework that does this for them.  As a consequence, connecting
+   disparate resources remains difficult and error-prone, requiring the
+   authoring and maintenance of significant boilerplate.
 
    This document specifies how to add support for "state that changes"
    to HTTP with a few small extensions.  Doing so transforms HTTP from a
@@ -155,11 +160,11 @@ Table of Contents
    A Braid web application can operate offline.  Multiple users can use
    the app from an airplane, and their edits can synchronize when they
    regain internet connections.  Additionally, the Braid protocol can be
-   expressed on a peer-to-peer transport (e.g. Braid-WebRTC) to support
+   expressed over peer-to-peer transports (e.g. Braid-WebRTC) to support
    a peer-to-peer synchronization without a server.  Braid-HTTP clients
-   could interoperate with Braid-WebRTC peers.  Thus, a chat
-   application, for instance, could be served and synchronized on
-   Braid-HTTP, yet also establish redundant peer-to-peer connections on
+   will be able to interoperate with Braid-WebRTC peers.  For example,
+   a chat application might be served and synchronized on Braid-HTTP,
+   while also establishing redundant peer-to-peer connections on
    Braid-WebRTC.  The server could then be shut down, and users of the
    chat app could continue to send messages to one another.
 
@@ -170,14 +175,14 @@ Table of Contents
      GET /peers
      Subscribe: keep-alive
      -------
-     [ {ip: '13.55.32.158', pubkey: 'x371...8382'}
+     [ {ip: '13.55.32.158', pubkey: 'x371...8382'},
        {ip: '244.38.55.83', pubkey: 'o2u8...2s73'},
        ...
      ]
 
-   Each peer can then choose some of those peers at random to establish
-   a WebRTC connection with.  It will then send Braid messages to that
-   peer over that connection.
+   Each peer can then choose a set of those peers with whom to establish
+   a WebRTC connection.  It will then exchange Braid messages with those
+   peers over that connection.
 
 2.  Subscriptions for GET
 
@@ -200,12 +205,11 @@ Table of Contents
 
    In general, a server that implements subscriptions promises to keep
    its subscribed clients up-to-date by sending changes until the client
-   closes the subscription.  A subscription is different than a GET
+   closes the subscription.  A subscription is different from a GET
    connection (e.g. a TCP connection, or HTTP/2 stream).  If a client
    requests "Subscribe: keep-alive", then the subscription will be
    remembered even after the GET connection closes.  A subscription can
-   be continued by the client issuing another GET with a Subscribe
-   header.
+   be resumed by the client issuing another GET with a Subscribe header.
 
 2.2.  Sending multiple updates per GET
 
@@ -295,6 +299,8 @@ Table of Contents
    XXX What happens if the server decides to drop the history that a
        client asks for?  How does it tell the client "sorry, I don't
        have the history to synchronize with you."
+
+   XXX (Bryn: we should use "410 GONE", as it implies that the resource will not become available in the future.  404 implies that it might.)
 
 3.  Versioning State
 
@@ -510,3 +516,11 @@ Authors' Addresses
    Bard College
 
    EMail: slickytail.mc@gmail.com
+
+   Bryn Bellomy
+   Invisible College, Berkeley
+   2053 Berkeley Way
+   Berkeley, CA 94704
+
+   EMail: bryn@signals.io
+   Web:   https://invisible.college/@bryn
