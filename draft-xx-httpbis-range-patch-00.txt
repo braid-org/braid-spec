@@ -55,12 +55,13 @@ Table of Contents
       4.1. Range Unit Registrations ..................................11
       4.2. The +patch Structured Syntax Suffix .......................12
    5. Checking Capabilities ..........................................13
-   6. Security Considerations ........................................13
-   7. Conventions ....................................................14
-   8. Copyright Notice ...............................................15
-   9. References .....................................................16
-      9.1. Normative References ......................................17
-      9.2. Informative References ....................................18
+   6. Race Conditions ................................................13
+   7. Security Considerations ........................................13
+   8. Conventions ....................................................14
+   9. Copyright Notice ...............................................15
+   10. References ....................................................16
+      10.1. Normative References .....................................17
+      10.2. Informative References ...................................18
 
 
 
@@ -455,7 +456,7 @@ Table of Contents
 
    Interoperability considerations:  n/a
 
-   Security considerations:  See Section 5 of this document.
+   Security considerations:  See Section 7 of this document.
 
    Contact:  IETF HTTP Working Group (ietf-http-wg@w3.org)
 
@@ -471,8 +472,7 @@ Table of Contents
    headers.  In the case of a range patch, this implies that a request
    issuing a patch to a specific subsection of a resource might
    be interpreted by a server as a request to overwrite the entire
-   resource with the patch.  This will leave the resource in an invalid
-   state.
+   resource with the patch, leaving the resource in a corrupted state.
 
    To determine whether or not the server can fulfill such a request
    correctly, the requester may first issue an OPTIONS request:
@@ -489,6 +489,7 @@ Table of Contents
      Range-Request-Allow-Methods: PATCH
      Range-Request-Allow-Units: json,bytes
      Range-Request-Allow-Span: /some/subpath/0-9
+     ETag: "33a64df551425fcc55e4d42a148795d9f25f89d4"
 
    In the partial negative:
 
@@ -497,6 +498,7 @@ Table of Contents
      Range-Request-Allow-Methods: PATCH
      Range-Request-Allow-Units: json
      Range-Request-Allow-Span: /some/subpath/2-5
+     ETag: "33a64df551425fcc55e4d42a148795d9f25f89d4"
 
    Or in the complete negative:
 
@@ -508,9 +510,26 @@ Table of Contents
 
    Empty header fields are allowed per [RFC2616] section 2.1.
 
+   Also note the presence of the ETag header, discussed in section 6.
 
 
-6.  Security Considerations
+6.  Race Conditions
+
+   As with standard PUT, POST, and PATCH requests, a range patch request
+   carries the risk of a mid-air collision with another simultaneous
+   request.  If one requester updates a resource, and another requester,
+   not being aware of that update, issues a second update, the resource
+   may be left in a corrupted state.
+
+   To safeguard against this, the server may return an ETag header in
+   response to GET and OPTIONS requests directed at a given resource.
+
+   When issuing a range patch, the requester may include an If-Match
+   header containing the ETag of the version of the resource it intends
+   to update.
+
+
+7.  Security Considerations
 
    Both GET and PATCH requests using a range patch are potentially
    susceptible to denial-of-service attacks because the effort required
@@ -518,13 +537,13 @@ Table of Contents
 
 
 
-7.  Conventions
+8.  Conventions
 
    The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
    "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this
    document are to be interpreted as described in [RFC2119].
 
-8.  Copyright Notice
+9.  Copyright Notice
 
    Copyright (c) 2019 IETF Trust and the persons identified as the
    document authors.  All rights reserved.
@@ -539,9 +558,9 @@ Table of Contents
    the Trust Legal Provisions and are provided without warranty as
    described in the Simplified BSD License.
 
-9.  References
+10.  References
 
-9.1.  Normative References
+10.1.  Normative References
 
    [RFC2119]  Bradner, S., "Key words for use in RFCs to Indicate
               Requirement Levels", BCP 14, RFC 2119, March 1997.
@@ -556,7 +575,7 @@ Table of Contents
    [RFC6902]  Bryan, P.,  and M. Nottingham, "JavaScript Object Notation
               (JSON) Patch", RFC 6902, April 2013.
 
-9.2.  Informative References
+10.2.  Informative References
 
    [RFC8259]  T. Bray, "The JavaScript Object Notation (JSON) Data
               Interchange Format", RFC 8259, December 2017.
