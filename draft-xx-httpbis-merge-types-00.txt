@@ -10,9 +10,15 @@ Intended status: Proposed Standard                        M. Milutinovic
 
 Abstract
 
-   Merge Types define how to merge patches to a data structure.  This
-   document defines Merge Types, the structure of the Merge Type system,
-   and IANA registration procedures for Merge Types.
+   Merge Types specify how to merge multiple simultaneous edits to a
+   resource.  This typically happens if two computers edit the same
+   state over a network with latency.  If the computers agree on a Merge
+   Type, however, they can always produce the same result, and can
+   promise eventual consistency.
+
+   You can define new Merge Types.  This document defines Merge Types,
+   the structure of the Merge Type system, and IANA registration
+   procedures for Merge Types.
 
 
 
@@ -62,16 +68,44 @@ Table of Contents
 
 1.  Introduction
 
-   When maintaining consistency in distributed computing environments
-   conflicting changes to system's state from concurrent operations can
-   happen.  There are many different approaches to resolving such
-   conflicts.  Currently popular approaches are using conflict-free
-   replicated data types [CRDT] or operational transformation [OT].
+   In a version history, a merge type defines the output of a version
+   with two or more parents:
 
-   When systems and protocols support different approaches a need to
-   identify those approaches arises.  This document defines how can
-   those different approaches to conflict resolution can be identified
-   using a standardized naming scheme.
+                   _
+             Time: |        birds
+                   |        /   \
+                   |     dogs   cats
+                   |        \   /
+                   V       dogcats   <-- merged version
+
+
+   Currently popular approaches are using conflict-free replicated data
+   types [CRDT] or operational transformation [OT].
+
+   This document defines how can those different approaches to conflict
+   resolution can be identified using a standardized naming scheme.
+
+1.1.  Merge Types vary across applications
+
+   Different resources merge in different ways, and can use different
+   merge types.  If a string represents a collaborative text document,
+   for instance, then parallel edits should be merged together.  But if
+   a string represents a database entry ID, then if two people edit it,
+   you want to choose one or the other.
+
+   A resource for your bank account balance should merge debits by
+   adding the debited amounts together.  if the number represents your
+   bank account balance, then multiple debits should be added together.
+
+1.2.  A Merge Type is specified as a function
+   
+   A Merge Type SHOULD state the limited set of substates that it is
+   capable of operating upon, and any assumptions it makes about the
+   data.
+
+   But given that it has data that meets those assumptions, a Merge Type
+   MUST return a result when merging any set of versions.  A Merge Type
+   MAY NOT contain validation logic.
 
 2.  Definitions
 
