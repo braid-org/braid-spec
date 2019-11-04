@@ -108,35 +108,33 @@ Table of Contents
    could not push updates.  To work around this, web programmers would
    poll the resource, which was inefficient.  Long-polling was invented
    to overcome the inefficiencies, which was standardized as SSE.  But
-   SSE provides semantics of an event-stream, and although a programmer
-   can encode a protocol within the event stream for updating a
-   resource, there is still no standard way to express the update of a
-   resource.  In practice, programmers today often give up on using
-   standards for "data that changes", and instead write their own
-   non-standard update protocol over a WebSocket.
+   SSE provides semantics of an event-stream, not an update-stream, and
+   although a programmer can encode a protocol within the event stream
+   for updating a resource, there is still no standard way to express
+   the update of a resource.  In practice, programmers today often give
+   up on using standards for "data that changes", and instead write
+   their own non-standard update protocol over a WebSocket.
 
-   Unfortunately, implementing a new protocol requires extra time and
-   effort to make, and programmers will often try to implement only the
-   synchronization features they need to.  Their app will be unlikely to
-   have an offline mode, or guarantee eventual consistency when there
-   are muiltple writers.  It is often the case that programmers do not
-   bother to implement a public version of the API, or if they do, they
-   might not keep it up-to-date with the important features.  These
-   frictions lead websites to become silos for data.  Even though HTTP
-   can technically be used to GET resources across multiple websites,
-   programmers today find it much easier to read and write data within
-   their own website, than an external site.
+   Unfortunately, non-standard protocols require extra time and effort
+   to design and implement, and programmers will often try to implement
+   only the minimal synchronization features they need.  Their app will
+   be unlikely to have an offline mode, or guarantee consistency after
+   conflicting edits over a network.  Programmers often do not bother to
+   implement a public API, or to keep it as featureful as the private
+   one.  These frictions lead to it being much easier for a programmer
+   to read and write data from their database than from some other
+   website's database, and as a result, programmers tend to build
+   websites in silos, where each one grows and controls data only within
+   its own domain.
 
-   The Braid extensions to HTTP solve these problems by creating a
-   standard for synchronizing changing state.  Each piece of state gets
-   a URL.  Each URL gets a DAG of historical versions.  A GET request
-   can optionally also Subscribe to all future changes, until issuing
-   FORGET.  Updates can be sent in a standard patch format, rather than
-   full resources, which guarantees eventual consistency across a
-   peer-to-peer network.  A client or server to go offline, make edits
-   on an airplane, and then rejoin at a later date and merge all changes
-   consistently.  Programmers no longer have to wire-together a layered
-   stack of MVC frameworks in order to connect a client with a server.
+   The Braid extensions solve these problems with a standard protocol
+   for synchronizing changing state.  Each piece of state gets a URL.
+   Each URL gets a DAG of historical versions.  GET requests can
+   optionally Subscribe to future updates, until issuing FORGET.
+   Updates get a standard patch format.  Merge semantics guarantee
+   eventual consistency over a peer-to-peer network.  Clients and
+   servers can go offline, make edits on airplanes, and then merge all
+   edits perfectly when they rejoin.  Programming becomes much simpler.
 
 
 1.1.  Design Goals
