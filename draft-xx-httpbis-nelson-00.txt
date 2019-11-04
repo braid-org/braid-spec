@@ -1,13 +1,15 @@
 Internet-Draft                                                 M. Toomim
 Expires: Mar 8, 2020                                   Invisible College
-Intended status: Proposed Standard                           Nov 4, 2019
+Intended status: Proposed Standard                            B. Bellomy
+                                                       Invisible College
+                                                             Nov 4, 2019
 
                                  NelSON
                        draft-xx-httpbis-nelson-00
 
 Abstract
 
-   NelSON is "JSON as Ted Nelson would design it."
+   NelSON is "JSON that Ted Nelson would approve of."
 
    NelSON is an extension to JSON where any region can be framed with a
    URI and HTTP Metadata.  Regions with the same URI refer to the same
@@ -61,31 +63,68 @@ Table of Contents
 
 1.  Introduction
 
-   NelSON is an extension of JSON, where any object with a field named
-   "uri" is a special Hypermedia wrapper, which can specify a URI link
-   for the region of JSON it wraps and optional metadata:
+   NelSON is an extension of JSON where any object with a field named
+   "uri" is a special Hypermedia wrapper that can specify a URI link
+   for the region of JSON it wraps, as well as optional metadata:
 
          {
            "uri": "/this-ietf-spec",
-           "val": "Framed JSON is JSON with ..."
+           "content-type": "text/plain",
+           "val": "NelSON is ..."
          }
 
    NelSON is valid JSON.  A NelSON Hypermedia wrapper can be used to
    insert a link inside JSON.  For instance, in the JSON for a book, one
-   could include a link to the author:
+   might include a link to the author:
 
          {
            "book-name": "The way things work",
-           "author":    { "uri": "/david-macaulay" }
+           "author":    { "uri": "/david-macaulay" },
            "image"      {
              "uri": "/the-way-things-work.jpg",
              "content-type": "image/png"
            }
          }
 
-   "val" field is optional.  If not present, it's just a pointer.  It
-   may be present, and refer to a cache of the data.  If "uri" is JSON
-   null, then it SHOULD have a "val" field.
+   In addition to the specially-interpreted "uri" field, the NelSON
+   wrapper may also contain an optional "val" field.  The presence and
+   contents of these two fields leads to three distinct permutations:
+
+   o "uri" is non-null, "val" is absent:
+
+         {
+           "uri": "/this-ietf-spec",
+           "content-type": "text/plain"
+         }
+
+      The NelSON wrapper should be interpreted as a simple pointer to
+      another resource with optional metadata.
+
+   o "uri" is non-null, "val" is present:
+
+         {
+           "uri": "/this-ietf-spec",
+           "content-type": "text/plain",
+           "val": "NelSON is ..."
+         }
+
+      The NelSON wrapper should be interpreted as a simple pointer to
+      another resource with optional metadata.  "val" contains a cached
+      copy of that resource that the consumer may ignore.
+
+   o "uri" is null, "val" is present:
+
+         {
+           "uri": null,
+           "content-type": "text/plain",
+           "val": "NelSON is ..."
+         }
+
+      "val" should be interpreted as the resource itself, and the NelSON
+      wrapper should be interpreted as metadata applying to it.
+
+   If "uri" is JSON null, then the NelSON wrapper SHOULD have a "val"
+   field.
 
    NelSON can be used to distinguish which strings in JSON actually
    represent URIs, for example, to fetch and include the contents of
@@ -238,3 +277,11 @@ Author's Address
 
    EMail: toomim@gmail.com
    Web:   https://invisible.college/@toomim
+
+   Bryn Bellomy
+   Invisible College, Berkeley
+   2053 Berkeley Way
+   Berkeley, CA 94704
+
+   EMail: bryn@signals.io
+   Web:   https://invisible.college/@bryn
