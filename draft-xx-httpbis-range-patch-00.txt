@@ -106,7 +106,7 @@ Table of Contents
 
    One might make the following request:
 
-     GET /data.json HTTP/1.1
+     GET /api/document/1 HTTP/1.1
      Host: example.com
      Accept: application/json
      Range: json=/foo/bar/3/baz
@@ -170,7 +170,7 @@ Table of Contents
    using multipart/byteranges payload as described in Section 4.1. of
    [RFC7233].
 
-   When issuing a PATCH request to a resource, multiple range patches
+   When issuing a non-GET request to a resource, multiple range patches
    can be provided as well:
 
      PATCH /api/document/1 HTTP/1.1
@@ -220,7 +220,7 @@ Table of Contents
 
    Stand-alone range patches can be transmitted over HTTP as-is as well.
    This can be used to provide the patch which has been used in a
-   previous PATCH request.  A Content-Type with "+patch" suffix
+   previous non-GET request.  A Content-Type with "+patch" suffix
    identifies such stand-alone range patch.  For example, the patch
    used in the PATCH request example above could be retrieved as:
 
@@ -530,7 +530,7 @@ Table of Contents
 
 7.  Security Considerations
 
-   Both GET and PATCH requests using a range patch are potentially
+   Both GET and non-GET requests using a range patch are potentially
    susceptible to denial-of-service attacks because the effort required
    to compute the patch or apply the patch.
 
