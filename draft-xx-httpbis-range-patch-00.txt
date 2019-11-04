@@ -159,9 +159,11 @@ Table of Contents
    When server supports Range header with non-GET requests, server MUST
    NOT ignore the Range header when used with a non-GET request.  When
    server does not support Range header with non-GET requests, a server
-   MUST generate a 416 (Range Not Satisfiable) or a 400 (Bad Request)
+   SHOULD generate a 416 (Range Not Satisfiable) or a 400 (Bad Request)
    response when a non-GET request with a Range header is made.  Proxies
-   MUST NOT drop Range header for non-GET requests.
+   SHOULD NOT drop Range header for non-GET requests.  To assure correct
+   handling of non-GET requests with the Range header, requester can
+   check server's support for it as described in Section 5.
 
 2.1.  Multiple Range Patches
 
@@ -275,6 +277,10 @@ Table of Contents
    zero-length range, and identifies a location immediately after the
    last byte of data.  This allows appending bytes to data.
 
+   Note that bytes range unit operates on encoded content as specified
+   in any Content-Encoding header.  That holds both for GET and non-GET
+   requests.
+
 3.2.  JSON Range Unit
 
    JSON range unit operates on JSON and JSON-compatible data structures.
@@ -349,6 +355,11 @@ Table of Contents
    but serve as a zero-length range to identify a location immediately
    before which new content can be inserted with a patch.
 
+   JSON range unit operates always on non-encoded content, ignoring any
+   Content-Encoding header.  That holds both for GET and non-GET
+   requests.
+
+
 3.3.  Lines Range Unit
 
    For textual contents lines range unit operates on lines.  Line
@@ -394,6 +405,10 @@ Table of Contents
    representing a zero-length range, and identifies a location
    immediately after the last line of textual contents.  This allows
    appending lines to textual contents.
+
+   Lines range unit operates always on non-encoded content, ignoring any
+   Content-Encoding header.  That holds both for GET and non-GET
+   requests.
 
 
 4.  IANA Considerations
@@ -466,20 +481,20 @@ Table of Contents
 
 5.  Checking Capabilities
 
-   A server may decide whether or not to support range patches.  The
-   default behavior of servers is simply to ignore unknown or unsupported
-   headers.  In the case of a range patch, this implies that a request
-   issuing a patch to a specific subsection of a resource might
-   be interpreted by a server as a request to overwrite the entire
-   resource with the patch, leaving the resource in a corrupted state.
+   A server may support or not support non-GET requests with a Range
+   header.  The default behavior of servers is simply to ignore unknown
+   or unsupported headers.  In the case of a range patch, this
+   implies that a request issuing a patch to a specific subsection of a
+   resource might be interpreted by a server as a request to overwrite
+   the entire resource with the patch, leaving the resource in a
+   corrupted state.
 
    To determine whether or not the server can fulfill such a request
    correctly, the requester may first issue an OPTIONS request:
 
-     OPTIONS /foo/xyzzy
+     OPTIONS /api/document/1
      Range-Request-Method: PATCH
-     Range-Request-Unit: json,bytes
-     Range-Request-Span: /some/subpath/0-9
+     Range-Request-Units: json,bytes
 
    To which the server may reply in the affirmative:
 
@@ -487,7 +502,6 @@ Table of Contents
      Connection: keep-alive
      Range-Request-Allow-Methods: PATCH
      Range-Request-Allow-Units: json,bytes
-     Range-Request-Allow-Span: /some/subpath/0-9
      ETag: "33a64df551425fcc55e4d42a148795d9f25f89d4"
 
    In the partial negative:
@@ -496,7 +510,6 @@ Table of Contents
      Connection: keep-alive
      Range-Request-Allow-Methods: PATCH
      Range-Request-Allow-Units: json
-     Range-Request-Allow-Span: /some/subpath/2-5
      ETag: "33a64df551425fcc55e4d42a148795d9f25f89d4"
 
    Or in the complete negative:
@@ -505,27 +518,27 @@ Table of Contents
      Connection: keep-alive
      Range-Request-Allow-Methods:
      Range-Request-Allow-Units:
-     Range-Request-Allow-Span:
 
    Empty header fields are allowed per [RFC2616] section 2.1.
 
    Also note the presence of the ETag header, discussed in section 6.
 
-
 6.  Race Conditions
 
-   As with standard PUT, POST, and PATCH requests, a range patch request
-   carries the risk of a mid-air collision with another simultaneous
-   request.  If one requester updates a resource, and another requester,
-   not being aware of that update, issues a second update, the resource
-   may be left in a corrupted state.
+   As with standard PUT, POST, and PATCH requests, a non-GET request
+   with a Range header carries the risk of a mid-air collision with
+   another simultaneous request.  If one requester updates a resource,
+   and another requester, not being aware of that update, issues a
+   second update, the resource may be left in an unexpected state.
 
    To safeguard against this, the server may return an ETag header in
-   response to GET and OPTIONS requests directed at a given resource.
+   response to HTTP requests directed at a given resource.
 
    When issuing a range patch, the requester may include an If-Match
    header containing the ETag of the version of the resource it intends
-   to update.
+   to update.  Note that ETag depends on Content-Encoding so use
+   consistent Content-Encoding for all your requests, or use
+   Transfer-Encoding instead.
 
 
 7.  Security Considerations
