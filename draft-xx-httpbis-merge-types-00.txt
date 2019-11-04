@@ -270,7 +270,9 @@ Table of Contents
        be valid individually, but when merged, the result is not valid.
        For instance, if a bank account has $1, then two simultaneous
        debits of $1 are both valid individually, but their merger of -$2
-       drains the bank account balance below $0.
+       drains the bank account balance below $0.  This is the
+       double-spend problem.  A system using Merge Types SHOULD be aware
+       of how their Merge Types interact with their Validators.
 
 
 
