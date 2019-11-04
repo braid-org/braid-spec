@@ -539,13 +539,12 @@ Table of Contents
    new header called Version to uniquely identify content versions
    across all content encodings.
 
-   To safeguard against this, the server may return a Version header in
-   response to HTTP requests directed at a given resource.
-
-   When issuing a range patch, the requester may include a Version
-   header containing the version of the resource it intends
-   to update.  If the server cannot merge the patch at the given 
-   version, it must reject the request with a 409 Conflict response.
+   The server may return a Version header in response to HTTP requests
+   directed at a given resource.  Correspondingly, when issuing a range
+   patch, the requester may include a Version header containing the
+   version of the resource it intends to update.  If the server cannot
+   merge the patch at the given version, it must reject the request
+   with a 409 Conflict response.
 
 
 7.  Security Considerations
