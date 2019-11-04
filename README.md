@@ -4,7 +4,7 @@ This is the working area for the [Braid](https://braid.news) extensions to
 HTTP in the [IETF HTTP Working Group](https://httpwg.org/).  These extensions
 add Synchronization to HTTP.  They are authored in three documents:
 
-### Braid HTTP — [`draft-xx-httpbis-braid-http-00.txt`](https://raw.githubusercontent.com/braid-work/braid-spec/master/draft-xx-httpbis-braid-http-00.txt)
+### Braid HTTP — [`draft-toomim-httpbis-braid-http-00.txt`](https://raw.githubusercontent.com/braid-work/braid-spec/master/draft-toomim-httpbis-braid-http-00.txt)
 
 Braid adds to HTTP:
 1. *Versioning* to resources
@@ -13,19 +13,20 @@ Braid adds to HTTP:
 4. *Merge-Types* to specify OT or CRDT behavior
 
 
-### Range Patch — [`draft-xx-httpbis-range-patch-00.txt`](https://raw.githubusercontent.com/braid-work/braid-spec/master/draft-xx-httpbis-range-patch-00.txt)
+### Range Patch — [`draft-toomim-httpbis-range-patch-00.txt`](https://raw.githubusercontent.com/braid-work/braid-spec/master/draft-toomim-httpbis-range-patch-00.txt)
 
 A uniform approach for expressing changes to state over HTTP.
 
-### Merge Types — [`draft-xx-httpbis-merge-types-00.txt`](https://raw.githubusercontent.com/braid-work/braid-spec/master/draft-xx-httpbis-merge-types-00.txt)
+### Merge Types — [`draft-toomim-httpbis-merge-types-00.txt`](https://raw.githubusercontent.com/braid-work/braid-spec/master/draft-toomim-httpbis-merge-types-00.txt)
 
 This document defines Merge Types, the structure of the Merge Type system, and
 IANA registration procedures for Merge Types.
 
-### Linked JSON — [`draft-xx-httpbis-linked-json-00.txt`](https://raw.githubusercontent.com/braid-work/braid-spec/master/draft-xx-httpbis-linked-json-00.txt)
+### NelSON — [`draft-toomim-httpbis-nelson-00.txt`](https://raw.githubusercontent.com/braid-work/braid-spec/master/draft-toomim-httpbis-nelson-00.txt)
 
-Linked JSON is an extension to JSON that defines a new datatype: a "Link".
-Allows JSON objects to compose across websites.  Supports transclusion.
+NelSON is an extension of JSON that "Ted Nelson would approve of."  Any region
+can be framed with a URI and HTTP Metadata.  Allows JSON objects to compose
+across websites.  Supports transclusion.
 
 ## Contributing
 
