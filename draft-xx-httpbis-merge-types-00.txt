@@ -140,7 +140,8 @@ Table of Contents
 
    But given that it has data that meets those assumptions, a Merge Type
    MUST return a result when merging any set of versions.  A Merge Type
-   MAY NOT contain validation logic.
+   MAY NOT contain validation logic.  Validation happens before and
+   after a merger.
 
 2.  Definitions
 
@@ -259,10 +260,17 @@ Table of Contents
    Some of the issues that need to be examined and described in a
    security analysis of a Merge Type are:
 
-   o  Merge Types might operate in a way which, while not directly
-      harmful, may result in disclosure of information that either
-      facilitates a subsequent attack or else violates user's privacy in
-      some way.
+     o Merge Types might operate in a way which, while not directly
+       harmful, may result in disclosure of information that either
+       facilitates a subsequent attack or else violates user's privacy
+       in some way.
+
+     o A Merge Type should be considered in concert with a Validator.
+       For instance, it is possible for two transactions A and B to both
+       be valid individually, but when merged, the result is not valid.
+       For instance, if a bank account has $1, then two simultaneous
+       debits of $1 are both valid individually, but their merger of -$2
+       drains the bank account balance below $0.
 
 
 
