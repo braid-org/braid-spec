@@ -189,8 +189,8 @@ Table of Contents
    2. Easy to implement simple synchronizers with.  For instance, easy
       to create an append-only log, or a counter.
 
-      EXAMPLE: A complete braid client for an append-only log can be
-      written in 50 lines of Javascript, without using any libraries.
+      - EXAMPLE: A complete braid client for an append-only log can be
+        written in 50 lines of Javascript, without using any libraries.
 
    3. Possible to implement arbitrary synchronization algorithms.  For
       instance, these extensions support any Operational Transform or
@@ -198,11 +198,15 @@ Table of Contents
 
 1.2.  Use Cases and Related Work
 
+   A number of IETF specifications already standardize aspects of
+   synchronization for specific domains:
+
    - The DAV standards:
      - CalDAV
      - CardDAV
      - WebDAV
-   - W3C Push API: https://www.w3.org/TR/push-api/
+   - W3C Push API:
+     - https://www.w3.org/TR/push-api/
    - Email push
      - JMAP
      - IMAP Web Push
@@ -248,9 +252,8 @@ Table of Contents
    version has a unique ID (a string), and a set of patches from its
    prior versions: its Parents.
 
-   o Version: a unique string identifying a point in time
-
-   o Parents: a set of Version IDs
+      Version: a unique string identifying a point in time
+      Parents: a set of Version IDs
 
    A Version can have multiple Parents because time on a network is a
    DAG, due to the unavoidable presence of network latency.  It can be
@@ -292,19 +295,19 @@ Table of Contents
 
    If a GET request contains a Version header:
 
-   o The Subscribe header MUST be absent.
+   - The Subscribe header MUST be absent.
 
-   o The server SHOULD return a single response, containing that
-     version of the resource in its body.
+   - The server SHOULD return a single response, containing that version
+     of the resource in its body.
 
    If a GET request contains a Parents header:
 
-   o If the request does not also contain a Version, then the request
+   - If the request does not also contain a Version, then the request
      MUST also contain a Subscribe header, and the server SHOULD send a
      set of versions connecting the Parents to the current Version, and
      then subscribe the client to future updates.
 
-   o If the request also contains a Version, then the server SHOULD
+   - If the request also contains a Version, then the server SHOULD
      respond with a set of versions that connect the specified Parents
      with the specified Version, and then close the connection.
 
@@ -456,15 +459,15 @@ Table of Contents
    no-cache, patch, to ensure that legacy systems do not cache the patch
    as if it were the resource.
 
-   o If Patch-Type is not specified, or Cache-Control does not have
+   - If Patch-Type is not specified, or Cache-Control does not have
      no-cache, then the request or response body SHOULD be interpreted
      as a complete representation of the resource.
 
-   o If the Version header is not specified, then the recipient MAY
+   - If the Version header is not specified, then the recipient MAY
      invent a new version ID for it, and MAY use that new ID in network
      communications with others.
 
-   o If the Parents is not specified, then the recipient SHOULD
+   - If the Parents is not specified, then the recipient SHOULD
      interpret the version to be new, built upon the latest versions
      the recipient has.  The determination of which versions are
      "latest" is up to the recipient.
@@ -473,12 +476,12 @@ Table of Contents
 
    A human MAY define a patch type by publishing a specification of its:
 
-   o Patch-Type
+     - Patch-Type
 
-   o Data format
+     - Data format
 
-   o and Behavior: the outcome after applying a sequence of patches to
-     a set of versions.
+     - and Behavior: the outcome after applying a sequence of patches to
+       - set of versions.
 
    The Patch-Type is an arbitrary string, such as:
 
@@ -499,15 +502,17 @@ Table of Contents
 
    A patch SHOULD satisfy:
 
-   o If a set of patches originated from a version, and you apply them
+   - If a set of patches originated from a version, and you apply them
      to a copy of the version, you get the same new version again.
 
    A patch MAY satisfy:
 
-   o (Commute) If the same set of patches are applied in a different
+   - (Commute) If the same set of patches are applied in a different
      order, the result is the same.
 
 5.   Merge Types
+
+
 
 6. IANA Considerations
 
