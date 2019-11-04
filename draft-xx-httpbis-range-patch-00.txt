@@ -530,7 +530,7 @@ Table of Contents
 
 7.  Security Considerations
 
-   Both GET and non-GET requests using a range patch are potentially
+   Both GET and non-GET requests with a Range header are potentially
    susceptible to denial-of-service attacks because the effort required
    to compute the patch or apply the patch.
 
