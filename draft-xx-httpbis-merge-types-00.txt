@@ -80,14 +80,16 @@ Table of Contents
 
 
    This can be ambiguous if two or more edits overlap, and edit the same
-   thing in different ways.  In the example above, one person replaced
-   "bird" with "dog", while theother replaced it with "cat", and the
-   Merge Type merged these edits together into "dogcats".
+   thing in different ways. It is desireable if all computers resolve
+   ambiguities in the same way, because then they will achieve
+   consistent results.  In the example above, one person replaced "bird"
+   with "dog", while the other replaced it with "cat", creating an
+   ambiguity, which the Merge Type resolved by merging these edits
+   together into "dogcats".  Some other Merge Type might resolve this
+   ambiguity differently.
 
-   It is desireable if all computers resolve ambiguities in the same
-   way, because then they will achieve consistent results.  Currently
-   popular approaches are using conflict-free replicated data types
-   [CRDT] or operational transformation [OT].  If a Merge Type is
+   Currently popular approaches are using conflict-free replicated data
+   types [CRDT] or operational transformation [OT].  If a Merge Type is
    specified for a region of data, and all computers implement that
    Merge Type, then they can guarantee to obtain the same resulting
    state, no matter the order that events arrive over the network, or
@@ -119,7 +121,7 @@ Table of Contents
    should merge.
 
 1.2.  A Merge Type is specified as a function
-   
+
    A Merge Type is a function of parents to result state:
 
                          Merge Type
@@ -133,10 +135,10 @@ Table of Contents
 
    To compute the result, a Merge Type has access to the entire version
    history that preceded the each of the parents, but it cannot depend
-   on information outside the Braid.
+   on information outside that version history.
 
    A Merge Type might only work on a particular type of data -- for
-   instance, a "counter" type only works on numbers.  A Merge Type
+   instance, a "counter" Merge Type only works on numbers.  A Merge Type
    SHOULD state any limitations in the set of states that it is capable
    of operating upon, and any assumptions it makes about the data.
 
