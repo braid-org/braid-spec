@@ -79,11 +79,24 @@ Table of Contents
                    V       dogcats   <-- merged version
 
 
-   Currently popular approaches are using conflict-free replicated data
-   types [CRDT] or operational transformation [OT].
+   This can be ambiguous if the edits change the same region of a
+   resource, in different ways.
 
-   This document defines how can those different approaches to conflict
-   resolution can be identified using a standardized naming scheme.
+   It is desireable if all computers resolve ambiguities in the same
+   way, because then they will achieve consistent results.  Currently
+   popular approaches are using conflict-free replicated data types
+   [CRDT] or operational transformation [OT].  There are many algorithms
+   that merge in many different ways, and additionally, different
+   applications will want to merge in different ways for different
+   pieces of data.
+   
+   If a Merge Type is specified for a region of data, and all computers
+   implement that Merge Type, then they can guarantee to obtain the same
+   resulting state, no matter the order that events arrive over the
+   network, or the algorithms they use to implement the Merge Types.
+
+   This document defines how to specify a Merge Type within a
+   standardized naming scheme.
 
 1.1.  Merge Types vary across applications
 
@@ -99,9 +112,24 @@ Table of Contents
 
 1.2.  A Merge Type is specified as a function
    
-   A Merge Type SHOULD state the limited set of substates that it is
-   capable of operating upon, and any assumptions it makes about the
-   data.
+   A Merge Type is a function of parents to result state:
+
+                         Merge Type
+
+         (parent1, parent2, ... ) -> merged state
+
+   A Merge Type must be a deterministic function.  Given the same set of
+   parents, which descend from the same version history, it should
+   always return the same resulting merged state.
+
+   To compute the result, a Merge Type has access to the entire version
+   history that preceded the each of the parents, but it cannot depend
+   on information outside the Braid.
+
+   A Merge Type might only work on a particular type of data -- for
+   instance, a "counter" type only works on numbers.  A Merge Type
+   SHOULD state any limitations in the set of states that it is capable
+   of operating upon, and any assumptions it makes about the data.
 
    But given that it has data that meets those assumptions, a Merge Type
    MUST return a result when merging any set of versions.  A Merge Type
