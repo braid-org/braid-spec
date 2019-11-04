@@ -106,9 +106,15 @@ Table of Contents
    a string represents a database entry ID, then if two people edit it,
    you want to choose one or the other.
 
-   A resource for your bank account balance should merge debits by
-   adding the debited amounts together.  if the number represents your
-   bank account balance, then multiple debits should be added together.
+   The database entry for the ID might be represented with a number,
+   instead of a string, but it could still merge in the same way.
+   However, if a database entry is a number that represents a bank
+   account balance, then it should merge multiple simultaneous debits by
+   adding the amounts of the debits together.
+
+   Thus, it is nice to re-use a Merge Type across multiple types of
+   data; and each application has different needs for how their data
+   should merge.
 
 1.2.  A Merge Type is specified as a function
    
@@ -120,7 +126,8 @@ Table of Contents
 
    A Merge Type must be a deterministic function.  Given the same set of
    parents, which descend from the same version history, it should
-   always return the same resulting merged state.
+   always return the same resulting merged state.  This guarantees
+   eventual consistency.
 
    To compute the result, a Merge Type has access to the entire version
    history that preceded the each of the parents, but it cannot depend
