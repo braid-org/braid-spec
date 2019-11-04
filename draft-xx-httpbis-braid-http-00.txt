@@ -134,17 +134,23 @@ Table of Contents
    Updates get a standard patch format.  Merge semantics guarantee
    eventual consistency over a peer-to-peer network.  Clients and
    servers can go offline, make edits on airplanes, and then merge all
-   edits perfectly when they rejoin.  Programming becomes much simpler.
+   edits perfectly when they rejoin.
 
 
 1.1.  Design Goals
 
    This spec is designed to be:
 
-     - Backwards-compatible with existing HTTP.
-     - Easy to implement for simple synchronizers.
-     - While also supporting arbitrary synchronization algorithms, such
-       as Operational Transform and CRDTs.
+   1. Backwards-compatible with existing HTTP
+
+   2. Easy to implement for simple synchronizers.  For instance, it is
+      easy to write the network requests by hand that write to an
+      append-only log, or to subscribe to a read-only resource, without
+      implementing any fancy synchronization logic.
+
+   3. Possible to implement arbitrary synchronization algorithms.  For
+      instance, these extensions support any Operational Transform or
+      CRDT algorithm.
 
 1.2.  Use Cases and Related Work
 
