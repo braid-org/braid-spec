@@ -12,9 +12,9 @@ Abstract
 
    Merge Types specify how to merge multiple simultaneous edits to a
    resource.  This typically happens if two computers edit the same
-   state over a network with latency.  If the computers agree on a Merge
-   Type, however, they can always produce the same result, and can
-   promise eventual consistency.
+   state over a network with latency.  If the computers implement and
+   agree upon the same Merge Type, then they can guarantee to reach a
+   consistent state, after arbitrary edits, eventually.
 
    You can define new Merge Types.  This document defines Merge Types,
    the structure of the Merge Type system, and IANA registration
@@ -69,7 +69,7 @@ Table of Contents
 1.  Introduction
 
    In a version history, a merge type defines the output of a version
-   with two or more parents:
+   that derived from two or more parent versions:
 
                    _
              Time: |        birds
@@ -79,8 +79,8 @@ Table of Contents
                    V       dogcats   <-- merged version
 
 
-   This can be ambiguous if the edits change the same region of a
-   resource, in different ways.
+   This can be ambiguous if two or more edits overlap, and edit the same
+   thing in different ways.
 
    It is desireable if all computers resolve ambiguities in the same
    way, because then they will achieve consistent results.  Currently
