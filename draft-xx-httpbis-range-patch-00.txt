@@ -502,7 +502,7 @@ Table of Contents
      Connection: keep-alive
      Range-Request-Allow-Methods: PATCH
      Range-Request-Allow-Units: json,bytes
-     ETag: "33a64df551425fcc55e4d42a148795d9f25f89d4"
+     Version: 33a64df551425fcc55e4d42a148795d9f25f89d4
 
    In the partial negative:
 
@@ -510,7 +510,7 @@ Table of Contents
      Connection: keep-alive
      Range-Request-Allow-Methods: PATCH
      Range-Request-Allow-Units: json
-     ETag: "33a64df551425fcc55e4d42a148795d9f25f89d4"
+     Version: 33a64df551425fcc55e4d42a148795d9f25f89d4
 
    Or in the complete negative:
 
@@ -521,7 +521,9 @@ Table of Contents
 
    Empty header fields are allowed per [RFC2616] section 2.1.
 
-   Also note the presence of the ETag header, discussed in section 6.
+   Also note the presence of the Version header, discussed in section 
+   6.  The server may preemptively send this to obviate the need for
+   another GET prior to a range patch request.
 
 6.  Race Conditions
 
@@ -531,14 +533,19 @@ Table of Contents
    and another requester, not being aware of that update, issues a
    second update, the resource may be left in an unexpected state.
 
-   To safeguard against this, the server may return an ETag header in
+   Standard PUT, POST, and PATCH requests handle this with the ETag
+   and If-Match headers.  However, these headers vary based on the
+   Content-Encoding of the request.  Consequently, Braid relies on a
+   new header called Version to uniquely identify content versions
+   across all content encodings.
+
+   To safeguard against this, the server may return a Version header in
    response to HTTP requests directed at a given resource.
 
-   When issuing a range patch, the requester may include an If-Match
-   header containing the ETag of the version of the resource it intends
-   to update.  Note that ETag depends on Content-Encoding so use
-   consistent Content-Encoding for all your requests, or use
-   Transfer-Encoding instead.
+   When issuing a range patch, the requester may include a Version
+   header containing the version of the resource it intends
+   to update.  If the server cannot merge the patch at the given 
+   version, it must reject the request with a 409 Conflict response.
 
 
 7.  Security Considerations
@@ -627,3 +634,4 @@ Authors' Addresses
 
    EMail: bryn@signals.io
    Web:   https://invisible.college/@bryn
+
