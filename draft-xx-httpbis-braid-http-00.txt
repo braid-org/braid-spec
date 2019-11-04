@@ -137,15 +137,15 @@ Table of Contents
    servers can go offline, make edits on airplanes, and then merge all
    edits perfectly when they rejoin.
 
-1.1.  Diagram
+1.1.  In Visual Infomercial Form
 
       ====== Legacy Websites ======      ====== Braid Websites ======
 
-      Today's websites are               Braid generalizes HTTP and
+      Today's webpages are               Braid generalizes HTTP and
       generated from multiple            REST into a uniform standard
-      layers of state across             that synchronizes state
-      multiple computers.  Each          within and between dynamic
-      layer has a different API.         websites.
+      layers of state.  Each layer       that synchronizes state
+      has a different API.               within and between dynamic
+                                         websites.
 
         x Non-standard state API          o Standard state API
 
@@ -174,10 +174,10 @@ Table of Contents
       together, making sure that         internal to a client or
       changes to shared state            server.  Any state can be a
       synchronize across all             function of other state, and
-      layers and computers.              and dynamically recomputes
+      layers and computers.              and automatically recompute
                                          when its dependencies change.
-                                         Braid guarantees the network
-                                         will synchronize.
+                                         Braid guarantees network
+                                         synchronization.
 
 
 1.1.  Design Goals
@@ -186,10 +186,11 @@ Table of Contents
 
    1. Backwards-compatible with existing HTTP
 
-   2. Easy to implement for simple synchronizers.  For instance, it is
-      easy to write the network requests by hand that write to an
-      append-only log, or to subscribe to a read-only resource, without
-      implementing any fancy synchronization logic.
+   2. Easy to implement simple synchronizers with.  For instance, easy
+      to create an append-only log, or a counter.
+
+      EXAMPLE: A complete braid client for an append-only log can be
+      written in 50 lines of Javascript, without using any libraries.
 
    3. Possible to implement arbitrary synchronization algorithms.  For
       instance, these extensions support any Operational Transform or
