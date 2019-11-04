@@ -2,6 +2,8 @@ Internet-Draft                                                 M. Toomim
 Expires: Mar 8, 2020                                   Invisible College
 Intended status: Proposed Standard                        M. Milutinovic
                                                              UC Berkeley
+                                                              B. Bellomy
+                                                       Invisible College
                                                              Nov 4, 2019
 
 
@@ -105,19 +107,18 @@ Table of Contents
 1.1.  Merge Types vary across applications
 
    Different resources merge in different ways, and can use different
-   merge types.  If a string represents a collaborative text document,
-   for instance, then parallel edits should be merged together.  But if
-   a string represents a database entry ID, then if two people edit it,
-   you want to choose one or the other.
+   merge types.  For example, if a string represents a collaborative
+   text document, then parallel edits should be merged together.  But if
+   a string represents a database entry ID and it is modified by two
+   requests simultaneously, the appropriate behavior is to choose one or
+   the other.
 
-   The database entry for the ID might be represented with a number,
-   instead of a string, but it could still merge in the same way.
-   However, if a database entry is a number that represents a bank
-   account balance, then it should merge multiple simultaneous debits by
-   adding the amounts of the debits together.
+   Similarly, if the resource is a number that represents a bank account
+   balance, then it should merge multiple simultaneous debits by adding
+   the amounts of the debits together.
 
    Thus, it is nice to re-use a Merge Type across multiple types of
-   data; and each application has different needs for how their data
+   data; and each application has different needs for how its data
    should merge.
 
 1.2.  A Merge Type is specified as a function
@@ -129,15 +130,15 @@ Table of Contents
          (parent1, parent2, ... ) -> merged state
 
    A Merge Type must be a deterministic function.  Given the same set of
-   parents, which descend from the same version history, it should
-   always return the same resulting merged state.  This guarantees
-   eventual consistency.
+   parents that descend from the same version history, it should always
+   return the same resulting merged state.  This guarantees eventual
+   consistency.
 
    To compute the result, a Merge Type has access to the entire version
-   history that preceded the each of the parents, but it cannot depend
-   on information outside that version history.
+   history that preceded each of the parents, but it cannot depend on
+   information outside of that version history.
 
-   A Merge Type might only work on a particular type of data -- for
+   A Merge Type might only work on a particular type of data. For
    instance, a "counter" Merge Type only works on numbers.  A Merge Type
    SHOULD state any limitations in the set of states that it is capable
    of operating upon, and any assumptions it makes about the data.
@@ -247,7 +248,7 @@ Table of Contents
    has not been done, all descriptions of security issues MUST be as
    accurate as possible.  In particular, the security considerations
    MUST NOT state that there are "no security issues associated with
-   this Merge Type".  Security considerations for Merge Types MAY say
+   this Merge Type".  Security considerations for Merge Types MAY state
    that "the security issues associated with this Merge Type have not
    been assessed".
 
@@ -264,7 +265,7 @@ Table of Contents
    Some of the issues that need to be examined and described in a
    security analysis of a Merge Type are:
 
-     o Merge Types might operate in a way which, while not directly
+     o Merge Types might operate in a way that, while not directly
        harmful, may result in disclosure of information that either
        facilitates a subsequent attack or else violates user's privacy
        in some way.
@@ -273,10 +274,11 @@ Table of Contents
        For instance, it is possible for two transactions A and B to both
        be valid individually, but when merged, the result is not valid.
        For instance, if a bank account has $1, then two simultaneous
-       debits of $1 are both valid individually, but their merger of -$2
-       drains the bank account balance below $0.  This is the
-       double-spend problem.  A system using Merge Types SHOULD be aware
-       of how their Merge Types interact with their Validators.
+       debits of $1 are both valid individually, but the resulting
+       merger, yielding -$2, drains the bank account balance below $0.  
+       This is the double-spend problem.  A system using Merge Types
+       SHOULD be aware of how its Merge Types interact with its
+       Validators.
 
 
 
@@ -350,3 +352,12 @@ Authors' Addresses
 
    EMail: mitar.ietf@tnode.com
    Web:   https://mitar.tnode.com/
+
+
+   Bryn Bellomy
+   Invisible College, Berkeley
+   2053 Berkeley Way
+   Berkeley, CA 94704
+
+   EMail: bryn@signals.io
+   Web:   https://invisible.college/@bryn
