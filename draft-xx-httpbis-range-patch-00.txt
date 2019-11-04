@@ -162,8 +162,8 @@ Table of Contents
    SHOULD generate a 416 (Range Not Satisfiable) or a 400 (Bad Request)
    response when a non-GET request with a Range header is made.  Proxies
    SHOULD NOT drop Range header for non-GET requests.  To assure correct
-   handling of non-GET requests with the Range header, client can check
-   server's support for it as described in Section 5.
+   handling of non-GET requests with the Range header, requester can
+   check server's support for it as described in Section 5.
 
 2.1.  Multiple Range Patches
 
@@ -513,7 +513,7 @@ Table of Contents
    with a Range header carries the risk of a mid-air collision with
    another simultaneous request.  If one requester updates a resource,
    and another requester, not being aware of that update, issues a
-   second update, the resource may be left in a corrupted state.
+   second update, the resource may be left in an unexpected state.
 
    To safeguard against this, the server may return an ETag header in
    response to GET requests directed at a given resource.
