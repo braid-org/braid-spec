@@ -7,7 +7,7 @@ Intended status: Proposed Standard                        M. Milutinovic
                                                              Nov 4, 2019
 
                              Range Patch
-                   draft-xx-httpbis-range-patch-00
+                  draft-toomim-httpbis-range-patch-00
 
 Abstract
 

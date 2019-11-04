@@ -8,7 +8,7 @@ Intended status: Proposed Standard                        M. Milutinovic
 
 
                               Merge Types
-                    draft-xx-httpbis-merge-types-00
+                  draft-toomim-httpbis-merge-types-00
 
 Abstract
 
