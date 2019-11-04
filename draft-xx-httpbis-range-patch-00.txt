@@ -4,7 +4,6 @@ Intended status: Proposed Standard                        M. Milutinovic
                                                              UC Berkeley
                                                               B. Bellomy
                                                        Invisible College
-
                                                              Nov 4, 2019
 
                              Range Patch
@@ -581,7 +580,7 @@ Table of Contents
               Interchange Format", RFC 8259, December 2017.
 
    [RFC2616]  Fielding, R., Gettys, J., Mogul, J., Frystyk, H.,
-              Masinter, L., Leach, P., and Berners-Lee, T.,
+              Masinter, L., Leach, P., and T. Berners-Lee,
               "Hypertext Transfer Protocol -- HTTP/1.1", RFC 2616,
               June 1999.
 
@@ -615,4 +614,3 @@ Authors' Addresses
 
    EMail: bryn@signals.io
    Web:   https://invisible.college/@bryn
-
