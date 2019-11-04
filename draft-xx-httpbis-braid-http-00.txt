@@ -26,10 +26,10 @@ Abstract
 
    Braid adds to HTTP:
 
-     1. Subscriptions to GET requests
-     2. Versioning to resources
+     1. Versioning to resources
+     2. Subscriptions to GET requests
      3. Ranges to PUT and PATCH requests
-     4. Synchronization of simultaneous requests
+     4. Merge-Types to specify OT or CRDT behavior
      5. Disaggregation of resource identity from resource location
         -> hmm... this also sounds like URIs.  -toomim
 
@@ -116,16 +116,16 @@ Table of Contents
    their own non-standard update protocol over a WebSocket.
 
    Unfortunately, non-standard protocols require extra time and effort
-   to design and implement, and programmers will often try to implement
-   only the minimal synchronization features they need.  Their app will
-   be unlikely to have an offline mode, or guarantee consistency after
-   conflicting edits over a network.  Programmers often do not bother to
-   implement a public API, or to keep it as featureful as the private
-   one.  These frictions lead to it being much easier for a programmer
-   to read and write data from their database than from some other
-   website's database, and as a result, programmers tend to build
-   websites in silos, where each one grows and controls data only within
-   its own domain.
+   to design and implement, and programmers often implement only the
+   minimal synchronization features they need.  Thus, most web apps do
+   not have an offline mode, or guarantee consistency after conflicting
+   edits over a network.  Programmers often do not bother to implement a
+   public API, or to keep it as featureful as the private one.  These
+   frictions lead to it being much easier for a programmer to read and
+   write data from their database than from some other website's
+   database, and as a result, programmers tend to build websites in
+   silos, where each one grows and controls data only within its own
+   domain.
 
    The Braid extensions solve these problems with a standard protocol
    for synchronizing changing state.  Each piece of state gets a URL.
@@ -135,6 +135,48 @@ Table of Contents
    eventual consistency over a peer-to-peer network.  Clients and
    servers can go offline, make edits on airplanes, and then merge all
    edits perfectly when they rejoin.
+
+1.1.  Diagram
+
+      ====== Legacy Websites ======      ====== Braid Websites ======
+
+      Today's websites are               Braid generalizes HTTP and
+      generated from multiple            REST into a uniform standard
+      layers of state across             that synchronizes state
+      multiple computers.  Each          within and between dynamic
+      layer has a different API.         websites.
+
+        x Non-standard state API          o Standard state API
+
+        _Client__
+       /         \ 
+      :  o o o o  :   Webpage DOM          o o o o       State
+      :   \|  \|  :                         \|  \|  
+      :    x   x  :   HTML Templates         o   o       State
+      :   /|  /|  :                         /|  /|  
+      :  x x x x  :   JS Models            o o o o       State
+       \ | | | | /                         | | | |  
+         | | | |                           | | | |
+         o o o o    - http:// -            o o o o     - http:// -
+       / | | | | \                         | | | | 
+      :  x x x x  :   Views                o o o o       State
+      :  |  \| |  :                        |  \| |   
+      :  x   x x  :   Controllers          o   o o       State
+      :   \ / \|  :                         \ / \| 
+      :    x   x  :   Models                 o   o       State
+      :     \ /   :                           \ /
+       \.... x ../    Database                 o         State
+         Server
+
+      Today's programmers have to        Each piece of Braid state (o)
+      learn each API, and wire them      has a URL; whether public, or
+      together, making sure that         internal to a client or
+      changes to shared state            server.  Any state can be a
+      synchronize across all             function of other state, and
+      layers and computers.              and dynamically recomputes
+                                         when its dependencies change.
+                                         Braid guarantees the network
+                                         will synchronize.
 
 
 1.1.  Design Goals
@@ -194,6 +236,15 @@ Table of Contents
    Each peer can then choose a set of those peers with whom to establish
    a WebRTC connection.  It will then exchange Braid messages with those
    peers over that connection.
+
+1.3.  Definitions
+
+1.3.1.  Version
+1.3.2.  Range
+1.3.3.  Patch
+1.3.4.  Merge-Type
+
+
 
 2.  Subscriptions for GET
 

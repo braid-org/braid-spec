@@ -7,10 +7,10 @@ add Synchronization to HTTP.  They are authored in three documents:
 ### Braid HTTP — [`draft-xx-httpbis-braid-http-00.txt`](https://raw.githubusercontent.com/braid-work/braid-spec/master/draft-xx-httpbis-braid-http-00.txt)
 
 Braid adds to HTTP:
-1. *Subscriptions* to GET requests
-2. *Versioning* to resources
+1. *Versioning* to resources
+2. *Subscriptions* to GET requests
 3. *Ranges* to PUT and PATCH requests
-4. *Synchronization* of simultaneous requests
+4. *Merge-Types* to specify OT or CRDT behavior
 
 
 ### Range Patch — [`draft-xx-httpbis-range-patch-00.txt`](https://raw.githubusercontent.com/braid-work/braid-spec/master/draft-xx-httpbis-range-patch-00.txt)
