@@ -77,7 +77,10 @@ Table of Contents
          {
            "book-name": "The way things work",
            "author":    { "uri": "/david-macaulay" }
-           "image"      { "uri": "/the-way-things-work.jpg", "content-type": "image/png" },
+           "image"      {
+             "uri": "/the-way-things-work.jpg",
+             "content-type": "image/png"
+           }
          }
 
    "val" field is optional.  If not present, it's just a pointer.  It
