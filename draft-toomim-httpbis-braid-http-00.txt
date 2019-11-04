@@ -30,9 +30,6 @@ Abstract
      2. Subscriptions to GET requests
      3. Ranges to PUT and PATCH requests
      4. Merge-Types to specify OT or CRDT behavior
-     5. Disaggregation of resource identity from resource location
-        -> hmm... this also sounds like URIs.  -toomim
-
 
    These extensions enable a web resource to synchronize automatically
    across multiple clients and servers, and guarantee consistency using a
@@ -137,6 +134,8 @@ Table of Contents
    servers can go offline, make edits on airplanes, and then merge all
    edits perfectly when they rejoin.
 
+
+
 1.1.  In Visual Infomercial Form
 
       ====== Legacy Websites ======      ====== Braid Websites ======
@@ -178,7 +177,7 @@ Table of Contents
                                          when its dependencies change.
                                          Braid guarantees network
                                          synchronization.
-
+
 
 1.1.  Design Goals
 
@@ -211,8 +210,11 @@ Table of Contents
      - JMAP
      - IMAP Web Push
 
-   XXX Explain each of the uses cases and how does related work relates.
-       Add references. Move links to references.
+   Each of these standards has to re-invent mechanisms for (a)
+   specifying subscriptions, (b) pushing updates, and (c) specifying
+   patches, and (d) handling conflicts.
+
+
 
 1.2.1.  Example: a Serverless Chat
 
@@ -243,6 +245,7 @@ Table of Contents
    a WebRTC connection.  It will then exchange Braid messages with those
    peers over that connection.
 
+
 
 2.  Versioning of Resources
 
@@ -289,6 +292,8 @@ Table of Contents
 
    Versions need their parents to be understood.
 
+
+
 2.2.  GET for Historical Versions
 
    GET requests can optionally contain a Version and/or Parents header.
@@ -320,6 +325,7 @@ Table of Contents
    instance, the same resource sent using gzip Content-Encoding will
    have a different ETag, but the same Version.
 
+
 
 3.  Subscriptions for GET
 
@@ -364,6 +370,8 @@ Table of Contents
    Each response MUST have both headers and a body.  The body MAY be
    zero-length.
 
+
+
 3.3.  Continuing a Subscription
 
    Even if a connection closes, a subscription might still be active.
@@ -401,6 +409,8 @@ Table of Contents
    request body, the client can issue a fresh request specified as a
    FORGET method.
 
+
+
 3.5.  Example: GET subscription that animates a GIF
 
    In this example, a server streams changes to a GIF file in a sequence
@@ -429,16 +439,13 @@ Table of Contents
 
        [348:887] = <binary data>
 
-   XXX Should we START the spec with examples?  Maybe in "Use Cases"?
-
 3.6.  Errors
 
-   XXX What happens if the server decides to drop the history that a
-       client asks for?  How does it tell the client "sorry, I don't
-       have the history to synchronize with you."
+   If a server decides has dropped the history that a client requests,
+   the server can return a 410 GONE response, to tell the client "sorry,
+   I don't have the history necessary to synchronize with you."
 
-   XXX (Bryn: we should use "410 GONE", as it implies that the resource will not become available in the future.  404 implies that it might.)
-
+
 
 4.  Range Patches
 
@@ -471,6 +478,8 @@ Table of Contents
      interpret the version to be new, built upon the latest versions
      the recipient has.  The determination of which versions are
      "latest" is up to the recipient.
+
+
 
 4.2.  Defining a new Patch Type
 
@@ -510,13 +519,15 @@ Table of Contents
    - (Commute) If the same set of patches are applied in a different
      order, the result is the same.
 
+
+
 5.   Merge Types
 
    Merge Types specify how to merge multiple simultaneous edits to a
-   resource.  This typically happens if two computers edit the same
-   state over a network with latency.  If the computers implement and
-   agree upon the same Merge Type, then they can guarantee to reach a
-   consistent state, after arbitrary edits, eventually.
+   resource consistently.  This typically happens if two computers edit
+   the same state over a network with latency.  If the computers
+   implement and agree upon the same Merge Type, then they can guarantee
+   to reach a consistent state, after arbitrary edits, eventually.
 
    Merge Types are discussed in a separate document, [MERGETYPES].
 
@@ -561,9 +572,11 @@ Table of Contents
    
    [MERGETYPES] draft-toomim-httpbis-merge-types-00
 
+
+
 10.2.  Informative References
 
-   XXX Add them.
+
 
 Authors' Addresses
 
