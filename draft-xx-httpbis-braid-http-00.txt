@@ -512,6 +512,13 @@ Table of Contents
 
 5.   Merge Types
 
+   Merge Types specify how to merge multiple simultaneous edits to a
+   resource.  This typically happens if two computers edit the same
+   state over a network with latency.  If the computers implement and
+   agree upon the same Merge Type, then they can guarantee to reach a
+   consistent state, after arbitrary edits, eventually.
+
+   Merge Types are discussed in a separate document, [MERGETYPES].
 
 
 6. IANA Considerations
@@ -551,6 +558,8 @@ Table of Contents
 
    [RFC2119]  Bradner, S., "Key words for use in RFCs to Indicate
               Requirement Levels", BCP 14, RFC 2119, March 1997.
+   
+   [MERGETYPES] draft-toomim-httpbis-merge-types-00
 
 10.2.  Informative References
 
