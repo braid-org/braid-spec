@@ -65,7 +65,10 @@ Table of Contents
    "uri" is a special Hypermedia wrapper, which can specify a URI link
    for the region of JSON it wraps and optional metadata:
 
-         { uri: "/this-ietf-spec", val: "Framed JSON is JSON with ..." }
+         {
+           "uri": "/this-ietf-spec",
+           "val": "Framed JSON is JSON with ..."
+         }
 
    NelSON is valid JSON.  A NelSON Hypermedia wrapper can be used to
    insert a link inside JSON.  For instance, in the JSON for a book, one
@@ -74,12 +77,12 @@ Table of Contents
          {
            "book-name": "The way things work",
            "author":    { "uri": "/david-macaulay" }
-           "image"      { "uri": "/the-way-things-work.jpg", ContentType: "image/png" },
+           "image"      { "uri": "/the-way-things-work.jpg", "content-type": "image/png" },
          }
 
-   val is optional.  If not present, it's just a pointer.  It may be
-   present, and refer to a cache of the data.  If uri: null, then it
-   SHOULD have a val.
+   "val" field is optional.  If not present, it's just a pointer.  It
+   may be present, and refer to a cache of the data.  If "uri" is JSON
+   null, then it SHOULD have a "val" field.
 
    NelSON can be used to distinguish which strings in JSON actually
    represent URIs, for example, to fetch and include the contents of
@@ -94,7 +97,7 @@ Table of Contents
 
    Any object with a field named "uri" is interpreted as a wrapper.  The
    value of the uri field MUST be either a string containing a URI
-   [RFC3986], or null.
+   [RFC3986], or JSON null.
 
 1.2.  Escape Syntax
 
@@ -132,10 +135,10 @@ Table of Contents
 
    This draft borrows from [JSONREF], but makes the following changes:
 
-     - It names the special field "link" instead of "$ref".
+     - It names the special field "uri" instead of "$ref".
 
      - It provides an escape hatch for when users need to encode the
-       string "link".
+       string "uri".
 
      - It allows metadata to be specified on links.
 
@@ -218,7 +221,7 @@ Table of Contents
    [JSONLD]   Sporny, M., Longley, D., Kellogg, G., Lanthaler, M., and
               N. Lindström, "JSON-LD", January 2014.
 
-   https://tools.ietf.org/html/draft-ucarion-json-schema-language-02
+   XXX https://tools.ietf.org/html/draft-ucarion-json-schema-language-02
 
 Author's Address
 
