@@ -277,6 +277,10 @@ Table of Contents
    zero-length range, and identifies a location immediately after the
    last byte of data.  This allows appending bytes to data.
 
+   Note that bytes range unit operates on encoded content as specified
+   in any Content-Encoding header.  That holds both for GET and non-GET
+   requests.
+
 3.2.  JSON Range Unit
 
    JSON range unit operates on JSON and JSON-compatible data structures.
@@ -351,6 +355,11 @@ Table of Contents
    but serve as a zero-length range to identify a location immediately
    before which new content can be inserted with a patch.
 
+   JSON range unit operates always on non-encoded content, ignoring any
+   Content-Encoding header.  That holds both for GET and non-GET
+   requests.
+
+
 3.3.  Lines Range Unit
 
    For textual contents lines range unit operates on lines.  Line
@@ -396,6 +405,10 @@ Table of Contents
    representing a zero-length range, and identifies a location
    immediately after the last line of textual contents.  This allows
    appending lines to textual contents.
+
+   Lines range unit operates always on non-encoded content, ignoring any
+   Content-Encoding header.  That holds both for GET and non-GET
+   requests.
 
 
 4.  IANA Considerations
@@ -489,6 +502,7 @@ Table of Contents
      Connection: keep-alive
      Range-Request-Allow-Methods: PATCH
      Range-Request-Allow-Units: json,bytes
+     ETag: "33a64df551425fcc55e4d42a148795d9f25f89d4"
 
    In the partial negative:
 
@@ -496,6 +510,7 @@ Table of Contents
      Connection: keep-alive
      Range-Request-Allow-Methods: PATCH
      Range-Request-Allow-Units: json
+     ETag: "33a64df551425fcc55e4d42a148795d9f25f89d4"
 
    Or in the complete negative:
 
@@ -506,6 +521,7 @@ Table of Contents
 
    Empty header fields are allowed per [RFC2616] section 2.1.
 
+   Also note the presence of the ETag header, discussed in section 6.
 
 6.  Race Conditions
 
@@ -516,11 +532,13 @@ Table of Contents
    second update, the resource may be left in an unexpected state.
 
    To safeguard against this, the server may return an ETag header in
-   response to GET requests directed at a given resource.
+   response to HTTP requests directed at a given resource.
 
    When issuing a range patch, the requester may include an If-Match
    header containing the ETag of the version of the resource it intends
-   to update.
+   to update.  Note that ETag depends on Content-Encoding so use
+   consistent Content-Encoding for all your requests, or use
+   Transfer-Encoding instead.
 
 
 7.  Security Considerations
