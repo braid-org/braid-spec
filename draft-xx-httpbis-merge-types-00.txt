@@ -69,7 +69,7 @@ Table of Contents
 1.  Introduction
 
    In a version history, a merge type defines the output of a version
-   that derived from two or more parent versions:
+   that is derived from two or more parent versions:
 
                    _
              Time: |        birds
