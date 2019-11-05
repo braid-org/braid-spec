@@ -63,32 +63,33 @@ Status of this Memo
 
 Table of Contents
 
-   1.  Introduction ..................................................1
-       1.1.  Design Goals ............................................2
-       1.2.  Use Cases and Related Work ..............................3
-          1.2.1. Example: a Serverless Chat ..........................4
-   2.  Versioning for Resources .....................................12
-       2.1.  Interpreting Versions ..................................13
-       2.2.  GET for Historical Versions ............................14
-   3.  Subscriptions for GET .........................................5
-       3.1.  Creating a Subscription .................................6
-       3.2.  Sending multiple updates per GET ........................7
-       3.3.  Continuing a Subscription ...............................8
-       3.4.  Ending a Subscription ...................................9
-       3.5.  Example: GET subscription that animates a GIF ..........10
-       3.6.  Errors .................................................11
-   4.  Range Patches ................................................15
-       4.1.  The Version Data Structure .............................16
-       4.2.  Defining a new Patch Type ..............................17
-          4.2.1.  Patch Behavior ....................................18
-   5.  Merge Types ..................................................
-   6.  IANA Considerations ..........................................29
-   7.  Security Considerations ......................................30
-   8.  Conventions ..................................................31
-   9.  Copyright Notice .............................................32
-   10. References ...................................................33
-       10.1.  Normative References ..................................34
-       10.2.  Informative References ................................35
+   1.  Introduction ..................................................4
+       1.1.  In Visual Infomercial Form ..............................5
+       1.2.  Design Goals ............................................6
+       1.3.  Use Cases and Related Work ..............................6
+          1.3.1. Example: a Serverless Chat ..........................7
+   2.  Versioning for Resources ......................................8
+       2.1.  Interpreting Versions ...................................8
+       2.2.  GET for Historical Versions .............................9
+   3.  Subscriptions for GET ........................................10
+       3.1.  Creating a Subscription ................................10
+       3.2.  Sending multiple updates per GET .......................10
+       3.3.  Continuing a Subscription ..............................11
+       3.4.  Ending a Subscription ..................................11
+       3.5.  Example: GET subscription that animates a GIF ..........12
+       3.6.  Errors .................................................12
+   4.  Range Patches ................................................13
+       4.1.  The Version Data Structure .............................13
+       4.2.  Defining a new Patch Type ..............................14
+          4.2.1.  Patch Behavior ....................................14
+   5.  Merge Types ..................................................15
+   6.  IANA Considerations ..........................................15
+   7.  Security Considerations ......................................15
+   8.  Conventions ..................................................16
+   9.  Copyright Notice .............................................16
+   10. References ...................................................16
+       10.1.  Normative References ..................................16
+       10.2.  Informative References ................................17
 
 
 
@@ -179,7 +180,7 @@ Table of Contents
                                          synchronization.
 
 
-1.1.  Design Goals
+1.2.  Design Goals
 
    This spec is designed to be:
 
@@ -195,7 +196,7 @@ Table of Contents
       instance, these extensions support any Operational Transform or
       CRDT algorithm.
 
-1.2.  Use Cases and Related Work
+1.3.  Use Cases and Related Work
 
    A number of IETF specifications already standardize aspects of
    synchronization for specific domains:
@@ -216,7 +217,7 @@ Table of Contents
 
 
 
-1.2.1.  Example: a Serverless Chat
+1.3.1.  Example: a Serverless Chat
 
    A Braid web application can operate offline.  Multiple users can use
    the app from an airplane, and their edits can synchronize when they
