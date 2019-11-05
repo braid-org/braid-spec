@@ -32,8 +32,8 @@ Abstract
      4. Merge-Types to specify OT or CRDT behavior
 
    These extensions enable a web resource to synchronize automatically
-   across multiple clients and servers, and guarantee consistency using a
-   OT or CRDT algorithm.
+   across multiple clients and servers, and guarantee consistency using
+   a OT or CRDT algorithm.
 
 
 

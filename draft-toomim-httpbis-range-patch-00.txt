@@ -223,8 +223,8 @@ Table of Contents
    Stand-alone range patches can be transmitted over HTTP as-is as well.
    This can be used to provide the patch which has been used in a
    previous non-GET request.  A Content-Type with "+patch" suffix
-   identifies such stand-alone range patch.  For example, the patch
-   used in the PATCH request example above could be retrieved as:
+   identifies such stand-alone range patch.  For example, the patch used
+   in the PATCH request example above could be retrieved as:
 
      HTTP/1.1 200 OK
      Date: Thu, 31 Oct 2019 07:51:08 GMT
@@ -265,8 +265,8 @@ Table of Contents
 
 3.1.  Bytes Range Unit
 
-   Bytes range unit is already specified in [RFC7233].  We extend it
-   by allowing a zero-length range using a zero-length-byte-range-spec.
+   Bytes range unit is already specified in [RFC7233].  We extend it by
+   allowing a zero-length range using a zero-length-byte-range-spec.
 
      zero-length-byte-range-spec = 1*DIGIT
 
@@ -285,12 +285,12 @@ Table of Contents
 
    JSON range unit operates on JSON and JSON-compatible data structures.
    Its range specification is based on JSON pointer as described in
-   [RFC6901].  The content of the range MUST always be a valid JSON
-   by itself.  JSON range unit is identified with "json".
+   [RFC6901].  The content of the range MUST always be a valid JSON by
+   itself.  JSON range unit is identified with "json".
 
-   JSON pointer provides capabilities to identify a single element
-   of a data structure.  Here we extend it to allow a range of elements
-   for arrays and strings, by extending the scheme how reference token
+   JSON pointer provides capabilities to identify a single element of a
+   data structure.  Here we extend it to allow a range of elements for
+   arrays and strings, by extending the scheme how reference token
    modifies which value is referenced from Section 4 of [RFC6901]:
 
    o If the currently referenced value is a JSON array, the reference
