@@ -71,27 +71,27 @@ Table of Contents
           1.2.3.  Existing IETF Standards ............................7
    2.  Versioning for Resources ......................................7
        2.1.  Comparison with ETag ....................................9
-       2.1.  Requesting Historical Versions ..........................9
-   3.  Subscriptions for GET ........................................10
-       3.1.  Creating a Subscription ................................10
-       3.2.  Sending multiple updates per GET .......................10
-       3.3.  Continuing a Subscription ..............................11
-       3.4.  Ending a Subscription ..................................11
-       3.5.  Example: GET subscription that animates a GIF ..........12
-       3.6.  Errors .................................................12
-   4.  Range Patches ................................................13
-       4.1.  The Version Data Structure .............................13
-       4.2.  Defining a new Patch Type ..............................14
-          4.2.1.  Patch Behavior ....................................14
-   5.  Merge Types ..................................................15
-   6.  IANA Considerations ..........................................15
-       6.1. Header Field Registration ...............................15
-   7.  Security Considerations ......................................15
-   8.  Conventions ..................................................16
-   9.  Copyright Notice .............................................16
-   10. References ...................................................16
-       10.1.  Normative References ..................................16
-       10.2.  Informative References ................................17
+       2.2.  Requesting Historical Versions .........................10
+   3.  Subscriptions for GET ........................................11
+       3.1.  Creating a Subscription ................................11
+       3.2.  Sending multiple updates per GET .......................11
+       3.3.  Continuing a Subscription ..............................12
+       3.4.  Ending a Subscription ..................................12
+       3.5.  Example: GET subscription that animates a GIF ..........13
+       3.6.  Errors .................................................13
+   4.  Range Patches ................................................14
+       4.1.  The Version Data Structure .............................14
+       4.2.  Defining a new Patch Type ..............................15
+          4.2.1.  Patch Behavior ....................................15
+   5.  Merge Types ..................................................16
+   6.  IANA Considerations ..........................................16
+       6.1. Header Field Registration ...............................16
+   7.  Security Considerations ......................................16
+   8.  Conventions ..................................................17
+   9.  Copyright Notice .............................................17
+   10. References ...................................................17
+       10.1.  Normative References ..................................17
+       10.2.  Informative References ................................18
 
 
 1.  Introduction
@@ -156,7 +156,7 @@ Table of Contents
    updates as soon as they reconnect.  These features support an offline
    mode and collaborative editing.
 
-1.2.  Design Goals
+1.1.  Design Goals
 
    This spec is designed to be:
 
@@ -170,9 +170,9 @@ Table of Contents
       instance, these extensions support any Operational Transform or
       CRDT algorithm.
 
-1.3.  Use Cases and Related Work
+1.2.  Use Cases and Related Work
 
-1.3.1.  Example: a Serverless Chat
+1.2.1.  Example: a Serverless Chat
 
    A Braid web application can operate offline.  A user can use the app
    from an airplane, and their edits can synchronize when they regain
@@ -203,7 +203,7 @@ Table of Contents
 
 
 
-1.3.2.  Web Frameworks
+1.2.2.  Web Frameworks
 
    Web applications typically synchronize the state of a client and
    server with layers of models, views, and controllers in web
@@ -251,7 +251,7 @@ Table of Contents
 
 
 
-1.3.3.  Existing IETF Standards
+1.2.3.  Existing IETF Standards
 
    A number of IETF specifications already standardize aspects of
    synchronization for specific domains.  IMAP [RFC3501] provides
@@ -554,7 +554,7 @@ Table of Contents
 
 6. IANA Considerations
 
-   6.1.  Header Field Registration
+6.1.  Header Field Registration
 
    HTTP header fields are registered within the "Message Headers"
    registry maintained at
