@@ -85,6 +85,7 @@ Table of Contents
           4.2.1.  Patch Behavior ....................................14
    5.  Merge Types ..................................................15
    6.  IANA Considerations ..........................................15
+       6.1. Header Field Registration ...............................15
    7.  Security Considerations ......................................15
    8.  Conventions ..................................................16
    9.  Copyright Notice .............................................16
@@ -219,20 +220,20 @@ Table of Contents
         x Non-standard state API          o Standard state API
 
         _Client__
-       /         \ 
+       /         \
       :  o o o o  :   Webpage DOM          o o o o       State
-      :   \|  \|  :                         \|  \|  
+      :   \|  \|  :                         \|  \|
       :    x   x  :   HTML Templates         o   o       State
-      :   /|  /|  :                         /|  /|  
+      :   /|  /|  :                         /|  /|
       :  x x x x  :   JS Models            o o o o       State
-       \ | | | | /                         | | | |  
+       \ | | | | /                         | | | |
          | | | |                           | | | |
          o o o o    - http:// -            o o o o     - http:// -
-       / | | | | \                         | | | | 
+       / | | | | \                         | | | |
       :  x x x x  :   Views                o o o o       State
-      :  |  \| |  :                        |  \| |   
+      :  |  \| |  :                        |  \| |
       :  x   x x  :   Controllers          o   o o       State
-      :   \ / \|  :                         \ / \| 
+      :   \ / \|  :                         \ / \|
       :    x   x  :   Models                 o   o       State
       :     \ /   :                           \ /
        \.... x ../    Database                 o         State
@@ -553,7 +554,27 @@ Table of Contents
 
 6. IANA Considerations
 
-   XXX Todo
+   6.1.  Header Field Registration
+
+   HTTP header fields are registered within the "Message Headers"
+   registry maintained at
+   <http://www.iana.org/assignments/message-headers/>.
+
+   This document defines the following HTTP header fields, so their
+   associated registry entries have been updated according to the
+   permanent registrations below (see [BCP90]):
+
+   +---------------------+----------+--------------+-------------+
+   | Header Field Name   | Protocol | Status       | Reference   |
+   +---------------------+----------+--------------+-------------+
+   | Version             | http     | experimental | Section 2.2 |
+   | Parents             | http     | experimental | Section 2.2 |
+   | Subscribe           | http     | experimental | Section 2.2 |
+   +---------------------+----------+--------------+-------------+
+
+   The change controller is: "IETF (iesg@ietf.org) - Internet
+   Engineering Task Force".
+
 
 7. Security Considerations
 
@@ -594,6 +615,7 @@ Table of Contents
    [RANGE-PATCH] draft-toomim-httpbis-range-patch-00
 
    [STRUCTURED-HEADERS] draft-ietf-httpbis-header-structure-14
+
 
 
 
