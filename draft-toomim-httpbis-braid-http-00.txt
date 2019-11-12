@@ -125,12 +125,12 @@ Table of Contents
    Braid extends HTTP into a synchronization protocol.  It adds these
    features:
 
-     1. Versioning [Section 2]
+     1. Versioning (Section 2)
 
         Each resource has a history of changes, ordered in time, and
         represented in a common format.
 
-     2. Subscriptions [Section 3]
+     2. Subscriptions (Section 3)
 
         If a client adds a Subscribe header to a GET request, then the
         server will push it new versions of the resource until the
@@ -316,14 +316,14 @@ Table of Contents
 
    If a GET request contains a Version header:
 
-   - The Subscribe header [Section 3] MUST be absent.
+   - The Subscribe header (Section 3) MUST be absent.
 
    - The server SHOULD return a single response, containing that version
      of the resource in its body, with the Version header set to the
      version requested by the client.
 
    - If the server does not support historical versions, it MAY ignore
-     the Version header and respond as usual, but MAY NOT include the
+     the Version header and respond as usual, but MUST NOT include the
      Version header in its response.
 
    If a GET request contains a Parents header:
@@ -338,7 +338,7 @@ Table of Contents
      with the specified Version, and then close the connection.
 
    - If the server does not support historical versions, then it MAY
-     ignore the Parents header, but MAY NOT include the Parents header
+     ignore the Parents header, but MUST NOT include the Parents header
      in its response.
 
    A server MAY refactor or rebase the version history that it provides
@@ -621,18 +621,44 @@ Table of Contents
 
 10.2.  Informative References
 
-   [XHR]  Van Kestern, A., Aubourg, J., Song, J., and R. M. Steen, H.
-          "XMLHttpRequest", September 2019.
-          <https://xhr.spec.whatwg.org/>
+   [XHR]      Van Kestern, A., Aubourg, J., Song, J., and R. M.
+              Steen, H.  "XMLHttpRequest", September 2019.
+              <https://xhr.spec.whatwg.org/>
 
-   [SSE]  Hickson, I.  "Server-Sent Events", W3C Recommendation,
-          February 2015.
-          <https://www.w3.org/TR/2015/REC-eventsource-20150203/>
+   [SSE]      Hickson, I.  "Server-Sent Events", W3C Recommendation,
+              February 2015.
+              <https://www.w3.org/TR/2015/REC-eventsource-20150203/>
 
-   [REST] Fielding, R.  "Architectural Styles and the Design of
-          Network-based Software Architectures."  Doctoral dissertation,
-          University of California, Irvine, 2000.
+   [REST]     Fielding, R.  "Architectural Styles and the Design of
+              Network-based Software Architectures"  Doctoral
+              dissertation, University of California, Irvine, 2000.
 
+   [RFC3501]  Crispin, M.,  "Internet Message Access Protocol - Version
+              4rev1", RFC 3501, DOI 10.17487/RFC3501, March 2003,
+              <https://www.rfc-editor.org/info/rfc3501>.
+
+   [RFC6578]  Daboo, C., Quillaud, A., "Collection Synchronization
+              for Web Distributed Authoring and Versioning (WebDAV)",
+              RFC 6578, DOI 10.17487/RFC6578, March 2012,
+              <https://www.rfc-editor.org/info/rfc6578>.
+
+   [RFC4791]  Daboo, C., Desruisseaux, B., Dusseault, L., "Calendaring
+              Extensions to WebDAV (CalDAV)", RFC 4791,
+              DOI 10.17487/RFC4791, March 2007,
+              <https://www.rfc-editor.org/info/rfc4791>.
+
+   [RFC6350]  Perreault, S., "vCard Format Specification", RFC 6350,
+              DOI 10.17487/RFC6350, August 2011,
+              <https://www.rfc-editor.org/info/rfc6350>.
+
+   [RFC8620]  Jenkins, N., Newman, C., "The JSON Meta Application
+              Protocol (JMAP)", RFC 8620, DOI 10.17487/RFC8620,
+              July 2019, <https://www.rfc-editor.org/info/rfc8620>.
+
+   [BCP90]    Klyne, G., Nottingham, M., and J. Mogul, "Registration
+              Procedures for Message Header Fields", BCP 90, RFC 3864,
+              September 2004.
+
 
 Authors' Addresses
 
