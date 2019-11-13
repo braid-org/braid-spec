@@ -29,11 +29,11 @@ Abstract
      1. Versioning to resources
      2. Subscriptions to GET requests
      3. Ranges to PUT and PATCH requests
-     4. Merge-Types to specify OT or CRDT behavior
+     4. Merge-Types that specify OT or CRDT behavior
 
    These extensions enable a web resource to synchronize automatically
-   across multiple clients and servers, and guarantee consistency using
-   a OT or CRDT algorithm.
+   across multiple clients, servers and caches, and guarantee
+   consistency using a OT, CRDT, or other algorithm.
 
 
 
@@ -64,89 +64,159 @@ Status of this Memo
 Table of Contents
 
    1.  Introduction ..................................................4
-       1.1.  In Visual Infomercial Form ..............................5
-       1.2.  Design Goals ............................................6
-       1.3.  Use Cases and Related Work ..............................6
-          1.3.1. Example: a Serverless Chat ..........................7
-   2.  Versioning for Resources ......................................8
-       2.1.  Interpreting Versions ...................................8
-       2.2.  GET for Historical Versions .............................9
-   3.  Subscriptions for GET ........................................10
-       3.1.  Creating a Subscription ................................10
-       3.2.  Sending multiple updates per GET .......................10
-       3.3.  Continuing a Subscription ..............................11
-       3.4.  Ending a Subscription ..................................11
-       3.5.  Example: GET subscription that animates a GIF ..........12
-       3.6.  Errors .................................................12
-   4.  Range Patches ................................................13
-       4.1.  The Version Data Structure .............................13
-       4.2.  Defining a new Patch Type ..............................14
-          4.2.1.  Patch Behavior ....................................14
-   5.  Merge Types ..................................................15
-   6.  IANA Considerations ..........................................15
-       6.1. Header Field Registration ...............................15
-   7.  Security Considerations ......................................15
-   8.  Conventions ..................................................16
-   9.  Copyright Notice .............................................16
-   10. References ...................................................16
-       10.1.  Normative References ..................................16
-       10.2.  Informative References ................................17
+       1.1.  Design Goals ............................................5
+       1.2.  Use Cases and Related Work ..............................5
+          1.2.1.  Example: a Serverless Chat .........................5
+          1.2.2.  Web Frameworks .....................................6
+          1.2.3.  Existing IETF Standards ............................7
+   2.  Versioning for Resources ......................................7
+       2.1.  Comparison with ETag ....................................9
+       2.2.  Requesting Historical Versions .........................10
+   3.  Subscriptions for GET ........................................11
+       3.1.  Creating a Subscription ................................11
+       3.2.  Sending multiple updates per GET .......................11
+       3.3.  Continuing a Subscription ..............................12
+       3.4.  Ending a Subscription ..................................12
+       3.5.  Example: GET subscription that animates a GIF ..........13
+       3.6.  Errors .................................................13
+   4.  Range Patches ................................................14
+       4.1.  The Version Data Structure .............................14
+       4.2.  Defining a new Patch Type ..............................15
+          4.2.1.  Patch Behavior ....................................15
+   5.  Merge Types ..................................................16
+   6.  IANA Considerations ..........................................16
+       6.1. Header Field Registration ...............................16
+   7.  Security Considerations ......................................16
+   8.  Conventions ..................................................17
+   9.  Copyright Notice .............................................17
+   10. References ...................................................17
+       10.1.  Normative References ..................................17
+       10.2.  Informative References ................................18
 
 
-
 1.  Introduction
 
    When a client GETs a resource over HTTP, the server sends the latest
-   version, but HTTP does not send updates when the resource changes.
-   This means web programmers have to implement a workaround whenever
-   they need to synchronize with data that changes.
+   version, but does not send updates when the resource changes.  If a
+   web programmer wants to synchronize with state as it changes, she
+   must implement a workaround.
 
    The web has a long history of these workarounds.  The original web
-   required users to click reload when a page changed.  In 2000,
-   XMLHTTPRequest made it possible to update just part of a page,
-   running a GET request behind the scenes.  But a GET request still
-   could not push updates.  To work around this, web programmers would
-   poll the resource, which was inefficient.  Long-polling was invented
-   to overcome the inefficiencies, which was standardized as SSE.  But
-   SSE provides semantics of an event-stream, not an update-stream, and
-   although a programmer can encode a protocol within the event stream
-   for updating a resource, there is still no standard way to express
-   the update of a resource.  In practice, programmers today often give
-   up on using standards for "data that changes", and instead write
-   their own non-standard update protocol over a WebSocket.
+   required users to click reload when a page changed.  XMLHTTPRequest
+   [XHR] made it possible to update just part of a page, running a GET
+   request behind the scenes.  However, a GET request still could not
+   push updates.  To work around this, web programmers would poll the
+   resource, which was inefficient.  Long-polling was invented to
+   overcome the inefficiencies, which was standardized as Server-Sent
+   Events [SSE].  Yet, SSE provides semantics of an event-stream, not an
+   update-stream, and although a programmer can encode a protocol within
+   the event stream for updating a resource, there is still no standard
+   way to express the update of a resource.
 
-   Unfortunately, non-standard protocols require extra time and effort
-   to design and implement, and programmers often implement only the
-   minimal synchronization features they need.  Thus, most web apps do
-   not have an offline mode, or guarantee consistency after conflicting
-   edits over a network.  Programmers often do not bother to implement a
-   public API, or to keep it as featureful as the private one.  These
-   frictions lead to it being much easier for a programmer to read and
-   write data from their database than from some other website's
-   database, and as a result, programmers tend to build websites in
-   silos, where each one grows and controls data only within its own
-   domain.
+   In practice, web programmers today often give up on using standards
+   for "data that changes", and instead send custom messages over a
+   WebSocket -- a hand-rolled synchronization protocol.  Unfortunately,
+   this forfeits the benefits of HTTP and ReST, such as caching, and a
+   uniform interface [REST].  As the web becomes increasingly dynamic,
+   programmers must increasingly synchronize state, rather than simply
+   transfer it with HTTP.
 
-   The Braid extensions solve these problems with a standard protocol
-   for synchronizing changing state.  Each piece of state gets a URL.
-   Each URL gets a DAG of historical versions.  GET requests can
-   optionally Subscribe to future updates, until issuing FORGET.
-   Updates get a standard patch format.  Merge semantics guarantee
-   eventual consistency over a peer-to-peer network.  Clients and
-   servers can go offline, make edits on airplanes, and then merge all
-   edits perfectly when they rejoin.
+   Braid extends HTTP into a synchronization protocol.  It adds these
+   features:
+
+     1. Versioning (Section 2)
+
+        Each resource has a history of changes, ordered in time.
+
+     2. Subscriptions (Section 3)
+
+        A client can add a Subscribe header to a GET request, which will
+        subscribe it to all future versions of the resource until the
+        client says forGET.
+
+     3. Range Patches [RANGE-PATCH]
+
+        When a resource changes, a client, server, or cache can send
+        just the changed range, rather than the entire resource.  This
+        extends the existing HTTP Range Request with semantics for PUT,
+        PATCH, and POST.
+
+     4. Merge Types [MERGE-TYPES]
+
+        If multiple clients and servers simultaneously edit the same
+        resource, they can guarantee a consistent resulting state by
+        implementing the same Merge Type.  Resources specify their Merge
+        Type with a header.
+
+
+   Taken together, these features allow an arbitrary set of clients and
+   servers to make arbitrary edits to resources, under arbitrary network
+   delays and paritions, and merge all edits consistently, receiving
+   updates as soon as they reconnect.  This enables caches to support
+   dynamic content, web applications to feature an offline mode, and
+   textareas to support collaborative editing.
+
+
+1.1.  Design Goals
+
+   This spec is designed to be:
+
+   1. Backwards-compatible with existing HTTP
+
+   2. Easy to implement simple synchronizers with.  For instance, it
+      should be easy to write a read-only synchronizer for an
+      append-only log.
+
+   3. Possible to implement arbitrary synchronization algorithms.  For
+      instance, these extensions support any Operational Transform or
+      CRDT algorithm.
+
+1.2.  Use Cases and Related Work
+
+1.2.1.  Example: a Serverless Chat
+
+   A Braid web application can operate offline.  A user can use the app
+   from an airplane, and their edits can synchronize when they regain
+   internet connections.  Additionally, the Braid protocol can be
+   expressed over peer-to-peer transports (e.g. Braid-WebRTC) to support
+   a peer-to-peer synchronization without a server.  Braid-HTTP clients
+   will be able to interoperate with Braid-WebRTC peers.  For example, a
+   chat application might be served and synchronized on Braid-HTTP,
+   while also establishing redundant peer-to-peer connections on
+   Braid-WebRTC.  The server could then be shut down, and users of the
+   chat app could continue to send messages to one another.
+
+   Imagine the server serves the current set of trusted clients' IP
+   addresses at the /peers state.  Each client then subscribes to the
+   /peers state with:
+
+     GET /peers
+     Subscribe: keep-alive
+     -------
+     [ {ip: '13.55.32.158', pubkey: 'x371...8382'},
+       {ip: '244.38.55.83', pubkey: 'o2u8...2s73'},
+       ...
+     ]
+
+   Each peer can then choose a set of those peers with whom to establish
+   a WebRTC connection.  It will then exchange Braid messages with those
+   peers over that connection.
 
 
 
-1.1.  In Visual Infomercial Form
+1.2.2.  Web Frameworks
+
+   Web applications typically synchronize the state of a client and
+   server with layers of models, views, and controllers in web
+   frameworks.  By implementing synchronization in HTTP, programmers
+   have to write fewer layers of code.
 
       ====== Legacy Websites ======      ====== Braid Websites ======
 
       Today's webpages are               Braid generalizes HTTP and
-      generated from multiple            REST into a uniform standard
-      layers of state.  Each layer       that synchronizes state
-      has a different API.               within and between dynamic
-                                         websites.
+      generated from multiple            into a standard for
+      layers of state.  Each layer       synchronizing state within
+      has a different API.               and between websites.
 
         x Non-standard state API          o Standard state API
 
@@ -171,141 +241,91 @@ Table of Contents
          Server
 
       Today's programmers have to        Each piece of Braid state (o)
-      learn each API, and wire them      has a URL; whether public, or
-      together, making sure that         internal to a client or
-      changes to shared state            server.  Any state can be a
-      synchronize across all             function of other state, and
-      layers and computers.              and automatically recompute
-                                         when its dependencies change.
+      learn each API, and wire them      has a URL; whether public or
+      together, making sure that         internal.  State can be a
+      changes to shared state            function of other state, and
+      synchronize across all             and automatically recompute
+      layers and computers.              when its dependencies change.
                                          Braid guarantees network
                                          synchronization.
+
+
 
 
-1.2.  Design Goals
-
-   This spec is designed to be:
-
-   1. Backwards-compatible with existing HTTP
-
-   2. Easy to implement simple synchronizers with.  For instance, easy
-      to create an append-only log, or a counter.
-
-      - EXAMPLE: A complete braid client for an append-only log can be
-        written in 50 lines of Javascript, without using any libraries.
-
-   3. Possible to implement arbitrary synchronization algorithms.  For
-      instance, these extensions support any Operational Transform or
-      CRDT algorithm.
-
-1.3.  Use Cases and Related Work
+1.2.3.  Existing IETF Standards
 
    A number of IETF specifications already standardize aspects of
-   synchronization for specific domains:
-
-   - The DAV standards:
-     - CalDAV
-     - CardDAV
-     - WebDAV
-   - W3C Push API:
-     - https://www.w3.org/TR/push-api/
-   - Email push
-     - JMAP
-     - IMAP Web Push
-
-   Each of these standards has to re-invent mechanisms for (a)
-   specifying subscriptions, (b) pushing updates, and (c) specifying
-   patches, and (d) handling conflicts.
-
-
-
-1.3.1.  Example: a Serverless Chat
-
-   A Braid web application can operate offline.  Multiple users can use
-   the app from an airplane, and their edits can synchronize when they
-   regain internet connections.  Additionally, the Braid protocol can be
-   expressed over peer-to-peer transports (e.g. Braid-WebRTC) to support
-   a peer-to-peer synchronization without a server.  Braid-HTTP clients
-   will be able to interoperate with Braid-WebRTC peers.  For example,
-   a chat application might be served and synchronized on Braid-HTTP,
-   while also establishing redundant peer-to-peer connections on
-   Braid-WebRTC.  The server could then be shut down, and users of the
-   chat app could continue to send messages to one another.
-
-   Imagine the server serves the current set of trusted clients' IP
-   addresses at the /peers state.  Each client then subscribes to the
-   /peers state with:
-
-     GET /peers
-     Subscribe: keep-alive
-     -------
-     [ {ip: '13.55.32.158', pubkey: 'x371...8382'},
-       {ip: '244.38.55.83', pubkey: 'o2u8...2s73'},
-       ...
-     ]
-
-   Each peer can then choose a set of those peers with whom to establish
-   a WebRTC connection.  It will then exchange Braid messages with those
-   peers over that connection.
-
-
+   synchronization for specific domains.  IMAP [RFC3501] provides
+   synchronization of email.  WebDAV provides the synchronization of
+   "collections" [RFC6578], and has been extended specifically for
+   calendar data in CalDAV [RFC4791], and vCards in [RFC6350].  More
+   recently, JMAP [RFC8620] provides an updated method of
+   synchronization, supporting mail, calendars, and contacts.
 
 2.  Versioning of Resources
 
-   Patches change the state of a resource over time.  We define a
-   "Version" as a point in time.  At a particular version, the contents
-   of a particular resource is immutable -- it will never change.  Each
-   version has a unique ID (a string), and a set of patches from its
-   prior versions: its Parents.
+   Each Braid resource has a version history.  Versions are specified
+   with a unique string in the [STRUCTURED-HEADERS] format.  A Version
+   header MAY be included in a request for a PUT, PATCH or POST, or in
+   the response to a GET:
 
-      Version: a unique string identifying a point in time
-      Parents: a set of Version IDs
+           Version: "dkn7ov2vwg"
 
-   A Version can have multiple Parents because time on a network is a
-   DAG, due to the unavoidable presence of network latency.  It can be
-   physically impossible to distinguish the order of two events that
-   occur close in time.  Thus, the general form of time on a network is
-   a Directed Acyclic Graph.
+   Every version also has a set of Parents, which denote the most recent
+   Version(s) that were known at the time the version was created.  The
+   full graph of parents forms a Directed Acyclic Graph (DAG),
+   representing the known partial order of all versions.  A version A is
+   known to have occurred before a version B if and only if A is an
+   ancestor of B in the partial order.
 
-         a     All peers are aware of version (a).
-        / \
-       /   \
-      b     c  Two peers make simultaneous edits creating versions (b)
-       \   /   and (c) respectively, and time forks.
-        \ /
-         d     Once a peer sees both of the edits, time merges again.
-               Until a peer makes an edit with (b) and (c) as parents,
-               the merge is only implicit-- there is no need for to
-               assign an ID to it.
+   Parents are also specified using a header in a PUT, PATCH, or POST
+   request, and a GET response:
 
-   Every change to state creates a new version.  This version has
-   Parents: the set of leaves in the DAG that were present when the new
-   version was created.  The new version is the Child of its parents.
-   We can say that one version came before another only if the first
-   version is an Ancestor of the second.
+           Parents: "ajtva12kid", "cmdpvkpll2"
 
-   A Version also specifies a list of Patches, which, when applied to
-   the merger of Parents, creates the Version's state.
+   The Parents header MUST be of type List in [STRUCTURED-HEADERS], with
+   each element a string obeying the requirements of a Version.  For any
+   two parent versions A and B that are specified in a Parents header, A
+   cannot be a descendent of B or vice versa.
 
-   When a peer makes an edit, it broadcasts the edit's version ID, its
-   parents version IDs, and the patches from its parents state to its
-   state.
+   If a client or server does not specify a Version for a resource it
+   transfers, the recipient MAY generate a new version ID of its own
+   choosing.  If a client or server does not specify a Parents header
+   when transferring a new version, the recipient MAY presume that the
+   most recent versions it has seen are the parents of the new version.
 
-2.1.  Interpreting Versions
+2.1.  Comparison with ETag
 
-   Versions need their parents to be understood.
+   The Version header is similar to an ETag, but has two differences:
 
+   1. ETags are sensitive to Content-Encoding.  If you send the same
+      version with a GZip Content-Encoding, it will have a different
+      ETag, but the same Version.
+
+   2. A Version marks a unique point in time -- not unique content.  If
+      a resource is changed from version A to B, and then to C, such
+      that the contents at A are the same as the contents at C, then it
+      is possible versions A and C to have the same ETag, even though
+      they have different Versions.
 
 
-2.2.  GET for Historical Versions
+2.2.  Requesting Historical Versions
 
-   GET requests can optionally contain a Version and/or Parents header.
+   A server can optionally allow clients to request historical versions
+   of a resource in GET requests.  To request a historical version, a
+   client includes a Version and/or Parents header in the request.
 
    If a GET request contains a Version header:
 
-   - The Subscribe header MUST be absent.
+   - The Subscribe header (Section 3) MUST be absent.
 
    - The server SHOULD return a single response, containing that version
-     of the resource in its body.
+     of the resource in its body, with the Version header set to the
+     version requested by the client.
+
+   - If the server does not support historical versions, it MAY ignore
+     the Version header and respond as usual, but MUST NOT include the
+     Version header in its response.
 
    If a GET request contains a Parents header:
 
@@ -318,14 +338,13 @@ Table of Contents
      respond with a set of versions that connect the specified Parents
      with the specified Version, and then close the connection.
 
+   - If the server does not support historical versions, then it MAY
+     ignore the Parents header, but MUST NOT include the Parents header
+     in its response.
+
    A server MAY refactor or rebase the version history that it provides
    to a client, so long as it does not affect the resulting state, or
    the result of the patch-type's merges.
-
-   Note that the 'Version' header is similar to, but not the same as the
-   'ETag' header, because an ETag depends on the Content-Encoding.  For
-   instance, the same resource sent using gzip Content-Encoding will
-   have a different ETag, but the same Version.
 
 
 
@@ -405,7 +424,7 @@ Table of Contents
    If a subscription is set to keep-alive, then closing the TCP/QUIC
    connection won't end the subscription.  Thus a client needs a way to
    explicitly end the subscription.  In HTTP/1, this is by sending the
-   text "Forget\n" over the TCP connection.  In HTTP/2, this is by
+   text "forGET\n" over the TCP connection.  In HTTP/2, this is by
    issuing a CLOSE event to the GET request's stream.  Alternatively,
    since today's web browsers do not support sending extra text after a
    request body, the client can issue a fresh request specified as a
@@ -424,7 +443,7 @@ Table of Contents
        Subscribe
 
      Response:
-       OK 200
+       HTTP/1.1 200 OK
        Subscribe
        Cache-Control: no-cache, patch
        Patch-Type: braid(bytes, sync9(array))
@@ -531,12 +550,12 @@ Table of Contents
    implement and agree upon the same Merge Type, then they can guarantee
    to reach a consistent state, after arbitrary edits, eventually.
 
-   Merge Types are discussed in a separate document, [MERGETYPES].
+   Merge Types are discussed in a separate document, [MERGE-TYPES].
 
 
 6. IANA Considerations
 
-   6.1.  Header Field Registration
+6.1.  Header Field Registration
 
    HTTP header fields are registered within the "Message Headers"
    registry maintained at
@@ -591,14 +610,56 @@ Table of Contents
 
    [RFC2119]  Bradner, S., "Key words for use in RFCs to Indicate
               Requirement Levels", BCP 14, RFC 2119, March 1997.
+   
+   [MERGE-TYPES] draft-toomim-httpbis-merge-types-00
 
-   [MERGETYPES] draft-toomim-httpbis-merge-types-00
+   [RANGE-PATCH] draft-toomim-httpbis-range-patch-00
+
+   [STRUCTURED-HEADERS] draft-ietf-httpbis-header-structure-14
+
 
 
 
 10.2.  Informative References
 
+   [XHR]      Van Kestern, A., Aubourg, J., Song, J., and R. M.
+              Steen, H.  "XMLHttpRequest", September 2019.
+              <https://xhr.spec.whatwg.org/>
 
+   [SSE]      Hickson, I.  "Server-Sent Events", W3C Recommendation,
+              February 2015.
+              <https://www.w3.org/TR/2015/REC-eventsource-20150203/>
+
+   [REST]     Fielding, R.  "Architectural Styles and the Design of
+              Network-based Software Architectures"  Doctoral
+              dissertation, University of California, Irvine, 2000.
+
+   [RFC3501]  Crispin, M.,  "Internet Message Access Protocol - Version
+              4rev1", RFC 3501, DOI 10.17487/RFC3501, March 2003,
+              <https://www.rfc-editor.org/info/rfc3501>.
+
+   [RFC6578]  Daboo, C., Quillaud, A., "Collection Synchronization
+              for Web Distributed Authoring and Versioning (WebDAV)",
+              RFC 6578, DOI 10.17487/RFC6578, March 2012,
+              <https://www.rfc-editor.org/info/rfc6578>.
+
+   [RFC4791]  Daboo, C., Desruisseaux, B., Dusseault, L., "Calendaring
+              Extensions to WebDAV (CalDAV)", RFC 4791,
+              DOI 10.17487/RFC4791, March 2007,
+              <https://www.rfc-editor.org/info/rfc4791>.
+
+   [RFC6350]  Perreault, S., "vCard Format Specification", RFC 6350,
+              DOI 10.17487/RFC6350, August 2011,
+              <https://www.rfc-editor.org/info/rfc6350>.
+
+   [RFC8620]  Jenkins, N., Newman, C., "The JSON Meta Application
+              Protocol (JMAP)", RFC 8620, DOI 10.17487/RFC8620,
+              July 2019, <https://www.rfc-editor.org/info/rfc8620>.
+
+   [BCP90]    Klyne, G., Nottingham, M., and J. Mogul, "Registration
+              Procedures for Message Header Fields", BCP 90, RFC 3864,
+              September 2004.
+
 
 Authors' Addresses
 
