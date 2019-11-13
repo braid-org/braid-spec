@@ -10,7 +10,7 @@ Braid adds to HTTP:
 1. *Versioning* to resources
 2. *Subscriptions* to GET requests
 3. *Ranges* to PUT and PATCH requests
-4. *Merge-Types* to specify OT or CRDT behavior
+4. *Merge-Types* that specify OT or CRDT behavior
 
 
 ### Range Patch — [`draft-toomim-httpbis-range-patch-00.txt`](https://raw.githubusercontent.com/braid-work/braid-spec/master/draft-toomim-httpbis-range-patch-00.txt)

@@ -29,11 +29,11 @@ Abstract
      1. Versioning to resources
      2. Subscriptions to GET requests
      3. Ranges to PUT and PATCH requests
-     4. Merge-Types to specify OT or CRDT behavior
+     4. Merge-Types that specify OT or CRDT behavior
 
    These extensions enable a web resource to synchronize automatically
-   across multiple clients and servers, and guarantee consistency using
-   a OT, CRDT, or other algorithm.
+   across multiple clients, servers and caches, and guarantee
+   consistency using a OT, CRDT, or other algorithm.
 
 
 
@@ -118,43 +118,44 @@ Table of Contents
    WebSocket -- a hand-rolled synchronization protocol.  Unfortunately,
    this forfeits the benefits of HTTP and ReST, such as caching, and a
    uniform interface [REST].  As the web becomes increasingly dynamic,
-   programmers must increasingly synchronize state over non-standard
-   protocols, and more of the web's state becomes locked away in custom
-   protocols instead of openly accessible via ReST and HTTP.
+   programmers must increasingly synchronize state, rather than simply
+   transfer it with HTTP.
 
    Braid extends HTTP into a synchronization protocol.  It adds these
    features:
 
      1. Versioning (Section 2)
 
-        Each resource has a history of changes, ordered in time, and
-        represented in a common format.
+        Each resource has a history of changes, ordered in time.
 
      2. Subscriptions (Section 3)
 
-        If a client adds a Subscribe header to a GET request, then the
-        server will push it new versions of the resource until the
-        client ends the subscription.
+        A client can add a Subscribe header to a GET request, which will
+        subscribe it to all future versions of the resource until the
+        client says forGET.
 
      3. Range Patches [RANGE-PATCH]
 
-        When a resource changes, a client and servers can send just the
-        difference, rather than the entire resource, using an extension
-        of the existing HTTP Range Request.
+        When a resource changes, a client, server, or cache can send
+        just the changed range, rather than the entire resource.  This
+        extends the existing HTTP Range Request with semantics for PUT,
+        PATCH, and POST.
 
      4. Merge Types [MERGE-TYPES]
 
         If multiple clients and servers simultaneously edit the same
         resource, they can guarantee a consistent resulting state by
-        implementing the same Merge Type.  Each resource can specify a
-        different Merge Type.
+        implementing the same Merge Type.  Resources specify their Merge
+        Type with a header.
 
 
    Taken together, these features allow an arbitrary set of clients and
    servers to make arbitrary edits to resources, under arbitrary network
    delays and paritions, and merge all edits consistently, receiving
-   updates as soon as they reconnect.  These features support an offline
-   mode and collaborative editing.
+   updates as soon as they reconnect.  This enables caches to support
+   dynamic content, web applications to feature an offline mode, and
+   textareas to support collaborative editing.
+
 
 1.1.  Design Goals
 
@@ -423,7 +424,7 @@ Table of Contents
    If a subscription is set to keep-alive, then closing the TCP/QUIC
    connection won't end the subscription.  Thus a client needs a way to
    explicitly end the subscription.  In HTTP/1, this is by sending the
-   text "Forget\n" over the TCP connection.  In HTTP/2, this is by
+   text "forGET\n" over the TCP connection.  In HTTP/2, this is by
    issuing a CLOSE event to the GET request's stream.  Alternatively,
    since today's web browsers do not support sending extra text after a
    request body, the client can issue a fresh request specified as a
@@ -442,7 +443,7 @@ Table of Contents
        Subscribe
 
      Response:
-       OK 200
+       HTTP/1.1 200 OK
        Subscribe
        Cache-Control: no-cache, patch
        Patch-Type: braid(bytes, sync9(array))
