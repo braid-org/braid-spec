@@ -572,6 +572,7 @@ Table of Contents
    of patches.  When the client renders the new state of the GIF after
    each patch, a new frame of animation is displayed.
 
+
      Request:
        GET /animated-braid.gif
        Subscribe
