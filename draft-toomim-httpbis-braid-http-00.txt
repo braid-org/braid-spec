@@ -284,9 +284,6 @@ Table of Contents
          Patches: OK
 
 
-   This example uses the Range Patch format, which is defined in
-   [RANGE-PATCH].
-
    In order to distinguish each patch within a Version, we need to know
    the length of the patch.  To know the length of the patch, each patch
    must include one of the following headers:
@@ -296,6 +293,39 @@ Table of Contents
 
    Either of these provide a way to determine when the next message
    starts.
+
+   The previous example uses the Range Patch format, which is defined in
+   [RANGE-PATCH].  However, one can use any patch format, by sending a
+   patch with a Content-Type: set to a patch format with a defined
+   behavior, such as application/json-patch+json (as specified in
+   [RFC6902]):
+
+
+      Request:
+
+         PUT /chat
+         Version: "up12vyc5ib"                                 | Version
+         Parents: "2bcbi84nsp"                                 |
+         Content-Type: application/json                        |
+         Merge-Type: sync9                                     |
+         Patches: 1                                            |
+                                                               |
+         Content-Length: 326                                   | | Patch
+         Content-Type: application/json-patch+json             | |
+                                                               | |
+         [                                                     | |
+           { "op": "test", "path": "/a/b/c", "value": "foo" }, | |
+           { "op": "remove", "path": "/a/b/c" },               | |
+           { "op": "add", "path": "/a/b/c", "value": [] },     | |
+           { "op": "replace", "path": "/a/b/c", "value": 42 }, | |
+           { "op": "move", "from": "/a/b", "path": "/a/d },    | |
+           { "op": "copy", "from": "/a/d/d", "path": "/a/d/e" }| |
+         ]                                                     | |
+
+      Response:
+
+         HTTP/1.1 200 OK
+         Patches: OK
 
 
 3.3.  GET a specific version
@@ -788,6 +818,9 @@ Table of Contents
    [RFC8620]  Jenkins, N., Newman, C., "The JSON Meta Application
               Protocol (JMAP)", RFC 8620, DOI 10.17487/RFC8620,
               July 2019, <https://www.rfc-editor.org/info/rfc8620>.
+
+   [RFC6902]  Bryan, P., Nottingham, M., "Javascript Object Notation
+              (JSON) Patch", RFC 6902.
 
    [BCP90]    Klyne, G., Nottingham, M., and J. Mogul, "Registration
               Procedures for Message Header Fields", BCP 90, RFC 3864,
