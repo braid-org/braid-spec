@@ -9,7 +9,7 @@ add Synchronization to HTTP.  They are authored in three documents:
 Braid adds to HTTP:
 1. *Versioning* to resources
 2. *Subscriptions* to GET requests
-3. *Ranges* to PUT and PATCH requests
+3. *Patches* built on Range Requests
 4. *Merge-Types* that specify OT or CRDT behavior
 
 

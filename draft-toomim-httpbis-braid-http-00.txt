@@ -28,11 +28,11 @@ Abstract
 
      1. Versioning to resources
      2. Subscriptions to GET requests
-     3. Ranges to PUT and PATCH requests
+     3. Patches built on Range Requests
      4. Merge-Types that specify OT or CRDT behavior
 
    These extensions enable a web resource to synchronize automatically
-   across multiple clients, servers and caches, and guarantee
+   across multiple clients, servers and proxies, and guarantee
    consistency using a OT, CRDT, or other algorithm.
 
 
@@ -64,34 +64,38 @@ Status of this Memo
 Table of Contents
 
    1.  Introduction ..................................................4
-       1.1.  Design Goals ............................................5
-       1.2.  Use Cases and Related Work ..............................5
-          1.2.1.  Example: a Serverless Chat .........................5
-          1.2.2.  Web Frameworks .....................................6
-          1.2.3.  Existing IETF Standards ............................7
    2.  Versioning for Resources ......................................7
-       2.1.  Comparison with ETag ....................................9
-       2.2.  Requesting Historical Versions .........................10
-   3.  Subscriptions for GET ........................................11
-       3.1.  Creating a Subscription ................................11
-       3.2.  Sending multiple updates per GET .......................11
-       3.3.  Continuing a Subscription ..............................12
-       3.4.  Ending a Subscription ..................................12
-       3.5.  Example: GET subscription that animates a GIF ..........13
-       3.6.  Errors .................................................13
-   4.  Range Patches ................................................14
-       4.1.  The Version Data Structure .............................14
-       4.2.  Defining a new Patch Type ..............................15
-          4.2.1.  Patch Behavior ....................................15
-   5.  Merge Types ..................................................16
-   6.  IANA Considerations ..........................................16
-       6.1. Header Field Registration ...............................16
-   7.  Security Considerations ......................................16
-   8.  Conventions ..................................................17
-   9.  Copyright Notice .............................................17
-   10. References ...................................................17
-       10.1.  Normative References ..................................17
-       10.2.  Informative References ................................18
+   2.1.  Comparison with ETag ....................................9
+   3.  Versioning for GET and PUT
+   3.1.  PUT a new version
+   3.2.  PUT a new version as a patch
+   3.3.  GET a specific version
+   3.4.  GET with Subscriptions
+   3.4.1.  Creating a Subscription
+   3.4.2.  Sending multiple updates per GET
+   3.4.3.  Continuing a Subscription
+   3.4.4.  Ending a Subscription
+   3.4.5.  Example: GET subscription that animates a GIF
+   3.4.6.  Errors
+   4.  Design Goals
+   5.  Use Cases
+   5.1.  Dynamic Resources
+   5.2.  Collaborative Editing
+   5.3.  Text Chat
+   5.4.  Offline Mode
+   5.5.  Serverless Mode
+   5.6.  Example: a Serverless Chat
+   6.  Related Work
+   6.1.  Web Frameworks
+   6.2.  Existing IETF Standards
+   7.  IANA Considerations ..........................................16
+       7.1. Header Field Registration ...............................16
+   8.  Security Considerations ......................................16
+   9.  Conventions ..................................................17
+   10.  Copyright Notice .............................................17
+   11. References ...................................................17
+       11.1.  Normative References ..................................17
+       11.2.  Informative References ................................18
 
 
 1.  Introduction
@@ -121,8 +125,8 @@ Table of Contents
    programmers must increasingly synchronize state, rather than simply
    transfer it with HTTP.
 
-   Braid extends HTTP into a synchronization protocol.  It adds these
-   features:
+   Braid generalizes HTTP into a synchronization protocol.  It adds
+   these features:
 
      1. Versioning (Section 2)
 
@@ -130,16 +134,14 @@ Table of Contents
 
      2. Subscriptions (Section 3)
 
-        A client can add a Subscribe header to a GET request, which will
-        subscribe it to all future versions of the resource until the
-        client says forGET.
+        A Subscribe header can be added to GET requests, which promises
+        to push all future versions to the client, until the client says
+        forGET.
 
      3. Range Patches [RANGE-PATCH]
 
-        When a resource changes, a client, server, or cache can send
-        just the changed range, rather than the entire resource.  This
-        extends the existing HTTP Range Request with semantics for PUT,
-        PATCH, and POST.
+        Express changes to versions in patches, with a uniform format
+        based on Range Requests.
 
      4. Merge Types [MERGE-TYPES]
 
@@ -157,7 +159,391 @@ Table of Contents
    textareas to support collaborative editing.
 
 
-1.1.  Design Goals
+2.  Versioning for Resources
+
+   Each Braid resource has a current version, and a version history.
+   Versions are specified as a string in the [STRUCTURED-HEADERS]
+   format.  Each version string must unique, to differentiate any two
+   points in time.  To specify the version of content in a request or
+   response body, a Version header MAY be included in a request for a
+   PUT, PATCH or POST, or in the response to a GET:
+
+           Version: "dkn7ov2vwg"
+
+   Every version has a set of Parents that denote the most recent parent
+   version(s) that were known at the time the version was created.  The
+   full graph of parents forms a Directed Acyclic Graph (DAG),
+   representing the known partial order of all versions.  A version A is
+   known to have occurred before a version B if and only if A is an
+   ancestor of B in the partial order.
+
+   Parents are also specified using a header in a PUT request or GET
+   response:
+
+           Parents: "ajtva12kid", "cmdpvkpll2"
+
+   The Parents header is a List of Strings (the syntax is defined in
+   [STRUCTURED-HEADERS]).  Each string is a version.  For any two parent
+   versions A and B that are specified in a Parents header, A cannot be
+   a descendent of B or vice versa.
+
+   If a client or server does not specify a Version for a resource it
+   transfers, the recipient MAY generate a new version ID of its own
+   choosing.  If a client or server does not specify a Parents header
+   when transferring a new version, the recipient MAY presume that the
+   most recent versions it has seen are the parents of the new version.
+
+
+2.1.  Comparison with ETag
+
+   The Version header is similar to an ETag, but has two differences:
+
+   1. ETags are sensitive to Content-Encoding.  If you send the same
+      version with a GZip Content-Encoding, it will have a different
+      ETag, but the same Version.
+
+   2. A Version marks a unique point in time -- not unique content.  If
+      a resource is changed from version A to B, and then to C, such
+      that the contents at A are the same as the contents at C, then it
+      is possible versions A and C to have the same ETag, even though
+      they have different Versions.
+
+
+3. Versioning for GET and PUT
+
+3.1.  PUT a new version
+
+   When a PUT request changes the state of a resource, it can specify
+   the new version of the resource, the parent versions that existed
+   when it was created, and the way multiple simultaneous changes should
+   be merged (the "Merge-Type"):
+
+
+      Request:
+
+         PUT /chat
+         Version: "ej4lhb9z78"                                 | Version
+         Parents: "oakwn5b8qh", "uc9zwhw7mf"                   |
+         Content-Type: application/json                        |
+         Merge-Type: sync9                                     |
+         Content-Length: 73                                    |
+                                                               |
+         [{text: "Hi, everyone!",                              | | Body
+           author: {type: "link", value: "/user/tommy"}}]      | |
+                  
+
+      Response:
+
+         HTTP/1.1 200 OK
+         Patches: OK
+
+
+   This example includes the entire new value of the state, but one can
+   also send updates as patches.
+
+
+3.2.  PUT a new version as a patch
+
+   Not only are patches smaller, and thus more efficient; they also
+   provide useful information for merging two simutaneous edits, for
+   instance in collaborative editing.
+
+   One can send an update in a patch by setting the "Patches" header to
+   a number, and then set the Message body to a sequence of that many
+   patches, separated by blank lines:
+
+
+      Request:
+
+         PUT /chat
+         Version: "g09ur8z74r"                                 | Version
+         Parents: "ej4lhb9z78"                                 |
+         Content-Type: application/json                        |
+         Merge-Type: sync9                                     |
+         Patches: 2                                            |
+                                                               |
+         Content-Length: 59                                    | | Patch
+         Content-Range: json .messages[1:1]                    | |
+                                                               | |
+         {text: "Yo!",                                         | |
+          author: {type: "link", value: "/user/yobot"}         | |
+                                                               |
+         Content-Length: 40                                    | | Patch
+         Content-Range: json .latest_change                    | |
+                                                               | |
+         {"type": "date", "value": 1573952202370}              | |
+
+
+      Response:
+
+         HTTP/1.1 200 OK
+         Patches: OK
+
+
+   This example uses a [RANGE-PATCH], which is defined separately.
+
+   In order to distinguish each patch within a Version, we need to know
+   the length of the patch.  To know the length of the patch, each patch
+   must include one of the following headers:
+
+         Content-Length: N
+         Transfer-Encoding: chunked
+
+   Either of these provide a way to determine when the next message
+   starts.
+
+
+3.3.  GET a specific version
+
+   A server can optionally allow clients to request historical versions
+   of a resource in GET requests.  To request a historical version, a
+   client includes a Version and/or Parents header in the request.
+
+
+      Request:
+
+         GET /chat
+         Version: "ej4lhb9z78"
+
+      Response:
+
+         HTTP/1.1 209 Subscription
+         Subscribe: keep-alive
+
+         Version: "ej4lhb9z78"                                 | Version
+         Parents: "oakwn5b8qh", "uc9zwhw7mf"                   |
+         Content-Type: application/json                        |
+         Merge-Type: sync9                                     |
+         Content-Length: 73                                    |
+                                                               |
+         [{text: "Hi, everyone!",                              | | Body
+           author: {type: "link", value: "/user/tommy"}}]      | | 
+   
+
+   If a GET request contains a Version header:
+
+   - The Subscribe header (Section 3.4) MUST be absent.
+
+   - The server SHOULD return a single response, containing that version
+     of the resource in its body, with the Version header set to the
+     version requested by the client.
+
+   - If the server does not support historical versions, it MAY ignore
+     the Version header and respond as usual, but MUST NOT include the
+     Version header in its response.
+
+   If a GET request contains a Parents header:
+
+   - If the request does not also contain a Version, then the request
+     MUST also contain a Subscribe header, and the server SHOULD send a
+     set of versions connecting the Parents to the current Version, and
+     then subscribe the client to future updates.
+
+   - If the request also contains a Version, then the server SHOULD
+     respond with a set of versions that connect the specified Parents
+     with the specified Version, and then close the connection.
+
+   - If the server does not support historical versions, then it MAY
+     ignore the Parents header, but MUST NOT include the Parents header
+     in its response.
+
+   A server MAY refactor or rebase the version history that it provides
+   to a client, so long as it does not affect the resulting state, or
+   the result of the patch-type's merges.
+
+
+3.4.  GET with Subscriptions
+
+   If a GET request includes the Subscribe header, it will return a
+   stream of versions; a new version pushed with each change.  Each
+   version can contain either the new contents in its body, or a set of
+   Patches.
+
+
+      Request:
+
+         GET /chat
+         Subscribe: keep-alive
+
+      Response:
+
+         HTTP/1.1 209 Subscription
+         Subscribe: keep-alive
+
+         Version: "ej4lhb9z78"                                 | Version
+         Parents: "oakwn5b8qh", "uc9zwhw7mf"                   |
+         Content-Type: application/json                        |
+         Merge-Type: sync9                                     |
+         Content-Length: 73                                    |
+                                                               |
+         [{text: "Hi, everyone!",                              | | Body
+           author: {type: "link", value: "/user/tommy"}}]      | | 
+
+         Version: "g09ur8z74r"                                 | Version
+         Parents: "ej4lhb9z78"                                 |
+         Content-Type: application/json                        |
+         Merge-Type: sync9                                     |
+         Patches: 1                                            |
+                                                               |
+         Content-Length: 59                                    | | Patch
+         Content-Range: json .messages[1:1]                    | |
+                                                               | |
+         {text: "Yo!",                                         | |
+          author: {type: "link", value: "/user/yobot"}         | |
+
+         Version: "2bcbi84nsp"                                 | Version
+         Parents: "g09ur8z74r"                                 |
+         Content-Type: application/json                        |
+         Merge-Type: sync9                                     |
+         Patches: 1                                            |
+                                                               |
+         Content-Length: 65                                    | | Patch
+         Content-Range: json .messages[2:2]                    | |
+                                                               | |
+         {text: "Hi, Tommy!",                                  | |
+          author: {type: "link", value: "/user/sal"}}          | |
+
+         Version: "up12vyc5ib"                                 | Version
+         Parents: "2bcbi84nsp"                                 |
+         Content-Type: application/json                        |
+         Merge-Type: sync9                                     |
+         Patches: 1                                            |
+                                                               |
+         Content-Length: 326                                   | | Patch
+         Content-Type: application/json-patch+json             | |
+                                                               | |
+         [                                                     | |
+           { "op": "test", "path": "/a/b/c", "value": "foo" }, | |
+           { "op": "remove", "path": "/a/b/c" },               | |
+           { "op": "add", "path": "/a/b/c", "value": [] },     | |
+           { "op": "replace", "path": "/a/b/c", "value": 42 }, | |
+           { "op": "move", "from": "/a/b", "path": "/a/d },    | |
+           { "op": "copy", "from": "/a/d/d", "path": "/a/d/e" }| |
+         ]                                                     | |
+
+
+3.4.1.  Creating a Subscription
+
+   The "Subscribe" header on a GET request modifies the method semantics
+   to request a subscription to future updates to the data, rather than
+   only the current version of the representation data.
+
+   A client MAY request a subscription by issuing a GET request
+   containing a Subscribe header:
+
+           Subscribe
+      or   Subscribe: keep-alive
+      or   Subscribe: keep-alive=<seconds>
+
+   If a server implements Subscribe, it MUST include a Subscribe header
+   in its response.  The server then SHOULD keep the connection open,
+   and send updates over it.
+
+   In general, a server that implements subscriptions promises to keep
+   its subscribed clients up-to-date by sending changes until the client
+   closes the subscription.  A subscription is different from a GET
+   connection (e.g. a TCP connection, or HTTP/2 stream).  If a client
+   requests "Subscribe: keep-alive", then the subscription will be
+   remembered even after the GET connection closes.  A subscription can
+   be resumed by the client issuing another GET with a Subscribe header.
+
+
+3.4.2.  Sending multiple updates per GET
+
+   To send multiple updates, a server concatenates multiple
+   sub-responses into a single response body.  Each sub-response MUST
+   contain its own headers and body.  Each sub-response's headers MUST
+   contain a
+
+      Content-Length: N
+
+   header, where N is specified in bytes.  The sub-response body MUST be
+   exactly N bytes, and be followed with a single newline.  Any data
+   after this newline begins the next sub-response's header.
+
+   Each response MUST have both headers and a body.  The body MAY be
+   zero-length.
+
+
+
+3.4.3.  Continuing a Subscription
+
+   Even if a connection closes, a subscription might still be active.
+   If a server's response headers for a connection contained:
+
+           Subscribe: keep-alive
+      or   Subscribe: keep-alive=<seconds>
+
+   Then the server SHOULD keep the subscription open even after the
+   connection closes.  This means that the server promises to keep
+   enough history to merge with the client when the client comes back
+   online.
+
+   When the client reconnects, it MAY specify the most recent versions
+   it saw from the server using the Parents header (Section 3).  This
+   tells the server which versions of state to catch it up from.
+
+   The server can suggest how long it will wait for the client by
+   responding with Subscribe: keep-alive=<seconds>.  A server SHOULD
+   wait at least <seconds> after a connection closes before dropping the
+   subscription, and clearing its history.
+
+
+3.4.4.  Ending a Subscription
+
+   Servers and clients MAY drop a subscription at any time, no matter
+   the value of keep-alive.  A client MAY reconnect by issuing a new GET
+   request with a new Subscribe header.
+
+   If a subscription is set to keep-alive, then closing the TCP/QUIC
+   connection won't end the subscription.  Thus a client needs a way to
+   explicitly end the subscription.  In HTTP/1, this is by sending the
+   text "forGET\n" over the TCP connection.  In HTTP/2, this is by
+   issuing a CLOSE event to the GET request's stream.  Alternatively,
+   since today's web browsers do not support sending extra text after a
+   request body, the client can issue a fresh request specified as a
+   FORGET method.
+
+
+
+3.4.5.  Example: GET subscription that animates a GIF
+
+   In this example, a server streams changes to a GIF file in a sequence
+   of patches.  When the client renders the new state of the GIF after
+   each patch, a new frame of animation is displayed.
+
+     Request:
+       GET /animated-braid.gif
+       Subscribe
+
+     Response:
+       HTTP/1.1 200 OK
+       Subscribe
+       Cache-Control: no-cache, patch
+       Patch-Type: range
+
+       Content-Type: image/gif                             -- Frame 1
+       Patch-Type: range
+       Content-Length: 1239
+
+       [100:200] = <binary data>
+
+       Content-Type: image/gif                             -- Frame 2
+       Patch-Type: range(json)
+       Content-Length: 62638
+
+       [348:887] = <binary data>
+
+
+3.4.6.  Errors
+
+   If a server decides has dropped the history that a client requests,
+   the server can return a 410 GONE response, to tell the client "sorry,
+   I don't have the history necessary to synchronize with you."
+
+
+
+4.  Design Goals
 
    This spec is designed to be:
 
@@ -171,9 +557,51 @@ Table of Contents
       instance, these extensions support any Operational Transform or
       CRDT algorithm.
 
-1.2.  Use Cases and Related Work
+5.  Use Cases and Related Work
 
-1.2.1.  Example: a Serverless Chat
+5.1.  Dynamic Resources
+
+  - Proxies/caches update
+  - Can fetch history of resource too
+
+5.2.  Collaborative Editing
+
+5.3.  Text Chat
+
+5.4.  Offline Mode
+
+5.5.  Serverless Mode
+
+5.6.  Example: a Serverless Chat
+
+   One could build a text chat, as a web application, that can continue
+   to function when the server goes down.
+
+   Each client could load the state of the chat with a:
+
+
+     Request:
+       GET /chat
+       Subscribe: keep-alive
+
+     Response:
+       HTTP/1.1 200 OK
+       Subscribe: keep-alive
+       Cache-Control: no-cache, patch
+       Content-Type: application/json
+
+       Content-Type: image/gif                             -- Frame 1
+       Patch-Type: braid(bytes, sync9(array))
+       Content-Length: 1239
+
+       [100:200] = <binary data>
+
+       Content-Type: image/gif                             -- Frame 2
+       Patch-Type: braid(bytes, sync9(array))
+       Content-Length: 62638
+
+       [348:887] = <binary data>
+
 
    A Braid web application can operate offline.  A user can use the app
    from an airplane, and their edits can synchronize when they regain
@@ -204,7 +632,9 @@ Table of Contents
 
 
 
-1.2.2.  Web Frameworks
+6.  Related Work
+
+6.1.  Web Frameworks
 
    Web applications typically synchronize the state of a client and
    server with layers of models, views, and controllers in web
@@ -213,7 +643,7 @@ Table of Contents
 
       ====== Legacy Websites ======      ====== Braid Websites ======
 
-      Today's webpages are               Braid generalizes HTTP and
+      Today's webpages are               Braid generalizes HTTP
       generated from multiple            into a standard for
       layers of state.  Each layer       synchronizing state within
       has a different API.               and between websites.
@@ -252,7 +682,7 @@ Table of Contents
 
 
 
-1.2.3.  Existing IETF Standards
+6.2.  Existing IETF Standards
 
    A number of IETF specifications already standardize aspects of
    synchronization for specific domains.  IMAP [RFC3501] provides
@@ -262,300 +692,12 @@ Table of Contents
    recently, JMAP [RFC8620] provides an updated method of
    synchronization, supporting mail, calendars, and contacts.
 
-2.  Versioning of Resources
-
-   Each Braid resource has a version history.  Versions are specified
-   with a unique string in the [STRUCTURED-HEADERS] format.  A Version
-   header MAY be included in a request for a PUT, PATCH or POST, or in
-   the response to a GET:
-
-           Version: "dkn7ov2vwg"
-
-   Every version also has a set of Parents, which denote the most recent
-   Version(s) that were known at the time the version was created.  The
-   full graph of parents forms a Directed Acyclic Graph (DAG),
-   representing the known partial order of all versions.  A version A is
-   known to have occurred before a version B if and only if A is an
-   ancestor of B in the partial order.
-
-   Parents are also specified using a header in a PUT, PATCH, or POST
-   request, and a GET response:
-
-           Parents: "ajtva12kid", "cmdpvkpll2"
-
-   The Parents header MUST be of type List in [STRUCTURED-HEADERS], with
-   each element a string obeying the requirements of a Version.  For any
-   two parent versions A and B that are specified in a Parents header, A
-   cannot be a descendent of B or vice versa.
-
-   If a client or server does not specify a Version for a resource it
-   transfers, the recipient MAY generate a new version ID of its own
-   choosing.  If a client or server does not specify a Parents header
-   when transferring a new version, the recipient MAY presume that the
-   most recent versions it has seen are the parents of the new version.
-
-2.1.  Comparison with ETag
-
-   The Version header is similar to an ETag, but has two differences:
-
-   1. ETags are sensitive to Content-Encoding.  If you send the same
-      version with a GZip Content-Encoding, it will have a different
-      ETag, but the same Version.
-
-   2. A Version marks a unique point in time -- not unique content.  If
-      a resource is changed from version A to B, and then to C, such
-      that the contents at A are the same as the contents at C, then it
-      is possible versions A and C to have the same ETag, even though
-      they have different Versions.
 
 
-2.2.  Requesting Historical Versions
 
-   A server can optionally allow clients to request historical versions
-   of a resource in GET requests.  To request a historical version, a
-   client includes a Version and/or Parents header in the request.
+7. IANA Considerations
 
-   If a GET request contains a Version header:
-
-   - The Subscribe header (Section 3) MUST be absent.
-
-   - The server SHOULD return a single response, containing that version
-     of the resource in its body, with the Version header set to the
-     version requested by the client.
-
-   - If the server does not support historical versions, it MAY ignore
-     the Version header and respond as usual, but MUST NOT include the
-     Version header in its response.
-
-   If a GET request contains a Parents header:
-
-   - If the request does not also contain a Version, then the request
-     MUST also contain a Subscribe header, and the server SHOULD send a
-     set of versions connecting the Parents to the current Version, and
-     then subscribe the client to future updates.
-
-   - If the request also contains a Version, then the server SHOULD
-     respond with a set of versions that connect the specified Parents
-     with the specified Version, and then close the connection.
-
-   - If the server does not support historical versions, then it MAY
-     ignore the Parents header, but MUST NOT include the Parents header
-     in its response.
-
-   A server MAY refactor or rebase the version history that it provides
-   to a client, so long as it does not affect the resulting state, or
-   the result of the patch-type's merges.
-
-
-
-3.  Subscriptions for GET
-
-3.1.  Creating a Subscription
-
-   The "Subscribe" header on a GET request modifies the method semantics
-   to request a subscription to future updates to the data, rather than
-   only the current version of the representation data.
-
-   A client MAY request a subscription by issuing a GET request
-   containing a Subscribe header:
-
-           Subscribe
-      or   Subscribe: keep-alive
-      or   Subscribe: keep-alive=<seconds>
-
-   If a server implements Subscribe, it MUST include a Subscribe header
-   in its response.  The server then SHOULD keep the connection open,
-   and send updates over it.
-
-   In general, a server that implements subscriptions promises to keep
-   its subscribed clients up-to-date by sending changes until the client
-   closes the subscription.  A subscription is different from a GET
-   connection (e.g. a TCP connection, or HTTP/2 stream).  If a client
-   requests "Subscribe: keep-alive", then the subscription will be
-   remembered even after the GET connection closes.  A subscription can
-   be resumed by the client issuing another GET with a Subscribe header.
-
-3.2.  Sending multiple updates per GET
-
-   To send multiple updates, a server concatenates multiple
-   sub-responses into a single response body.  Each sub-response MUST
-   contain its own headers and body.  Each sub-response's headers MUST
-   contain a
-
-      Content-Length: N
-
-   header, where N is specified in bytes.  The sub-response body MUST be
-   exactly N bytes, and be followed with a single newline.  Any data
-   after this newline begins the next sub-response's header.
-
-   Each response MUST have both headers and a body.  The body MAY be
-   zero-length.
-
-
-
-3.3.  Continuing a Subscription
-
-   Even if a connection closes, a subscription might still be active.
-   If a server's response headers for a connection contained:
-
-           Subscribe: keep-alive
-      or   Subscribe: keep-alive=<seconds>
-
-   Then the server SHOULD keep the subscription open even after the
-   connection closes.  This means that the server promises to keep
-   enough history to merge with the client when the client comes back
-   online.
-
-   When the client reconnects, it MAY specify the most recent versions
-   it saw from the server using the Parents header (Section 3).  This
-   tells the server which versions of state to catch it up from.
-
-   The server can suggest how long it will wait for the client by
-   responding with Subscribe: keep-alive=<seconds>.  A server SHOULD
-   wait at least <seconds> after a connection closes before dropping the
-   subscription, and clearing its history.
-
-3.4.  Ending a Subscription
-
-   Servers and clients MAY drop a subscription at any time, no matter
-   the value of keep-alive.  A client MAY reconnect by issuing a new GET
-   request with a new Subscribe header.
-
-   If a subscription is set to keep-alive, then closing the TCP/QUIC
-   connection won't end the subscription.  Thus a client needs a way to
-   explicitly end the subscription.  In HTTP/1, this is by sending the
-   text "forGET\n" over the TCP connection.  In HTTP/2, this is by
-   issuing a CLOSE event to the GET request's stream.  Alternatively,
-   since today's web browsers do not support sending extra text after a
-   request body, the client can issue a fresh request specified as a
-   FORGET method.
-
-
-
-3.5.  Example: GET subscription that animates a GIF
-
-   In this example, a server streams changes to a GIF file in a sequence
-   of patches.  When the client renders the new state of the GIF after
-   each patch, a new frame of animation is displayed.
-
-     Request:
-       GET /animated-braid.gif
-       Subscribe
-
-     Response:
-       HTTP/1.1 200 OK
-       Subscribe
-       Cache-Control: no-cache, patch
-       Patch-Type: braid(bytes, sync9(array))
-
-       Content-Type: image/gif                             -- Frame 1
-       Patch-Type: braid(bytes, sync9(array))
-       Content-Length: 1239
-
-       [100:200] = <binary data>
-
-       Content-Type: image/gif                             -- Frame 2
-       Patch-Type: braid(bytes, sync9(array))
-       Content-Length: 62638
-
-       [348:887] = <binary data>
-
-3.6.  Errors
-
-   If a server decides has dropped the history that a client requests,
-   the server can return a 410 GONE response, to tell the client "sorry,
-   I don't have the history necessary to synchronize with you."
-
-
-
-4.  Range Patches
-
-4.1.  The Version Data Structure
-
-   A client SHOULD send a new version in a PATCH, POST, or PUT request.
-   A server MAY send a version in the response or sub-response to a GET
-   request.  A version MAY contain any combination of the following
-   headers, with one restriction:
-
-     Patch-Type: <patch-type>
-     Cache-Control: no-cache, patch
-     Version: <versionid>
-     Parents: <versionid>, <versionid>, ...
-
-   The restriction is that if Patch-Type is present, then the body
-   contains a patch, and the response MUST also specify Cache-Control:
-   no-cache, patch, to ensure that legacy systems do not cache the patch
-   as if it were the resource.
-
-   - If Patch-Type is not specified, or Cache-Control does not have
-     no-cache, then the request or response body SHOULD be interpreted
-     as a complete representation of the resource.
-
-   - If the Version header is not specified, then the recipient MAY
-     invent a new version ID for it, and MAY use that new ID in network
-     communications with others.
-
-   - If the Parents is not specified, then the recipient SHOULD
-     interpret the version to be new, built upon the latest versions
-     the recipient has.  The determination of which versions are
-     "latest" is up to the recipient.
-
-
-
-4.2.  Defining a new Patch Type
-
-   A human MAY define a patch type by publishing a specification of its:
-
-     - Patch-Type
-
-     - Data format
-
-     - and Behavior: the outcome after applying a sequence of patches to
-       - set of versions.
-
-   The Patch-Type is an arbitrary string, such as:
-
-     Patch-Type: braid
-     Patch-Type: automerge/json
-     Patch-Type: sharedb/rich-text
-
-   The Content-Type SHOULD start with patch/*, such as:
-
-     Content-Type: patch/braid
-     Content-Type: patch/automerge/json
-     Content-Type: patch/sharedb/rich-text
-
-   A patch/* content-type indicates that the content is a type of patch
-   that satisfies the requirements of this section.
-
-4.2.1.  Patch Behavior
-
-   A patch SHOULD satisfy:
-
-   - If a set of patches originated from a version, and you apply them
-     to a copy of the version, you get the same new version again.
-
-   A patch MAY satisfy:
-
-   - (Commute) If the same set of patches are applied in a different
-     order, the result is the same.
-
-
-
-5.   Merge Types
-
-   Merge Types specify how to merge multiple simultaneous edits to a
-   resource consistently.  This typically happens if two computers edit
-   the same state over a network with latency.  If the computers
-   implement and agree upon the same Merge Type, then they can guarantee
-   to reach a consistent state, after arbitrary edits, eventually.
-
-   Merge Types are discussed in a separate document, [MERGE-TYPES].
-
-
-6. IANA Considerations
-
-6.1.  Header Field Registration
+7.1.  Header Field Registration
 
    HTTP header fields are registered within the "Message Headers"
    registry maintained at
@@ -577,19 +719,19 @@ Table of Contents
    Engineering Task Force".
 
 
-7. Security Considerations
+8. Security Considerations
 
    XXX Todo
 
 
 
-8.  Conventions
+9.  Conventions
 
    The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
    "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this
    document are to be interpreted as described in [RFC2119].
 
-9.  Copyright Notice
+10.  Copyright Notice
 
    Copyright (c) 2019 IETF Trust and the persons identified as the
    document authors.  All rights reserved.
@@ -604,9 +746,9 @@ Table of Contents
    the Trust Legal Provisions and are provided without warranty as
    described in the Simplified BSD License.
 
-10.  References
+11.  References
 
-10.1.  Normative References
+11.1.  Normative References
 
    [RFC2119]  Bradner, S., "Key words for use in RFCs to Indicate
               Requirement Levels", BCP 14, RFC 2119, March 1997.
@@ -620,7 +762,7 @@ Table of Contents
 
 
 
-10.2.  Informative References
+11.2.  Informative References
 
    [XHR]      Van Kestern, A., Aubourg, J., Song, J., and R. M.
               Steen, H.  "XMLHttpRequest", September 2019.
