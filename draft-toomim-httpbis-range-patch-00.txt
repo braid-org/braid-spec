@@ -83,44 +83,44 @@ Table of Contents
    units can be represented over HTTP, using Content-Range,
    Content-Type, and Content-Length HTTP headers.  Example:
 
-     HTTP/1.1 206 Partial Content
-     Date: Wed, 15 Nov 1995 06:25:24 GMT
-     Last-Modified: Wed, 15 Nov 1995 04:58:08 GMT
-     Content-Range: bytes 21010-47021/47022
-     Content-Length: 26012
-     Content-Type: image/gif
+      HTTP/1.1 206 Partial Content
+      Date: Wed, 15 Nov 1995 06:25:24 GMT
+      Last-Modified: Wed, 15 Nov 1995 04:58:08 GMT
+      Content-Range: bytes 21010-47021/47022
+      Content-Length: 26012
+      Content-Type: image/gif
 
-     ... 26012 bytes of partial image data ...
+      ... 26012 bytes of partial image data ...
 
    The same approach can be used to describe a range inside content
    interpreted not as bytes, but, for example, as JSON [RFC8259] or
    JSON-compatible structure.  We define such JSON range unit in
    Section 4.1.  For example, given the following JSON document:
 
-     {"foo": {"bar": [
-       {"some": "thing"},
-       {"no": "thing"},
-       {"mo": "re"},
-       {"baz": {"1": {"two": "tree"}}}
-     ]}}
+      {"foo": {"bar": [
+        {"some": "thing"},
+        {"no": "thing"},
+        {"mo": "re"},
+        {"baz": {"1": {"two": "tree"}}}
+      ]}}
 
    One might make the following request:
 
-     GET /api/document/1 HTTP/1.1
-     Host: example.com
-     Accept: application/json
-     Range: json=/foo/bar/3/baz
+      GET /api/document/1 HTTP/1.1
+      Host: example.com
+      Accept: application/json
+      Range: json=/foo/bar/3/baz
 
    And receive the following response:
 
-     HTTP/1.1 206 Partial Content
-     Date: Thu, 31 Oct 2019 07:51:08 GMT
-     Last-Modified: Thu, 18 Oct 2019 17:44:39 GMT
-     Content-Range: json /foo/bar/3/baz
-     Content-Length: 22
-     Content-Type: application/json
+      HTTP/1.1 206 Partial Content
+      Date: Thu, 31 Oct 2019 07:51:08 GMT
+      Last-Modified: Thu, 18 Oct 2019 17:44:39 GMT
+      Content-Range: json /foo/bar/3/baz
+      Content-Length: 22
+      Content-Type: application/json
 
-     {"1": {"two": "tree"}}
+      {"1": {"two": "tree"}}
 
    [RFC7233] defines and allows a Range header only for the GET request
    method.  In this document, we define the behavior for other request
@@ -131,23 +131,23 @@ Table of Contents
    When issuing a non-GET request to a resource, a range patch can be
    provided using Range header field.
 
-     PATCH /api/image/1 HTTP/1.1
-     Host: example.com
-     Range: bytes=21010-47021
-     Content-Length: 26012
-     Content-Type: image/gif
+      PATCH /api/image/1 HTTP/1.1
+      Host: example.com
+      Range: bytes=21010-47021
+      Content-Length: 26012
+      Content-Type: image/gif
 
-     ... 26012 bytes of new partial image data ...
+      ... 26012 bytes of new partial image data ...
 
    And for JSON:
 
-     PATCH /api/document/1 HTTP/1.1
-     Host: example.com
-     Range: json=/foo/bar/3/baz
-     Content-Length: 25
-     Content-Type: application/json
+      PATCH /api/document/1 HTTP/1.1
+      Host: example.com
+      Range: json=/foo/bar/3/baz
+      Content-Length: 25
+      Content-Type: application/json
 
-     {"2": {"three": "flour"}}
+      {"2": {"three": "flour"}}
 
    A patch with empty contents corresponds to deletion of existing
    content at the specified range.  A patch with a zero-length range but
@@ -175,21 +175,21 @@ Table of Contents
    When issuing a non-GET request to a resource, multiple range patches
    can be provided as well:
 
-     PATCH /api/document/1 HTTP/1.1
-     Host: example.com
-     Content-Length: 200
-     Content-Type: multipart/byteranges; boundary=THIS_STRING_SEPARATES
+      PATCH /api/document/1 HTTP/1.1
+      Host: example.com
+      Content-Length: 200
+      Content-Type: multipart/byteranges; boundary=THIS_STRING_SEPARATES
 
-     --THIS_STRING_SEPARATES
-     Content-Type: application/json
-     Range: json=/foo/bar/2/mo
+      --THIS_STRING_SEPARATES
+      Content-Type: application/json
+      Range: json=/foo/bar/2/mo
 
-     42
-     --THIS_STRING_SEPARATES
-     Content-Type: application/json
-     Range: json=/foo/bar/1/no
+      42
+      --THIS_STRING_SEPARATES
+      Content-Type: application/json
+      Range: json=/foo/bar/1/no
 
-     "person"
+      "person"
 
 2.2.  Stand-Alone Range Patch
 
@@ -201,24 +201,24 @@ Table of Contents
    headers separated from the patch body by an empty line.  Only
    Content-Range header is required.  Example:
 
-     Content-Range: json /foo/bar/3/baz
+      Content-Range: json /foo/bar/3/baz
 
-     {"1": {"two": "tree"}}
+      {"1": {"two": "tree"}}
 
    Additional headers can be provided.  This can be used even for
    multiple range patches.  In such case the patch starts with
    Content-Type header defining the boundary.  Example:
 
-     Content-Type: multipart/byteranges; boundary=THIS_STRING_SEPARATES
+      Content-Type: multipart/byteranges; boundary=THIS_STRING_SEPARATES
 
-     --THIS_STRING_SEPARATES
-     Content-Range: json /foo/bar/2/mo
+      --THIS_STRING_SEPARATES
+      Content-Range: json /foo/bar/2/mo
 
-     42
-     --THIS_STRING_SEPARATES
-     Content-Range: json /foo/bar/1/no
+      42
+      --THIS_STRING_SEPARATES
+      Content-Range: json /foo/bar/1/no
 
-     "person"
+      "person"
 
    Stand-alone range patches can be transmitted over HTTP as-is as well.
    This can be used to provide the patch which has been used in a
@@ -226,15 +226,15 @@ Table of Contents
    identifies such stand-alone range patch.  For example, the patch used
    in the PATCH request example above could be retrieved as:
 
-     HTTP/1.1 200 OK
-     Date: Thu, 31 Oct 2019 07:51:08 GMT
-     Last-Modified: Thu, 18 Oct 2019 17:44:39 GMT
-     Content-Length: 62
-     Content-Type: application/json+patch
+      HTTP/1.1 200 OK
+      Date: Thu, 31 Oct 2019 07:51:08 GMT
+      Last-Modified: Thu, 18 Oct 2019 17:44:39 GMT
+      Content-Length: 62
+      Content-Type: application/json+patch
 
-     Content-Range: json /foo/bar/3/baz
+      Content-Range: json /foo/bar/3/baz
 
-     {"2": {"three": "flour"}}
+      {"2": {"three": "flour"}}
 
    Stand-alone range patches are binary data.
 
@@ -243,16 +243,16 @@ Table of Contents
    For media types which support range patches, ranges can be used as
    URI fragment identifies as well.  For example, URI:
 
-     /api/document/1#json=/foo/bar/0
+      /api/document/1#json=/foo/bar/0
 
    identifies a fragment with the following content:
 
-     {"some": "thing"}
+      {"some": "thing"}
 
    Multiple ranges are supported as well and they identify multiple
    fragments:
 
-     /api/document/1#json=/foo/bar/0,/foo/bar/1
+      /api/document/1#json=/foo/bar/0,/foo/bar/1
 
 3.  Range Units
 
@@ -268,7 +268,7 @@ Table of Contents
    Bytes range unit is already specified in [RFC7233].  We extend it by
    allowing a zero-length range using a zero-length-byte-range-spec.
 
-     zero-length-byte-range-spec = 1*DIGIT
+      zero-length-byte-range-spec = 1*DIGIT
 
    A zero-length range is a byte offset used to identify a location
    immediately before which new content can be inserted with a patch.
@@ -328,28 +328,28 @@ Table of Contents
 
    For example, given the JSON document:
 
-     {
-       "foo": [
-         "bar",
-         "baz",
-         "bax"
-       ]
-     }
+      {
+        "foo": [
+          "bar",
+          "baz",
+          "bax"
+        ]
+      }
 
    The following JSON strings evaluate to the accompanying JSON values:
 
-     "/foo"       ["bar", "baz"]
-     "/foo/0"     "bar"
-     "/foo/0-1"   ["bar"]
-     "/foo/1-3"   ["baz", "bax"]
-     "/foo/1-1"   []
-     "/foo/-"     []
-     "/foo/3-3"   // error
-     "/foo/4-4"   // error
-     "/foo/1-0"   // error
-     "/foo/1-4"   // error
-     "/foo/1-3/0" // error
-     "/foo/0/1-3" "ar"
+      "/foo"       ["bar", "baz"]
+      "/foo/0"     "bar"
+      "/foo/0-1"   ["bar"]
+      "/foo/1-3"   ["baz", "bax"]
+      "/foo/1-1"   []
+      "/foo/-"     []
+      "/foo/3-3"   // error
+      "/foo/4-4"   // error
+      "/foo/1-0"   // error
+      "/foo/1-4"   // error
+      "/foo/1-3/0" // error
+      "/foo/0/1-3" "ar"
 
    JSON ranges "/foo/1-1" and "/foo/-" are on its own of little utility,
    but serve as a zero-length range to identify a location immediately
@@ -379,9 +379,9 @@ Table of Contents
    Lines range unit is identified with "lines".  Lines range
    specification is defined by:
 
-     lines-range-spec = first-line "-" second-line
-     first-line = 1*DIGIT
-     second-line = 1*DIGIT
+      lines-range-spec = first-line "-" second-line
+      first-line = 1*DIGIT
+      second-line = 1*DIGIT
 
    Each lines range consists of two sets of digits, delimited by a
    character "-". Each set of digits represent an unsigned base-10
@@ -492,32 +492,32 @@ Table of Contents
    To determine whether or not the server can fulfill such a request
    correctly, the requester may first issue an OPTIONS request:
 
-     OPTIONS /api/document/1
-     Range-Request-Method: PATCH
-     Range-Request-Units: json,bytes
+      OPTIONS /api/document/1
+      Range-Request-Method: PATCH
+      Range-Request-Units: json,bytes
 
    To which the server may reply in the affirmative:
 
-     HTTP/1.1 204 No Content
-     Connection: keep-alive
-     Range-Request-Allow-Methods: PATCH
-     Range-Request-Allow-Units: json,bytes
-     Version: 33a64df551425fcc55e4d42a148795d9f25f89d4
+      HTTP/1.1 204 No Content
+      Connection: keep-alive
+      Range-Request-Allow-Methods: PATCH
+      Range-Request-Allow-Units: json,bytes
+      Version: 33a64df551425fcc55e4d42a148795d9f25f89d4
 
    In the partial negative:
 
-     HTTP/1.1 204 No Content
-     Connection: keep-alive
-     Range-Request-Allow-Methods: PATCH
-     Range-Request-Allow-Units: json
-     Version: 33a64df551425fcc55e4d42a148795d9f25f89d4
+      HTTP/1.1 204 No Content
+      Connection: keep-alive
+      Range-Request-Allow-Methods: PATCH
+      Range-Request-Allow-Units: json
+      Version: 33a64df551425fcc55e4d42a148795d9f25f89d4
 
    Or in the complete negative:
 
-     HTTP/1.1 204 No Content
-     Connection: keep-alive
-     Range-Request-Allow-Methods:
-     Range-Request-Allow-Units:
+      HTTP/1.1 204 No Content
+      Connection: keep-alive
+      Range-Request-Allow-Methods:
+      Range-Request-Allow-Units:
 
    Empty header fields are allowed per [RFC2616] section 2.1.
 
@@ -607,6 +607,7 @@ Authors' Addresses
 
    For more information, the authors of this document are best contacted
    via Internet mail:
+
 
    Michael Toomim
    Invisible College, Berkeley
