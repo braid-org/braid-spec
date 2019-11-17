@@ -284,7 +284,8 @@ Table of Contents
          Patches: OK
 
 
-   This example uses a Range Patch, which is defined in [RANGE-PATCH].
+   This example uses the Range Patch format, which is defined in
+   [RANGE-PATCH].
 
    In order to distinguish each patch within a Version, we need to know
    the length of the patch.  To know the length of the patch, each patch
