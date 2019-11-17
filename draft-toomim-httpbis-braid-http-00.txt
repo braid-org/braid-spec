@@ -75,16 +75,12 @@ Table of Contents
    3.4.2.  Sending multiple updates per GET
    3.4.3.  Continuing a Subscription
    3.4.4.  Ending a Subscription
-   3.4.5.  Example: GET subscription that animates a GIF
-   3.4.6.  Errors
+   3.4.5.  Errors
    4.  Design Goals
    5.  Use Cases
    5.1.  Dynamic Resources
-   5.2.  Collaborative Editing
-   5.3.  Text Chat
-   5.4.  Offline Mode
-   5.5.  Serverless Mode
-   5.6.  Example: a Serverless Chat
+   5.2.  Dynamic Proxies and Caches
+   5.3.  A Serverless Chat Example
    6.  Related Work
    6.1.  Web Frameworks
    6.2.  Existing IETF Standards
@@ -322,30 +318,30 @@ Table of Contents
 
    If a GET request contains a Version header:
 
-   - The Subscribe header (Section 3.4) MUST be absent.
+     - The Subscribe header (Section 3.4) MUST be absent.
 
-   - The server SHOULD return a single response, containing that version
-     of the resource in its body, with the Version header set to the
-     version requested by the client.
+     - The server SHOULD return a single response, containing that
+       version of the resource in its body, with the Version header set
+       to the version requested by the client.
 
-   - If the server does not support historical versions, it MAY ignore
-     the Version header and respond as usual, but MUST NOT include the
-     Version header in its response.
+     - If the server does not support historical versions, it MAY ignore
+       the Version header and respond as usual, but MUST NOT include the
+       Version header in its response.
 
    If a GET request contains a Parents header:
 
-   - If the request does not also contain a Version, then the request
-     MUST also contain a Subscribe header, and the server SHOULD send a
-     set of versions connecting the Parents to the current Version, and
-     then subscribe the client to future updates.
+     - If the request does not also contain a Version, then the request
+       MUST also contain a Subscribe header, and the server SHOULD send
+       a set of versions connecting the Parents to the current Version,
+       and then subscribe the client to future updates.
 
-   - If the request also contains a Version, then the server SHOULD
-     respond with a set of versions that connect the specified Parents
-     with the specified Version, and then close the connection.
+     - If the request also contains a Version, then the server SHOULD
+       respond with a set of versions that connect the specified Parents
+       with the specified Version, and then close the connection.
 
-   - If the server does not support historical versions, then it MAY
-     ignore the Parents header, but MUST NOT include the Parents header
-     in its response.
+     - If the server does not support historical versions, then it MAY
+       ignore the Parents header, but MUST NOT include the Parents
+       header in its response.
 
    A server MAY refactor or rebase the version history that it provides
    to a client, so long as it does not affect the resulting state, or
@@ -452,17 +448,15 @@ Table of Contents
 
    To send multiple updates, a server concatenates multiple
    sub-responses into a single response body.  Each sub-response MUST
-   contain its own headers and body.  Each sub-response's headers MUST
-   contain a
+   contain its own headers and body.  Each sub-response must have a
+   known length, which means it MUST contain one of the following
+   headers:
 
-      Content-Length: N
+      - Content-Length: N
+      - Transfer-Encoding: chunked
+      - Patches: N
 
-   header, where N is specified in bytes.  The sub-response body MUST be
-   exactly N bytes, and be followed with a single newline.  Any data
-   after this newline begins the next sub-response's header.
-
-   Each response MUST have both headers and a body.  The body MAY be
-   zero-length.
+   Each sub-response MUST have both headers and a body.
 
 
 
@@ -479,12 +473,12 @@ Table of Contents
    enough history to merge with the client when the client comes back
    online.
 
-   When the client reconnects, it MAY specify the most recent versions
+   When the client reconnects, it may specify the most recent versions
    it saw from the server using the Parents header (Section 3).  This
    tells the server which versions of state to catch it up from.
 
    The server can suggest how long it will wait for the client by
-   responding with Subscribe: keep-alive=<seconds>.  A server SHOULD
+   responding with Subscribe: keep-alive=<seconds>.  A server should
    wait at least <seconds> after a connection closes before dropping the
    subscription, and clearing its history.
 
@@ -492,7 +486,7 @@ Table of Contents
 3.4.4.  Ending a Subscription
 
    Servers and clients MAY drop a subscription at any time, no matter
-   the value of keep-alive.  A client MAY reconnect by issuing a new GET
+   the value of keep-alive.  A client may reconnect by issuing a new GET
    request with a new Subscribe header.
 
    If a subscription is set to keep-alive, then closing the TCP/QUIC
@@ -506,41 +500,11 @@ Table of Contents
 
 
 
-3.4.5.  Example: GET subscription that animates a GIF
-
-   In this example, a server streams changes to a GIF file in a sequence
-   of patches.  When the client renders the new state of the GIF after
-   each patch, a new frame of animation is displayed.
-
-     Request:
-       GET /animated-braid.gif
-       Subscribe
-
-     Response:
-       HTTP/1.1 200 OK
-       Subscribe
-       Cache-Control: no-cache, patch
-       Patch-Type: range
-
-       Content-Type: image/gif                             -- Frame 1
-       Patch-Type: range
-       Content-Length: 1239
-
-       [100:200] = <binary data>
-
-       Content-Type: image/gif                             -- Frame 2
-       Patch-Type: range(json)
-       Content-Length: 62638
-
-       [348:887] = <binary data>
-
-
-3.4.6.  Errors
+3.4.5.  Errors
 
    If a server decides has dropped the history that a client requests,
    the server can return a 410 GONE response, to tell the client "sorry,
    I don't have the history necessary to synchronize with you."
-
 
 
 4.  Design Goals
@@ -557,51 +521,58 @@ Table of Contents
       instance, these extensions support any Operational Transform or
       CRDT algorithm.
 
-5.  Use Cases and Related Work
 
-5.1.  Dynamic Resources
+5.  Use Cases
 
-  - Proxies/caches update
-  - Can fetch history of resource too
+5.1.  Dynamic Resources: Animating a GIF
 
-5.2.  Collaborative Editing
+   Braid allows resources to become inherently dynamic -- able to change
+   over time.  You can use this to make a resource animate.
 
-5.3.  Text Chat
-
-5.4.  Offline Mode
-
-5.5.  Serverless Mode
-
-5.6.  Example: a Serverless Chat
-
-   One could build a text chat, as a web application, that can continue
-   to function when the server goes down.
-
-   Each client could load the state of the chat with a:
-
+   In this example, a server streams changes to a GIF file in a sequence
+   of patches.  When the client renders the new state of the GIF after
+   each patch, a new frame of animation is displayed.
 
      Request:
-       GET /chat
-       Subscribe: keep-alive
+       GET /animated-braid.gif
+       Subscribe
 
      Response:
-       HTTP/1.1 200 OK
-       Subscribe: keep-alive
-       Cache-Control: no-cache, patch
-       Content-Type: application/json
+       HTTP/1.1 209 Subscribe
+       Content-Type: image/gif         | Version
+       Patches: 2                      |
+                                       |
+       Content-Length: 1239            | | Patch
+       Content-Range: bytes 100-200    | |
+                                       | |
+       <binary data>                   | |
+                                       |
+       Content-Length: 62638           | | Patch
+       Content-Range: bytes 348-887    | |
+                                       | | 
+       <binary data>                   | |
 
-       Content-Type: image/gif                             -- Frame 1
-       Patch-Type: braid(bytes, sync9(array))
-       Content-Length: 1239
 
-       [100:200] = <binary data>
+5.2.  Dynamic Proxies and Caches
 
-       Content-Type: image/gif                             -- Frame 2
-       Patch-Type: braid(bytes, sync9(array))
-       Content-Length: 62638
+   Since updates aren't pushed, today's web often uses timeouts to
+   trigger a cache becoming stale.  Unfortunately, sometimes the timeout
+   is wrong, and caches become out-of-date, and we have to wait for an
+   unknown cache to timeout before we can see the new version of
+   something.  As a result, programmers have learned to force-reload
+   pages habitually, and caches become less efficient than necessary.
 
-       [348:887] = <binary data>
+   A cache supporting Braid, however, will automatically update whenever
+   a change occurs.  If a client starts a GET Subscription with a proxy,
+   the proxy will then start and maintain a GET Subscription with the
+   origin server.  The origin server will promise to send the proxy
+   updates over its GET Subscription, and the proxy will then relay
+   these changes to all connected clients.  If a set of clients and
+   servers all support Braid, they will never need to Force-reloading
+   caches for any data amongst them.
 
+
+5.3.  A Serverless Chat Example
 
    A Braid web application can operate offline.  A user can use the app
    from an airplane, and their edits can synchronize when they regain
