@@ -618,8 +618,8 @@ Table of Contents
 
    Web applications typically synchronize the state of a client and
    server with layers of models, views, and controllers in web
-   frameworks.  By implementing synchronization in HTTP, programmers
-   have to write fewer layers of code.
+   frameworks.  By automating synchronization within HTTP, programmers
+   have to write fewer layers of code on top of it.
 
       ====== Legacy Websites ======      ====== Braid Websites ======
 
