@@ -85,13 +85,15 @@ Table of Contents
    6.1.  Web Frameworks
    6.2.  Existing IETF Standards
    7.  IANA Considerations ..........................................16
-       7.1. Header Field Registration ...............................16
+   7.1. Header Field Registration ...............................16
    8.  Security Considerations ......................................16
    9.  Conventions ..................................................17
-   10.  Copyright Notice .............................................17
+   10. Copyright Notice .............................................17
    11. References ...................................................17
-       11.1.  Normative References ..................................17
-       11.2.  Informative References ................................18
+   11.1. Normative References ..................................17
+   11.2. Informative References ................................18
+   12.  Acknowledgements
+   13.  Authors' Addresses
 
 
 1.  Introduction
@@ -159,7 +161,7 @@ Table of Contents
 
    Each Braid resource has a current version, and a version history.
    Versions are specified as a string in the [STRUCTURED-HEADERS]
-   format.  Each version string must unique, to differentiate any two
+   format.  Each version string must be unique, to differentiate any two
    points in time.  To specify the version of content in a request or
    response body, a Version header MAY be included in a request for a
    PUT, PATCH or POST, or in the response to a GET:
@@ -173,12 +175,12 @@ Table of Contents
    known to have occurred before a version B if and only if A is an
    ancestor of B in the partial order.
 
-   Parents are also specified using a header in a PUT request or GET
+   Parents are also specified with a header in a PUT request or GET
    response:
 
            Parents: "ajtva12kid", "cmdpvkpll2"
 
-   The Parents header is a List of Strings (the syntax is defined in
+   The Parents header is a List of Strings, in the syntax of HTTP's
    [STRUCTURED-HEADERS]).  Each string is a version.  For any two parent
    versions A and B that are specified in a Parents header, A cannot be
    a descendent of B or vice versa.
@@ -696,6 +698,7 @@ Table of Contents
 
 
 
+
 9.  Conventions
 
    The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
@@ -774,7 +777,22 @@ Table of Contents
               September 2004.
 
 
-Authors' Addresses
+12.  Acknowledgements
+
+   In addition to the authors, this spec contains intellectual
+   contributions from the following people:
+
+      - Seph Gentle
+      - Sarah Allen
+      - Duane Johnson
+      - Travis Kriplean
+      - Marius Nita
+      - Paul Pham
+      - Morgan Dixon
+      - Karthik Palaniappan
+
+
+13.  Authors' Addresses
 
    For more information, the authors of this document are best contacted
    via Internet mail:
