@@ -236,6 +236,12 @@ Table of Contents
          Patches: OK
 
 
+   Merge-Types are specified in [MERGE-TYPES].  The Version and Parents
+   headers are optional.  If Version is omitted, the recipient may
+   invent a version ID.  If Parents is omitted, the recipient may assume
+   that the current set of leaf versions on its machine is the version's
+   context.
+
    This example includes the entire new value of the state, but one can
    also send updates as patches.
 
