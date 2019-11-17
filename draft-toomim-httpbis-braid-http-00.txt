@@ -692,9 +692,9 @@ Table of Contents
    +---------------------+----------+--------------+-------------+
    | Version             | http     | experimental | Section 2.2 |
    | Parents             | http     | experimental | Section 2.2 |
+   | Merge-Type          | http     | experimental | Section 3.1 |
    | Patches             | http     | experimental | Section 3.3 |
    | Subscribe           | http     | experimental | Section 3.4 |
-   | Merge-Type          | http     | experimental | Section 3.1 |
    +---------------------+----------+--------------+-------------+
 
    The change controller is: "IETF (iesg@ietf.org) - Internet
