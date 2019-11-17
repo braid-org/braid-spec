@@ -123,11 +123,12 @@ Table of Contents
 
 1.2.  A Merge Type is specified as a function
 
-   A Merge Type is a function of parents to result state:
+   A Merge Type is a function that produces a merged state when provided
+   with any version history:
 
                          Merge Type
 
-         (parent1, parent2, ... ) -> merged state
+             (version_history) -> merged state
 
    A Merge Type must be a deterministic function.  Given the same set of
    parents that descend from the same version history, it should always
@@ -138,15 +139,15 @@ Table of Contents
    history that preceded each of the parents, but it cannot depend on
    information outside of that version history.
 
-   A Merge Type might only work on a particular type of data. For
+   A Merge Type might only work on a particular Content-Type. For
    instance, a "counter" Merge Type only works on numbers.  A Merge Type
    SHOULD state any limitations in the set of states that it is capable
    of operating upon, and any assumptions it makes about the data.
 
    But given that it has data that meets those assumptions, a Merge Type
    MUST return a result when merging any set of versions.  A Merge Type
-   MAY NOT contain validation logic.  Validation happens before and
-   after a merger.
+   MAY NOT perform any validation on new versions.  Validation should
+   happen on a transaction before and after merging.
 
 2.  Definitions
 
@@ -175,7 +176,7 @@ Table of Contents
 
    The "Merge Type Registry" defines the namespace for the merge type
    names and refers to their corresponding specifications.  The registry
-   has been created and is now maintained at
+   will be created and maintained at
    <http://www.iana.org/assignments/merge-types>.
 
 4.1.1.  Procedure
