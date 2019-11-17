@@ -30,11 +30,6 @@ across websites.  Supports transclusion.
 
 ## Contributing
 
-We normally have weekly video meetings on Mondays, but the last week of October
-/ first week of November is special because the IETF draft deadline is Nov.
-4th. To that end, we are holding daily meetings **Mon-Fri this week, 4:00pm–
-5:00pm Pacific** (Oct 28 - Nov 1, 2019).  See https://braid.news.
-
 You are welcome to edit these documents.  To get Github access, send your
 login to [Michael](mailto:toomim@gmail.com).  Discuss edits on the
 [Braid mailing list](https://groups.google.com/forum/#!forum/braid-http).
