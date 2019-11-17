@@ -841,6 +841,19 @@ Table of Contents
       - Morgan Dixon
       - Karthik Palaniappan
 
+   We thank the following people for key feedback given on previous
+   drafts:
+
+      - Austin Wright
+      - Martin Thomson
+      - Eric Kinnear
+      - Olli Vanhoja
+      - Julian Reschke
+
+   We also thank Mark Nottingham, Fred Baker, Adam Roach, and Barry
+   Leiba for facilitating this collaboration in the IETF HTTP Working
+   Group.
+
 
 13.  Authors' Addresses
 
