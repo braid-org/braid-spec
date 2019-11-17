@@ -1,7 +1,7 @@
-Internet-Draft                                                 M. Toomim
-Expires: Mar 8, 2020                                   Invisible College
-Intended status: Proposed Standard                        M. Milutinovic
-                                                             UC Berkeley
+Internet-Draft                                            M. Milutinovic
+Expires: Mar 8, 2020                                         UC Berkeley
+Intended status: Proposed Standard                             M. Toomim
+                                                       Invisible College
                                                               B. Bellomy
                                                        Invisible College
                                                              Nov 4, 2019
@@ -609,15 +609,6 @@ Authors' Addresses
    via Internet mail:
 
 
-   Michael Toomim
-   Invisible College, Berkeley
-   2053 Berkeley Way
-   Berkeley, CA 94704
-
-   EMail: toomim@gmail.com
-   Web:   https://invisible.college/@toomim
-
-
    Mitar Milutinovic
    UC Berkeley, EECS Department
    775 Soda Hall #1776
@@ -625,6 +616,15 @@ Authors' Addresses
 
    EMail: mitar.ietf@tnode.com
    Web:   https://mitar.tnode.com/
+
+
+   Michael Toomim
+   Invisible College, Berkeley
+   2053 Berkeley Way
+   Berkeley, CA 94704
+
+   EMail: toomim@gmail.com
+   Web:   https://invisible.college/@toomim
 
 
    Bryn Bellomy
