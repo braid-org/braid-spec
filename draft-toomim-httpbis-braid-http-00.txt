@@ -130,7 +130,7 @@ Table of Contents
 
         Each resource has a history of changes, ordered in time.
 
-     2. Subscriptions (Section 3)
+     2. Subscriptions (Section 3.4)
 
         A Subscribe header can be added to GET requests, which promises
         to push all future versions to the client, until the client says
@@ -249,7 +249,7 @@ Table of Contents
 3.2.  PUT a new version as a patch
 
    Not only are patches smaller, and thus more efficient; they also
-   provide useful information for merging two simutaneous edits, for
+   provide useful information for merging two simultaneous edits, for
    instance in collaborative editing.
 
    One can send an update in a patch by setting the "Patches" header to
@@ -328,6 +328,7 @@ Table of Contents
 
          HTTP/1.1 200 OK
          Patches: OK
+
 
 3.3.  GET a specific version
 
@@ -513,8 +514,8 @@ Table of Contents
    online.
 
    When the client reconnects, it may specify the most recent versions
-   it saw from the server using the Parents header (Section 3).  This
-   tells the server which versions of state to catch it up from.
+   it saw from the server using the Parents header.  This tells the
+   server which versions of state to catch it up from.
 
    The server can suggest how long it will wait for the client by
    responding with Subscribe: keep-alive=<seconds>.  A server should
@@ -627,13 +628,13 @@ Table of Contents
    addresses at the /peers state.  Each client then subscribes to the
    /peers state with:
 
-     GET /peers
-     Subscribe: keep-alive
-     -------
-     [ {ip: '13.55.32.158', pubkey: 'x371...8382'},
-       {ip: '244.38.55.83', pubkey: 'o2u8...2s73'},
-       ...
-     ]
+      GET /peers
+      Subscribe: keep-alive
+      -------
+      [ {ip: '13.55.32.158', pubkey: 'x371...8382'},
+        {ip: '244.38.55.83', pubkey: 'o2u8...2s73'},
+        ...
+      ]
 
    Each peer can then choose a set of those peers with whom to establish
    a WebRTC connection.  It will then exchange Braid messages with those
@@ -717,8 +718,8 @@ Table of Contents
    +---------------------+----------+--------------+-------------+
    | Header Field Name   | Protocol | Status       | Reference   |
    +---------------------+----------+--------------+-------------+
-   | Version             | http     | experimental | Section 2.2 |
-   | Parents             | http     | experimental | Section 2.2 |
+   | Version             | http     | experimental | Section 2   |
+   | Parents             | http     | experimental | Section 2   |
    | Merge-Type          | http     | experimental | Section 3.1 |
    | Patches             | http     | experimental | Section 3.3 |
    | Subscribe           | http     | experimental | Section 3.4 |
