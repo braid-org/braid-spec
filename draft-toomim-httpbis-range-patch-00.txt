@@ -167,9 +167,9 @@ Table of Contents
 
 2.1.  Multiple Range Patches
 
-   Multiple range patches can also be combined in one request. This is
-   again done by reusing [RFC7233] for transferring multiple parts
-   using multipart/byteranges payload as described in Section 4.1. of
+   Multiple range patches can also be combined in one request. This can
+   be done by reusing [RFC7233] for transferring multiple parts using
+   multipart/byteranges payload as described in Section 4.1. of
    [RFC7233].
 
    When issuing a non-GET request to a resource, multiple range patches
@@ -533,18 +533,18 @@ Table of Contents
    and another requester, not being aware of that update, issues a
    second update, the resource may be left in an unexpected state.
 
-   Standard PUT, POST, and PATCH requests handle this with the ETag
-   and If-Match headers.  However, these headers vary based on the
-   Content-Encoding of the request.  Consequently, Braid relies on a
-   new header called Version to uniquely identify content versions
-   across all content encodings.
+   Standard PUT, POST, and PATCH requests handle this with the ETag and
+   If-Match headers.  However, these headers vary based on the
+   Content-Encoding of the request.  Alternatively, requests can use the
+   Versioning in [Braid-HTTP] to determine the ordering of simultaneous
+   requests, and can specify consistency guarantees with [Merge-Types].
 
    The server may return a Version header in response to HTTP requests
    directed at a given resource.  Correspondingly, when issuing a range
    patch, the requester may include a Version header containing the
    version of the resource it intends to update.  If the server cannot
-   merge the patch at the given version, it must reject the request
-   with a 409 Conflict response.
+   merge the patch at the given version, it must return a 409 Conflict
+   response.
 
 
 7.  Security Considerations
@@ -593,7 +593,12 @@ Table of Contents
    [RFC6902]  Bryan, P.,  and M. Nottingham, "JavaScript Object Notation
               (JSON) Patch", RFC 6902, April 2013.
 
+
 10.2.  Informative References
+
+   [Merge-Types] draft-toomim-httpbis-merge-types-00
+
+   [Braid-HTTP] draft-toomim-httpbis-braid-http-00
 
    [RFC8259]  T. Bray, "The JavaScript Object Notation (JSON) Data
               Interchange Format", RFC 8259, December 2017.
