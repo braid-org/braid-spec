@@ -840,8 +840,7 @@ Table of Contents
       - Morgan Dixon
       - Karthik Palaniappan
 
-   We thank the following people for key feedback given on previous
-   drafts:
+   We thank the following people for key feedback on previous drafts:
 
       - Austin Wright
       - Martin Thomson
