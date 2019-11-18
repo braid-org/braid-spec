@@ -181,9 +181,10 @@ Table of Contents
            Parents: "ajtva12kid", "cmdpvkpll2"
 
    The Parents header is a List of Strings, in the syntax of HTTP's
-   [STRUCTURED-HEADERS]).  Each string is a version.  For any two parent
+   [STRUCTURED-HEADERS].  Each string is a version.  For any two parent
    versions A and B that are specified in a Parents header, A cannot be
-   a descendent of B or vice versa.
+   a descendent of B or vice versa.  The ordering of versions in the
+   list carries no meaning, and SHOULD be softed lexicographically.
 
    If a client or server does not specify a Version for a resource it
    transfers, the recipient MAY generate a new version ID of its own
