@@ -830,6 +830,7 @@ Table of Contents
    contributions from the following people:
 
       - Seph Gentle
+      - Mitar Milutinovic
       - Sarah Allen
       - Duane Johnson
       - Travis Kriplean
