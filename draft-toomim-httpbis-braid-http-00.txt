@@ -1,12 +1,12 @@
 Internet-Draft                                                 M. Toomim
-Expires: Mar 8, 2020                                   Invisible College
+Expires: Mar 10, 2020                                  Invisible College
 Intended status: Proposed Standard                             G. Little
                                                        Invisible College
                                                                R. Walker
                                                             Bard College
                                                               B. Bellomy
                                                        Invisible College
-                                                             Nov 4, 2019
+                                                            Nov 17, 2019
 
         \=/====\\  |//===\\=      /=\     =\==\|\=/== =|====\==
         ||/    |\\ ||\    |\\   /|| \|\       |//     //|    \\\
@@ -64,36 +64,36 @@ Status of this Memo
 Table of Contents
 
    1.  Introduction ..................................................4
-   2.  Versioning for Resources ......................................7
-   2.1.  Comparison with ETag ........................................9
-   3.  Versioning for GET and PUT ....................................
-   3.1.  PUT a new version ...........................................
-   3.2.  PUT a new version as a patch ................................
-   3.3.  GET a specific version ......................................
-   3.4.  GET with Subscriptions ......................................
-   3.4.1.  Creating a Subscription ...................................
-   3.4.2.  Sending multiple updates per GET ..........................
-   3.4.3.  Continuing a Subscription .................................
-   3.4.4.  Ending a Subscription .....................................
-   3.4.5.  Errors ....................................................
-   4.  Design Goals...................................................
-   5.  Use Cases .....................................................
-   5.1.  Dynamic Resources ...........................................
-   5.2.  Dynamic Proxies and Caches ..................................
-   5.3.  A Serverless Chat Example ...................................
-   6.  Related Work ..................................................
-   6.1.  Web Frameworks ..............................................
-   6.2.  Existing IETF Standards .....................................
-   7.  IANA Considerations ...........................................
-   7.1. Header Field Registration ....................................
-   8.  Security Considerations .......................................
-   9.  Conventions ...................................................
-   10. Copyright Notice ..............................................
-   11. References ....................................................
-   11.1. Normative References ........................................
-   11.2. Informative References ......................................
-   12.  Acknowledgements .............................................
-   13.  Authors' Addresses ...........................................
+   2.  Versioning for Resources ......................................5
+   2.1.  Comparison with ETag ........................................5
+   3.  Versioning for GET and PUT ....................................6
+   3.1.  PUT a new version ...........................................6
+   3.2.  PUT a new version as a patch ................................6
+   3.3.  GET a specific version ......................................8
+   3.4.  GET with Subscriptions ......................................9
+   3.4.1.  Creating a Subscription ..................................11
+   3.4.2.  Sending multiple updates per GET .........................11
+   3.4.3.  Continuing a Subscription ................................12
+   3.4.4.  Ending a Subscription ....................................12
+   3.4.5.  Errors ...................................................12
+   4.  Design Goals..................................................13
+   5.  Use Cases ....................................................13
+   5.1.  Dynamic Resources ..........................................13
+   5.2.  Dynamic Proxies and Caches .................................14
+   5.3.  A Serverless Chat Example ..................................14
+   6.  Related Work .................................................15
+   6.1.  Web Frameworks .............................................15
+   6.2.  Existing IETF Standards ....................................16
+   7.  IANA Considerations ..........................................16
+   7.1. Header Field Registration ...................................16
+   8.  Security Considerations ......................................16
+   9.  Conventions ..................................................16
+   10. Copyright Notice .............................................17
+   11. References ...................................................17
+   11.1. Normative References .......................................17
+   11.2. Informative References .....................................18
+   12.  Acknowledgements ............................................19
+   13.  Authors' Addresses ..........................................20
 
 
 1.  Introduction
@@ -147,11 +147,11 @@ Table of Contents
         resource, they can guarantee a consistent resulting state by
         implementing the same Merge Type.  Resources specify their Merge
         Type with a header.
-
 
    Taken together, these features allow an arbitrary set of clients and
    servers to make arbitrary edits to resources, under arbitrary network
    delays and paritions, and merge all edits consistently, receiving
+
    updates as soon as they reconnect.  This enables caches to support
    dynamic content, web applications to feature an offline mode, and
    textareas to support collaborative editing.
@@ -205,7 +205,7 @@ Table of Contents
       that the contents at A are the same as the contents at C, then it
       is possible versions A and C to have the same ETag, even though
       they have different Versions.
-
+
 
 3. Versioning for GET and PUT
 
@@ -255,7 +255,7 @@ Table of Contents
    One can send an update in a patch by setting the "Patches" header to
    a number, and then set the Message body to a sequence of that many
    patches, separated by blank lines:
-
+
 
       Request:
 
@@ -294,6 +294,8 @@ Table of Contents
    Either of these provide a way to determine when the next message
    starts.
 
+
+
    The previous example uses the Range Patch format, which is defined in
    [RANGE-PATCH].  However, one can use any patch format, by sending a
    patch with a Content-Type: set to a patch format with a defined
@@ -326,8 +328,7 @@ Table of Contents
 
          HTTP/1.1 200 OK
          Patches: OK
-
-
+
 3.3.  GET a specific version
 
    A server can optionally allow clients to request historical versions
@@ -385,7 +386,7 @@ Table of Contents
    A server MAY refactor or rebase the version history that it provides
    to a client, so long as it does not affect the resulting state, or
    the result of the patch-type's merges.
-
+
 
 3.4.  GET with Subscriptions
 
@@ -393,7 +394,6 @@ Table of Contents
    stream of versions; a new version pushed with each change.  Each
    version can contain either the new contents in its body, or a set of
    Patches.
-
 
       Request:
 
@@ -437,7 +437,7 @@ Table of Contents
                                                                | |
          {text: "Hi, Tommy!",                                  | |
           author: {type: "link", value: "/user/sal"}}          | |
-
+
          Version: "up12vyc5ib"                                 | Version
          Parents: "2bcbi84nsp"                                 |
          Content-Type: application/json                        |
@@ -455,7 +455,7 @@ Table of Contents
            { "op": "move", "from": "/a/b", "path": "/a/d },    | |
            { "op": "copy", "from": "/a/d/d", "path": "/a/d/e" }| |
          ]                                                     | |
-
+
 
 3.4.1.  Creating a Subscription
 
@@ -537,14 +537,12 @@ Table of Contents
    request body, the client can issue a fresh request specified as a
    FORGET method.
 
-
-
 3.4.5.  Errors
 
    If a server decides has dropped the history that a client requests,
    the server can return a 410 GONE response, to tell the client "sorry,
    I don't have the history necessary to synchronize with you."
-
+
 
 4.  Design Goals
 
@@ -591,7 +589,7 @@ Table of Contents
        Content-Range: bytes 348-887    | |
                                        | | 
        <binary data>                   | |
-
+
 
 5.2.  Dynamic Proxies and Caches
 
@@ -703,8 +701,6 @@ Table of Contents
    recently, JMAP [RFC8620] provides an updated method of
    synchronization, supporting mail, calendars, and contacts.
 
-
-
 
 7. IANA Considerations
 
@@ -736,14 +732,13 @@ Table of Contents
 
    XXX Todo
 
-
-
 
 9.  Conventions
 
    The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
    "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this
    document are to be interpreted as described in [RFC2119].
+
 
 10.  Copyright Notice
 
@@ -855,6 +850,7 @@ Table of Contents
    Leiba for facilitating this collaboration in the IETF HTTP Working
    Group.
 
+
 
 13.  Authors' Addresses
 
