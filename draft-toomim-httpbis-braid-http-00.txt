@@ -66,34 +66,34 @@ Table of Contents
    1.  Introduction ..................................................4
    2.  Versioning for Resources ......................................5
    2.1.  Comparison with ETag ........................................5
-   3.  Versioning for GET and PUT ....................................6
+   3.  Sending a Version over HTTP ...................................6
    3.1.  PUT a new version ...........................................6
    3.2.  PUT a new version as a patch ................................6
    3.3.  GET a specific version ......................................8
-   3.4.  GET with Subscriptions ......................................9
-   3.4.1.  Creating a Subscription ..................................11
-   3.4.2.  Sending multiple updates per GET .........................11
-   3.4.3.  Continuing a Subscription ................................12
-   3.4.4.  Ending a Subscription ....................................12
-   3.4.5.  Errors ...................................................12
-   4.  Design Goals..................................................13
-   5.  Use Cases ....................................................13
-   5.1.  Dynamic Resources ..........................................13
-   5.2.  Dynamic Proxies and Caches .................................14
-   5.3.  A Serverless Chat Example ..................................14
-   6.  Related Work .................................................15
-   6.1.  Web Frameworks .............................................15
-   6.2.  Existing IETF Standards ....................................16
-   7.  IANA Considerations ..........................................16
-   7.1. Header Field Registration ...................................16
-   8.  Security Considerations ......................................16
-   9.  Conventions ..................................................16
-   10. Copyright Notice .............................................17
-   11. References ...................................................17
-   11.1. Normative References .......................................17
-   11.2. Informative References .....................................18
-   12.  Acknowledgements ............................................19
-   13.  Authors' Addresses ..........................................20
+   4.  GET with Subscriptions ........................................9
+   4.1.  Creating a Subscription ....................................11
+   4.2.  Sending multiple updates per GET ...........................11
+   4.3.  Continuing a Subscription ..................................12
+   4.4.  Ending a Subscription ......................................12
+   4.5.  Errors .....................................................12
+   5.  Design Goals..................................................13
+   6.  Use Cases ....................................................13
+   6.1.  Dynamic Resources ..........................................13
+   6.2.  Dynamic Proxies and Caches .................................14
+   6.3.  A Serverless Chat Example ..................................14
+   7.  Related Work .................................................15
+   7.1.  Web Frameworks .............................................15
+   7.2.  Existing IETF Standards ....................................16
+   8.  IANA Considerations ..........................................16
+   8.1. Header Field Registration ...................................16
+   9.  Security Considerations ......................................16
+   10.  Conventions .................................................16
+   11. Copyright Notice .............................................17
+   12. References ...................................................17
+   12.1. Normative References .......................................17
+   12.2. Informative References .....................................18
+   13.  Acknowledgements ............................................19
+   14.  Authors' Addresses ..........................................20
 
 
 1.  Introduction
@@ -130,7 +130,7 @@ Table of Contents
 
         Each resource has a history of changes, ordered in time.
 
-     2. Subscriptions (Section 3.4)
+     2. Subscriptions (Section 4)
 
         A Subscribe header can be added to GET requests, which promises
         to push all future versions to the client, until the client says
@@ -208,7 +208,7 @@ Table of Contents
       they have different Versions.
 
 
-3. Versioning for GET and PUT
+3.  Sending a Version over HTTP
 
 3.1.  PUT a new version
 
@@ -360,7 +360,7 @@ Table of Contents
 
    If a GET request contains a Version header:
 
-     - The Subscribe header (Section 3.4) MUST be absent.
+     - The Subscribe header (Section 4) MUST be absent.
 
      - The server SHOULD return a single response, containing that
        version of the resource in its body, with the Version header set
@@ -390,7 +390,7 @@ Table of Contents
    the result of the patch-type's merges.
 
 
-3.4.  GET with Subscriptions
+4.  GET with Subscriptions
 
    If a GET request includes the Subscribe header, it will return a
    stream of versions; a new version pushed with each change.  Each
@@ -459,7 +459,7 @@ Table of Contents
          ]                                                     | |
 
 
-3.4.1.  Creating a Subscription
+4.1.  Creating a Subscription
 
    The "Subscribe" header on a GET request modifies the method semantics
    to request a subscription to future updates to the data, rather than
@@ -485,7 +485,7 @@ Table of Contents
    be resumed by the client issuing another GET with a Subscribe header.
 
 
-3.4.2.  Sending multiple updates per GET
+4.2.  Sending multiple updates per GET
 
    To send multiple updates, a server concatenates multiple
    sub-responses into a single response body.  Each sub-response MUST
@@ -502,7 +502,7 @@ Table of Contents
 
 
 
-3.4.3.  Continuing a Subscription
+4.3.  Continuing a Subscription
 
    Even if a connection closes, a subscription might still be active.
    If a server's response headers for a connection contained:
@@ -525,7 +525,7 @@ Table of Contents
    subscription, and clearing its history.
 
 
-3.4.4.  Ending a Subscription
+4.4.  Ending a Subscription
 
    Servers and clients MAY drop a subscription at any time, no matter
    the value of keep-alive.  A client may reconnect by issuing a new GET
@@ -540,14 +540,14 @@ Table of Contents
    request body, the client can issue a fresh request specified as a
    FORGET method.
 
-3.4.5.  Errors
+4.5.  Errors
 
    If a server has dropped the history that a client requests, the
    server can return a 410 GONE response, to tell the client "sorry, I
    don't have the history necessary to synchronize with you."
 
 
-4.  Design Goals
+5.  Design Goals
 
    This spec is designed to be:
 
@@ -562,9 +562,9 @@ Table of Contents
       CRDT algorithm.
 
 
-5.  Use Cases
+6.  Use Cases
 
-5.1.  Dynamic Resources: Animating a GIF
+6.1.  Dynamic Resources: Animating a GIF
 
    Braid allows resources to become inherently dynamic -- able to change
    over time.  You can use this to make a resource animate.
@@ -594,7 +594,7 @@ Table of Contents
        <binary data>                   | |
 
 
-5.2.  Dynamic Proxies and Caches
+6.2.  Dynamic Proxies and Caches
 
    Since updates aren't pushed, today's web often uses timeouts to
    trigger a cache becoming stale.  Unfortunately, sometimes the timeout
@@ -613,7 +613,7 @@ Table of Contents
    Force-reloading caches for any data amongst them.
 
 
-5.3.  A Serverless Chat Example
+6.3.  A Serverless Chat Example
 
    A Braid web application can operate offline.  A user can use the app
    from an airplane, and their edits can synchronize when they regain
@@ -644,9 +644,9 @@ Table of Contents
 
 
 
-6.  Related Work
+7.  Related Work
 
-6.1.  Web Frameworks
+7.1.  Web Frameworks
 
    Web applications typically synchronize the state of a client and
    server with layers of models, views, and controllers in web
@@ -694,7 +694,7 @@ Table of Contents
 
 
 
-6.2.  Existing IETF Standards
+7.2.  Existing IETF Standards
 
    A number of IETF specifications already standardize aspects of
    synchronization for specific domains.  IMAP [RFC3501] provides
@@ -705,9 +705,9 @@ Table of Contents
    synchronization, supporting mail, calendars, and contacts.
 
 
-7. IANA Considerations
+8. IANA Considerations
 
-7.1.  Header Field Registration
+8.1.  Header Field Registration
 
    HTTP header fields are registered within the "Message Headers"
    registry maintained at
@@ -724,26 +724,26 @@ Table of Contents
    | Parents             | http     | experimental | Section 2   |
    | Merge-Type          | http     | experimental | Section 3.1 |
    | Patches             | http     | experimental | Section 3.3 |
-   | Subscribe           | http     | experimental | Section 3.4 |
+   | Subscribe           | http     | experimental | Section 4   |
    +---------------------+----------+--------------+-------------+
 
    The change controller is: "IETF (iesg@ietf.org) - Internet
    Engineering Task Force".
 
 
-8. Security Considerations
+9. Security Considerations
 
    XXX Todo
 
 
-9.  Conventions
+10.  Conventions
 
    The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
    "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this
    document are to be interpreted as described in [RFC2119].
 
 
-10.  Copyright Notice
+11.  Copyright Notice
 
    Copyright (c) 2019 IETF Trust and the persons identified as the
    document authors.  All rights reserved.
@@ -758,9 +758,9 @@ Table of Contents
    the Trust Legal Provisions and are provided without warranty as
    described in the Simplified BSD License.
 
-11.  References
+12.  References
 
-11.1.  Normative References
+12.1.  Normative References
 
    [RFC7230]  "HTTP/1.1 Message Syntax and Routing", RFC 7230.
 
@@ -782,7 +782,7 @@ Table of Contents
 
 
 
-11.2.  Informative References
+12.2.  Informative References
 
    [XHR]      Van Kestern, A., Aubourg, J., Song, J., and R. M.
               Steen, H.  "XMLHttpRequest", September 2019.
@@ -826,7 +826,7 @@ Table of Contents
               September 2004.
 
 
-12.  Acknowledgements
+13.  Acknowledgements
 
    In addition to the authors, this spec contains intellectual
    contributions from the following people:
@@ -854,7 +854,7 @@ Table of Contents
 
 
 
-13.  Authors' Addresses
+14.  Authors' Addresses
 
    For more information, the authors of this document are best contacted
    via Internet mail:
