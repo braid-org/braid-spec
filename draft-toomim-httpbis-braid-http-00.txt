@@ -496,7 +496,8 @@ Table of Contents
       - Transfer-Encoding: chunked
       - Patches: N
 
-   Each sub-response MUST have both headers and a body.
+   Each sub-response MUST have both headers and a body.  The body may be
+   zero-length.
 
 
 
