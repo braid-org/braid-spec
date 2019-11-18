@@ -21,8 +21,8 @@ Intended status: Proposed Standard                             G. Little
 
 Abstract
 
-   Braid is a set of extensions that extend HTTP from a state transfer
-   protocol into a state synchronization protocol.
+   Braid is a set of extensions that generalize HTTP from a state
+   transfer protocol into a state synchronization protocol.
 
    Braid adds to HTTP:
 
