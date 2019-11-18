@@ -602,14 +602,14 @@ Table of Contents
    something.  As a result, programmers have learned to force-reload
    pages habitually, and caches become less efficient than necessary.
 
-   A cache supporting Braid, however, will automatically update whenever
-   a change occurs.  If a client starts a GET Subscription with a proxy,
-   the proxy will then start and maintain a GET Subscription with the
-   origin server.  The origin server will promise to send the proxy
-   updates over its GET Subscription, and the proxy will then relay
-   these changes to all connected clients.  If a set of clients and
-   servers all support Braid, they will never need to Force-reloading
-   caches for any data amongst them.
+   A cache supporting the Braid extensions, however, will automatically
+   update whenever a change occurs.  If a client starts a GET
+   Subscription with a proxy, the proxy will then start and maintain a
+   GET Subscription with the origin server.  The origin server will
+   promise to send the proxy updates over its GET Subscription, and the
+   proxy will then relay these changes to all connected clients.  If a
+   set of clients and servers all support Braid, they will never need to
+   Force-reloading caches for any data amongst them.
 
 
 5.3.  A Serverless Chat Example
