@@ -541,9 +541,9 @@ Table of Contents
 
 3.4.5.  Errors
 
-   If a server decides has dropped the history that a client requests,
-   the server can return a 410 GONE response, to tell the client "sorry,
-   I don't have the history necessary to synchronize with you."
+   If a server has dropped the history that a client requests, the
+   server can return a 410 GONE response, to tell the client "sorry, I
+   don't have the history necessary to synchronize with you."
 
 
 4.  Design Goals
