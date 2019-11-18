@@ -69,7 +69,7 @@ Table of Contents
    2.2.  PUT a new version ...........................................6
    2.3.  PUT a new version as a patch ................................6
    2.4.  GET a specific version ......................................8
-   3.  GET with Subscriptions ........................................9
+   3.  Subscriptions for GET .........................................9
    3.1.  Creating a Subscription ....................................11
    3.2.  Sending multiple updates per GET ...........................11
    3.3.  Continuing a Subscription ..................................12
@@ -387,7 +387,7 @@ Table of Contents
    the result of the patch-type's merges.
 
 
-3.  GET with Subscriptions
+3.  Subscriptions for GET
 
    If a GET request includes the Subscribe header, it will return a
    stream of versions; a new version pushed with each change.  Each
