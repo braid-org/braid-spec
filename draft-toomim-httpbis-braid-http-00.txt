@@ -101,7 +101,7 @@ Table of Contents
    When a client GETs a resource over HTTP, the server sends the latest
    version, but does not send updates when the resource changes.  If a
    web programmer wants to synchronize with state as it changes, she
-   must implement a workaround.
+   must work around HTTP.
 
    The web has a long history of these workarounds.  The original web
    required users to click reload when a page changed.  XMLHTTPRequest
@@ -123,8 +123,8 @@ Table of Contents
    programmers must increasingly synchronize state, rather than simply
    transfer it with HTTP.
 
-   Braid generalizes HTTP into a synchronization protocol.  It adds
-   these features:
+   Braid generalizes HTTP into a synchronization protocol, and ReST into
+   a synchronization architecture.  It adds these features:
 
      1. Versioning (Section 2)
 
