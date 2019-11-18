@@ -129,7 +129,7 @@ Table of Contents
 
         Each resource has a history of changes, ordered in time.
 
-     2. Subscriptions (Section 4)
+     2. Subscriptions (Section 3)
 
         A Subscribe header can be added to GET requests, which promises
         to push all future versions to the client, until the client says
@@ -357,7 +357,7 @@ Table of Contents
 
    If a GET request contains a Version header:
 
-     - The Subscribe header (Section 4) MUST be absent.
+     - The Subscribe header (Section 3) MUST be absent.
 
      - The server SHOULD return a single response, containing that
        version of the resource in its body, with the Version header set
@@ -719,8 +719,8 @@ Table of Contents
    +---------------------+----------+--------------+-------------+
    | Version             | http     | experimental | Section 2   |
    | Parents             | http     | experimental | Section 2   |
-   | Merge-Type          | http     | experimental | Section 3.1 |
-   | Patches             | http     | experimental | Section 3.3 |
+   | Merge-Type          | http     | experimental | Section 2.2 |
+   | Patches             | http     | experimental | Section 2.3 |
    | Subscribe           | http     | experimental | Section 4   |
    +---------------------+----------+--------------+-------------+
 
