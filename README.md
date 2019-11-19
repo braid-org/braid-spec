@@ -15,12 +15,16 @@ Braid adds to HTTP:
 
 ### Range Patch — [`draft-toomim-httpbis-range-patch-00.txt`](https://raw.githubusercontent.com/braid-work/braid-spec/master/draft-toomim-httpbis-range-patch-00.txt)
 
-A uniform approach for expressing changes to state over HTTP.
+A uniform approach for expressing changes to state over HTTP.  Generalizes
+Range Requests to other HTTP methods.  Defines the replacement of a range with
+a new value.
 
 ### Merge Types — [`draft-toomim-httpbis-merge-types-00.txt`](https://raw.githubusercontent.com/braid-work/braid-spec/master/draft-toomim-httpbis-merge-types-00.txt)
 
-This document defines Merge Types, the structure of the Merge Type system, and
-IANA registration procedures for Merge Types.
+Merge Types specify how to consistently merge a set of simultaneous
+conflicting edits to a resource.  If multiple computers implement the same
+Merge Type, they can guarantee eventual consistency after arbitrary
+multi-writer edits.
 
 ### NelSON — [`draft-toomim-httpbis-nelson-00.txt`](https://raw.githubusercontent.com/braid-work/braid-spec/master/draft-toomim-httpbis-nelson-00.txt)
 
