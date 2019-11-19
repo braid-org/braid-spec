@@ -541,7 +541,7 @@ Table of Contents
    Standard PUT, POST, and PATCH requests handle this with the ETag and
    If-Match headers.  However, these headers vary based on the
    Content-Encoding of the request.  Alternatively, requests can use the
-   Versioning in [Braid-HTTP] to determine the ordering of simultaneous
+   versioning in [Braid-HTTP] to determine the ordering of simultaneous
    requests, and can specify consistency guarantees with [Merge-Types].
 
    The server may return a Version header in response to HTTP requests
