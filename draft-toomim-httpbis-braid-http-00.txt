@@ -264,11 +264,11 @@ Table of Contents
          Merge-Type: sync9                                     |
          Patches: 2                                            |
                                                                |
-         Content-Length: 59                                    | | Patch
+         Content-Length: 62                                    | | Patch
          Content-Range: json .messages[1:1]                    | |
                                                                | |
-         {text: "Yo!",                                         | |
-          author: {type: "link", value: "/user/yobot"}         | |
+         [{text: "Yo!",                                        | |
+           author: {type: "link", value: "/user/yobot"}]       | |
                                                                |
          Content-Length: 40                                    | | Patch
          Content-Range: json .latest_change                    | |
@@ -419,11 +419,11 @@ Table of Contents
          Merge-Type: sync9                                     |
          Patches: 1                                            |
                                                                |
-         Content-Length: 59                                    | | Patch
+         Content-Length: 62                                    | | Patch
          Content-Range: json .messages[1:1]                    | |
                                                                | |
-         {text: "Yo!",                                         | |
-          author: {type: "link", value: "/user/yobot"}         | |
+         [{text: "Yo!",                                        | |
+           author: {type: "link", value: "/user/yobot"}]       | |
 
          Version: "2bcbi84nsp"                                 | Version
          Parents: "g09ur8z74r"                                 |
@@ -431,11 +431,11 @@ Table of Contents
          Merge-Type: sync9                                     |
          Patches: 1                                            |
                                                                |
-         Content-Length: 65                                    | | Patch
+         Content-Length: 68                                    | | Patch
          Content-Range: json .messages[2:2]                    | |
                                                                | |
-         {text: "Hi, Tommy!",                                  | |
-          author: {type: "link", value: "/user/sal"}}          | |
+         [{text: "Hi, Tommy!",                                 | |
+           author: {type: "link", value: "/user/sal"}}]        | |
 
          Version: "up12vyc5ib"                                 | Version
          Parents: "2bcbi84nsp"                                 |
