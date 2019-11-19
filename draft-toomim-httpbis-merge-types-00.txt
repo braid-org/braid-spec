@@ -4,7 +4,7 @@ Intended status: Proposed Standard                        M. Milutinovic
                                                              UC Berkeley
                                                               B. Bellomy
                                                        Invisible College
-                                                             Nov 4, 2019
+                                                            Nov 18, 2019
 
 
                               Merge Types
@@ -13,10 +13,11 @@ Intended status: Proposed Standard                        M. Milutinovic
 Abstract
 
    Merge Types specify how to merge multiple simultaneous edits to a
-   resource.  This typically happens if two computers edit the same
-   state over a network with latency.  If the computers implement and
-   agree upon the same Merge Type, then they can guarantee to reach a
-   consistent state, after arbitrary edits, eventually.
+   resource.  This happens when two computers edit the same state over a
+   network with latency.  A Merge Type specifies how to merge
+   conflicting changes.  If the computers implement and agree upon the
+   same Merge Type, then they can guarantee to reach a consistent state,
+   after arbitrary edits, eventually.
 
    You can define new Merge Types.  This document defines Merge Types,
    the structure of the Merge Type system, and IANA registration
@@ -50,24 +51,25 @@ Status of this Memo
 
 Table of Contents
 
-   1. Introduction ....................................................1
-   2. Definitions .....................................................2
-   3. Merge Type Naming ...............................................3
-   4. IANA Considerations .............................................4
-      4.1. Merge Type Registry ........................................5
+   1.  Introduction ...................................................4
+      1.1. Merge Types vary across applications .......................4
+      1.2. A Merge Type is specified as a function ....................5
+   2. Definitions .....................................................5
+   3. Merge Type Naming ...............................................5
+   4. IANA Considerations .............................................6
+      4.1. Merge Type Registry ........................................6
            4.1.1. Procedure ...........................................6
-           4.1.2. Registrations .......................................7
-           4.1.3. Comments on Merge Type Registrations ................8
-           4.1.4. Change Procedures ...................................9
-   5. Security Considerations ........................................10
-   6. Conventions ....................................................11
-   7. Copyright Notice ...............................................12
-   8. References .....................................................13
-      8.1. Normative References ......................................14
-      8.2. Informative References ....................................15
+           4.1.2. Registrations .......................................6
+           4.1.3. Comments on Merge Type Registrations ................6
+           4.1.4. Change Procedures ...................................6
+   5. Security Considerations .........................................7
+   6. Conventions .....................................................8
+   7. Copyright Notice ................................................8
+   8. References ......................................................8
+      8.1. Normative References .......................................8
+      8.2. Informative References .....................................8
 
 
-
 1.  Introduction
 
    In a version history, a merge type defines the output of a version
@@ -91,15 +93,16 @@ Table of Contents
    ambiguity differently.
 
    Currently popular approaches are using conflict-free replicated data
-   types [CRDT] or operational transformation [OT].  If a Merge Type is
-   specified for a region of data, and all computers implement that
-   Merge Type, then they can guarantee to obtain the same resulting
-   state, no matter the order that events arrive over the network, or
-   the algorithms they use to implement the Merge Types.
+   types [CRDT] or operational transformation [OT].  Different
+   algorithms that merge in different ways.  Different applications need
+   different parts of their data to merge in different ways.  The Merge
+   Type specifies the outcome of a merge.  Different algorithms can
+   implement the same Merge Type to interoperate.
 
-   There are many algorithms that merge in many different ways, and
-   additionally, different applications will want to merge in different
-   ways for different pieces of data.
+   If a Merge Type is specified for a region of data, and all computers
+   implement that Merge Type, then they can guarantee to obtain the same
+   resulting state, no matter the order that events arrive over the
+   network, or the algorithms they use to implement the Merge Types.
 
    This document defines how to specify a Merge Type within a
    standardized naming scheme.
@@ -120,15 +123,15 @@ Table of Contents
    Thus, it is nice to re-use a Merge Type across multiple types of
    data; and each application has different needs for how its data
    should merge.
-
+
 1.2.  A Merge Type is specified as a function
 
    A Merge Type is a function that produces a merged state when provided
-   with any version history:
+   with any set of parent versions:
 
                          Merge Type
 
-             (version_history) -> merged state
+             (parent, parent, ..) -> merged state
 
    A Merge Type must be a deterministic function.  Given the same set of
    parents that descend from the same version history, it should always
@@ -146,8 +149,7 @@ Table of Contents
 
    But given that it has data that meets those assumptions, a Merge Type
    MUST return a result when merging any set of versions.  A Merge Type
-   MAY NOT perform any validation on new versions.  Validation should
-   happen on a transaction before and after merging.
+   cannot perform any validation on new versions.
 
 2.  Definitions
 
@@ -169,7 +171,7 @@ Table of Contents
      automerge-counter
      sharedb-json; variant=1
      biggest-wins; sortby=versionid
-
+
 4.  IANA Considerations
 
 4.1.  Merge Type Registry
@@ -225,7 +227,7 @@ Table of Contents
    Merge Type registrations may not be deleted; Merge Types that are no
    longer believed appropriate for use can be declared OBSOLETE; such
    Merge Types will be clearly marked in the list published by the IANA.
-
+
    Significant changes to a Merge Type's definition should be requested
    only when there are serious omissions or errors in the published
    specification.  When review is required, a change request may be
@@ -280,9 +282,7 @@ Table of Contents
        This is the double-spend problem.  A system using Merge Types
        SHOULD be aware of how its Merge Types interact with its
        Validators.
-
 
-
 6.  Conventions
 
    The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
@@ -321,7 +321,7 @@ Table of Contents
 
 8.2.  Informative References
 
-   [CRDT]     Shapiro, M., Preguiça, N., Baquero, C., and M. Zawirski,
+   [CRDT]     Shapiro, M., Preguica, N., Baquero, C., and M. Zawirski,
               "Conflict-free replicated data types", in SSS'11
               Proceedings of the 13th international conference on
               Stabilization, safety, and security of distributed
@@ -331,7 +331,7 @@ Table of Contents
               groupware systems", in SIGMOD '89 Proceedings of the 1989
               ACM SIGMOD international conference on Management of data,
               June 1989.
-
+
 Authors' Addresses
 
    For more information, the authors of this document are best contacted
