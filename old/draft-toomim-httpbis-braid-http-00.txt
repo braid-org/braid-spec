@@ -150,7 +150,6 @@ Table of Contents
    Taken together, these features allow an arbitrary set of clients and
    servers to make arbitrary edits to resources, under arbitrary network
    delays and paritions, and merge all edits consistently, receiving
-
    updates as soon as they reconnect.  This enables caches to support
    dynamic content, web applications to feature an offline mode, and
    textareas to support collaborative editing.
