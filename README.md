@@ -4,7 +4,7 @@ This is the working area for the [Braid](https://braid.news) extensions to
 HTTP in the [IETF HTTP Working Group](https://httpwg.org/).  These extensions
 add Synchronization to HTTP.  They are authored in three documents:
 
-### Braid HTTP — [`draft-toomim-httpbis-braid-http-00.txt`](https://raw.githubusercontent.com/braid-work/braid-spec/master/draft-toomim-httpbis-braid-http-00.txt)
+### Braid HTTP — [`draft-toomim-httpbis-braid-http-01.txt`](https://raw.githubusercontent.com/braid-work/braid-spec/master/draft-toomim-httpbis-braid-http-01.txt)
 
 Braid adds to HTTP:
 1. *Versioning* to resources
