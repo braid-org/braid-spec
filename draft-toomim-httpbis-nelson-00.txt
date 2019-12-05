@@ -198,10 +198,10 @@ Table of Contents
 
    Resolution of a Link SHOULD yield the referenced value.
 
-   If the URI contained in the JSON Reference value is a relative URI,
-   then the base URI resolution MUST be calculated according to
-   [RFC3986], Section 5.2.  Resolution is performed relative to the
-   referring document.
+   If the URI contained in the link value is a relative URI, then the
+   base URI resolution MUST be calculated according to [RFC3986],
+   Section 5.2.  Resolution is performed relative to the referring
+   document.
 
 4.  Media Type
 
