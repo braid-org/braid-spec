@@ -51,7 +51,6 @@ Abstract
    edit or choose their own UI for any website's state.
 
 
-
 Status of this Memo
 
    This Internet-Draft is submitted in full conformance with the
@@ -75,7 +74,6 @@ Status of this Memo
    https://www.ietf.org/shadow.html
 
 
-
 Table of Contents
 
    1.  Introduction ..................................................4
@@ -222,7 +220,10 @@ Table of Contents
       a resource is changed from version A to B, and then to C, such
       that the contents at A are the same as the contents at C, then it
       is possible versions A and C to have the same ETag, even though
-      they have different Versions.
+      they have different Versions.  This can break a CRDT or OT merge
+      algorithm.
+
+   Versions can be used in a variety of requests, as we explain next.
 
 
 2.2.  PUT a new version
@@ -309,7 +310,6 @@ Table of Contents
 
    Either of these provide a way to determine when the next message
    starts.
-
 
 
    The previous example uses the Range Patch format, which is defined in
@@ -865,7 +865,7 @@ Table of Contents
       - Julian Reschke
 
    We also thank Mark Nottingham, Fred Baker, Adam Roach, and Barry
-   Leiba for facilitating a productive environment.
+   Leiba for facilitating a productive environment within the IETF.
 
 
 
