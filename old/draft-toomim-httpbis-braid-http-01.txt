@@ -182,7 +182,7 @@ Table of Contents
    [STRUCTURED-HEADERS].  Each string is a version.  For any two parent
    versions A and B that are specified in a Parents header, A cannot be
    a descendent of B or vice versa.  The ordering of versions in the
-   list carries no meaning, and SHOULD be softed lexicographically.
+   list carries no meaning, and SHOULD be sorted lexicographically.
 
    If a client or server does not specify a Version for a resource it
    transfers, the recipient MAY generate a new version ID of its own
@@ -295,7 +295,7 @@ Table of Contents
 
    The previous example uses the Range Patch format, which is defined in
    [RANGE-PATCH].  However, one can use any patch format, by sending a
-   patch with a Content-Type: set to a patch format with a defined
+   patch with a Content-Type set to a patch format with a defined
    behavior, such as application/json-patch+json (as specified in
    [RFC6902]):
 
