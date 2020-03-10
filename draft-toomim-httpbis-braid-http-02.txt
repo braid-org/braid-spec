@@ -314,7 +314,7 @@ Table of Contents
 
    The previous example uses the Range Patch format, which is defined in
    [RANGE-PATCH].  However, one can use any patch format, by sending a
-   patch with a Content-Type: set to a patch format with a defined
+   patch with a Content-Type set to a patch format with a defined
    behavior, such as application/json-patch+json (as specified in
    [RFC6902]):
 
