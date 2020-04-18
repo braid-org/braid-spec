@@ -360,9 +360,7 @@ Table of Contents
 
       Response:
 
-         HTTP/1.1 209 Subscription
-         Subscribe: keep-alive
-
+         HTTP/1.1 200 OK
          Version: "ej4lhb9z78"                                 | Version
          Parents: "oakwn5b8qh", "uc9zwhw7mf"                   |
          Content-Type: application/json                        |
@@ -863,6 +861,7 @@ Table of Contents
       - Eric Kinnear
       - Olli Vanhoja
       - Julian Reschke
+      - Chris Lemmons
 
    We also thank Mark Nottingham, Fred Baker, Adam Roach, and Barry
    Leiba for facilitating a productive environment within the IETF.
