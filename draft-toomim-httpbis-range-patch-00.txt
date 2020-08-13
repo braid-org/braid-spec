@@ -117,7 +117,7 @@ Table of Contents
       HTTP/1.1 206 Partial Content
       Date: Thu, 31 Oct 2019 07:51:08 GMT
       Last-Modified: Thu, 18 Oct 2019 17:44:39 GMT
-      Content-Range: json /foo/bar/3/baz
+      Content-Range: json=/foo/bar/3/baz
       Content-Length: 22
       Content-Type: application/json
 
@@ -203,7 +203,7 @@ Table of Contents
    headers separated from the patch body by an empty line.  Only
    Content-Range header is required.  Example:
 
-      Content-Range: json /foo/bar/3/baz
+      Content-Range: json=/foo/bar/3/baz
 
       {"1": {"two": "tree"}}
 
@@ -214,11 +214,11 @@ Table of Contents
       Content-Type: multipart/byteranges; boundary=THIS_STRING_SEPARATES
 
       --THIS_STRING_SEPARATES
-      Content-Range: json /foo/bar/2/mo
+      Content-Range: json=/foo/bar/2/mo
 
       42
       --THIS_STRING_SEPARATES
-      Content-Range: json /foo/bar/1/no
+      Content-Range: json=/foo/bar/1/no
 
       "person"
 
@@ -234,7 +234,7 @@ Table of Contents
       Content-Length: 62
       Content-Type: application/json+patch
 
-      Content-Range: json /foo/bar/3/baz
+      Content-Range: json=/foo/bar/3/baz
 
       {"2": {"three": "flour"}}
 
