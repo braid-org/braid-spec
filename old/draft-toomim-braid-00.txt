@@ -16,26 +16,6 @@ Intended status: Proposed Standard                             R. Walker
                          draft-toomim-braid-00
 
 
-Todo:
-
-  - Define "state"
-  - Explain time and space for someone who could get confused by that idea
-  - Explain the configurable merge types better.
-
-  > Introduction and abstract were good
-  > Synchronization was good
-  > As a whole it makes sense
-  > - There's a clear need
-  > - There's a clear benefit
-  > Really liked the network messages, and the explanation of each msg.
-
-  - Proposed Changes to HTTP -> Proposed Extension to HTTP
-    - Move the Linked JSON out of there and into its own proposed new
-      content-type
-  - Say that you connect on websocket at path __connect_to_braid__, and
-    then send messages as described below.
-
-
 Abstract
 
   Braid is an extension to HTTP that transforms it from a state
