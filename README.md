@@ -13,7 +13,7 @@ Braid adds to HTTP:
 4. *Merge-Types* that specify OT or CRDT behavior
 
 
-### Range Patch — [`draft-toomim-httpbis-range-patch-00.txt`](https://raw.githubusercontent.com/braid-work/braid-spec/master/draft-toomim-httpbis-range-patch-00.txt)
+### Range Patch — [`draft-toomim-httpbis-range-patch-01.txt`](https://raw.githubusercontent.com/braid-work/braid-spec/master/draft-toomim-httpbis-range-patch-01.txt)
 
 A uniform approach for expressing changes to state over HTTP.  Generalizes
 Range Requests to other HTTP methods.  Defines the replacement of a range with
