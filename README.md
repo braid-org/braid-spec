@@ -26,11 +26,12 @@ conflicting edits to a resource.  If multiple computers implement the same
 Merge Type, they can guarantee eventual consistency after arbitrary
 multi-writer edits.
 
-### NelSON — [`draft-toomim-httpbis-nelson-00.txt`](https://raw.githubusercontent.com/braid-work/braid-spec/master/draft-toomim-httpbis-nelson-00.txt)
+### Linked JSON — [`draft-toomim-httpbis-linked-json-00.txt`](https://raw.githubusercontent.com/braid-work/braid-spec/master/draft-toomim-httpbis-linked-json-00.txt)
 
-NelSON is an extension of JSON that "Ted Nelson would approve of."  Any region
-can be framed with a URI and HTTP Metadata.  Allows JSON objects to compose
-across websites.  Supports transclusion.
+Linked JSON is an extension of JSON that adds a Link datatype, so that URIs
+can be distinguished from ordinary strings.  This allows JSON documents to
+be nested inside other JSON documents.
+
 
 ## Contributing
 
