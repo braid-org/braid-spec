@@ -241,10 +241,10 @@ Table of Contents
          Parents: "oakwn5b8qh", "uc9zwhw7mf"                   |
          Content-Type: application/json                        |
          Merge-Type: sync9                                     |
-         Content-Length: 73                                    |
+         Content-Length: 64                                    |
                                                                |
-         [{text: "Hi, everyone!",                              | | Body
-           author: {type: "link", value: "/user/tommy"}}]      | |
+         [{"text": "Hi, everyone!",                            | | Body
+           "author": {"link": "/user/tommy"}}]                 | |
                   
 
       Response:
@@ -283,11 +283,11 @@ Table of Contents
          Merge-Type: sync9                                     |
          Patches: 2                                            |
                                                                |
-         Content-Length: 62                                    | | Patch
+         Content-Length: 53                                    | | Patch
          Content-Range: json=.messages[1:1]                    | |
                                                                | |
-         [{text: "Yo!",                                        | |
-           author: {type: "link", value: "/user/yobot"}]       | |
+         [{"text": "Yo!",                                      | |
+           "author": {"link": "/user/yobot"}]                  | |
                                                                |
          Content-Length: 40                                    | | Patch
          Content-Range: json=.latest_change                    | |
@@ -365,10 +365,10 @@ Table of Contents
          Parents: "oakwn5b8qh", "uc9zwhw7mf"                   |
          Content-Type: application/json                        |
          Merge-Type: sync9                                     |
-         Content-Length: 73                                    |
+         Content-Length: 64                                    |
                                                                |
-         [{text: "Hi, everyone!",                              | | Body
-           author: {type: "link", value: "/user/tommy"}}]      | | 
+         [{"text": "Hi, everyone!",                            | | Body
+           "author": {"link": "/user/tommy"}}]                 | |
    
 
    If a GET request contains a Version header:
@@ -424,10 +424,10 @@ Table of Contents
          Parents: "oakwn5b8qh", "uc9zwhw7mf"                   |
          Content-Type: application/json                        |
          Merge-Type: sync9                                     |
-         Content-Length: 73                                    |
+         Content-Length: 64                                    |
                                                                |
-         [{text: "Hi, everyone!",                              | | Body
-           author: {type: "link", value: "/user/tommy"}}]      | | 
+         [{"text": "Hi, everyone!",                            | | Body
+           "author": {"link": "/user/tommy"}}]                 | |
 
          Version: "g09ur8z74r"                                 | Version
          Parents: "ej4lhb9z78"                                 |
@@ -435,11 +435,11 @@ Table of Contents
          Merge-Type: sync9                                     |
          Patches: 1                                            |
                                                                |
-         Content-Length: 62                                    | | Patch
+         Content-Length: 53                                    | | Patch
          Content-Range: json=.messages[1:1]                    | |
                                                                | |
-         [{text: "Yo!",                                        | |
-           author: {type: "link", value: "/user/yobot"}]       | |
+         [{"text": "Yo!",                                      | |
+           "author": {"link": "/user/yobot"}]                  | |
 
          Version: "2bcbi84nsp"                                 | Version
          Parents: "g09ur8z74r"                                 |
@@ -447,11 +447,11 @@ Table of Contents
          Merge-Type: sync9                                     |
          Patches: 1                                            |
                                                                |
-         Content-Length: 68                                    | | Patch
+         Content-Length: 58                                    | | Patch
          Content-Range: json=.messages[2:2]                    | |
                                                                | |
-         [{text: "Hi, Tommy!",                                 | |
-           author: {type: "link", value: "/user/sal"}}]        | |
+         [{"text": "Hi, Tommy!",                               | |
+           "author": {"link": "/user/sal"}}]                   | |
 
          Version: "up12vyc5ib"                                 | Version
          Parents: "2bcbi84nsp"                                 |
