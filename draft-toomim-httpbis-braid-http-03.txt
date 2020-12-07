@@ -577,33 +577,33 @@ Table of Contents
 
 5.  Use Cases
 
-5.1.  Dynamic Resources: Animating a GIF
+5.1.  Dynamic Resources: Animating a PNG
 
    Braid allows resources to become inherently dynamic -- able to change
    over time.  You can use this to make a resource animate.
 
-   In this example, a server streams changes to a GIF file in a sequence
-   of patches.  When the client renders the new state of the GIF after
+   In this example, a server streams changes to a PNG file in a sequence
+   of patches.  When the client renders the new state of the PNG after
    each patch, a new frame of animation is displayed.
 
 
      Request:
-       GET /animated-braid.gif
+       GET /animated-braid.png
        Subscribe
 
      Response:
        HTTP/1.1 209 Subscribe
        Subscribe
-       Content-Type: image/gif         | Version
+       Content-Type: image/png         | Version
        Patches: 2                      |
                                        |
        Content-Length: 1239            | | Patch
-       Content-Range: bytes 100-200    | |
+       Content-Range: bytes=100-200    | |
                                        | |
        <binary data>                   | |
                                        |
        Content-Length: 62638           | | Patch
-       Content-Range: bytes 348-887    | |
+       Content-Range: bytes=348-887    | |
                                        | | 
        <binary data>                   | |
 
