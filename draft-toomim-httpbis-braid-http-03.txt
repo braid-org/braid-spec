@@ -302,14 +302,12 @@ Table of Contents
 
 
    In order to distinguish each patch within a Version, we need to know
-   the length of the patch.  To know the length of the patch, each patch
-   must include one of the following headers:
+   the length of each patch.  To know the length of each past, it must
+   include the following header:
 
          Content-Length: N
-         Transfer-Encoding: chunked
 
-   Either of these provide a way to determine when the next message
-   starts.
+   This length determines where this patch ends, and next begins.
 
 
    The previous example uses the Range Patch format, which is defined in
