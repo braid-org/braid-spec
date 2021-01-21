@@ -302,7 +302,7 @@ Table of Contents
 
 
    In order to distinguish each patch within a Version, we need to know
-   the length of each patch.  To know the length of each past, it must
+   the length of each patch.  To know the length of each patch, it must
    include the following header:
 
          Content-Length: N
