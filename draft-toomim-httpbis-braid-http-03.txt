@@ -302,7 +302,7 @@ Table of Contents
 
 
    In order to distinguish each patch within a Version, we need to know
-   the length of each patch.  To know the length of each patch, it must
+   the length of each patch.  To know the length of each patch, it MUST
    include the following header:
 
          Content-Length: N
@@ -500,8 +500,8 @@ Table of Contents
 
    To send multiple updates, a server concatenates multiple
    sub-responses into a single response body.  Each sub-response must
-   contain its own headers and body.  Each sub-response must have a
-   known length, which means it must contain one of the following
+   contain its own headers and body.  Each sub-response MUST have a
+   known length, which means it MUST contain one of the following
    headers:
 
       - Content-Length: N
