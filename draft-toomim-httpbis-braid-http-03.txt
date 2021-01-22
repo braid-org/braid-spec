@@ -87,7 +87,8 @@ Table of Contents
    3.2.  Sending multiple updates per GET ...........................11
    3.3.  Continuing a Subscription ..................................12
    3.4.  Ending a Subscription ......................................12
-   3.5.  Errors .....................................................12
+   3.5.  Signaling "all caught up" ..................................12
+   3.6.  Errors .....................................................12
    4.  Design Goals..................................................13
    5.  Use Cases ....................................................13
    5.1.  Dynamic Resources ..........................................13
@@ -553,7 +554,37 @@ Table of Contents
    request body, the client can issue a fresh request specified as a
    FORGET method.
 
-3.5.  Errors
+
+3.5.  Signaling "all caught up"
+
+   When starting a subscription, the server can indicate which version is
+   current by specifying a "Version" header before starting the stream of
+   versions.  The client can use this information to determine when it has
+   caught up with the server.
+
+
+      Request:
+
+         GET /chat
+         Subscribe: keep-alive
+
+      Response:
+
+         HTTP/1.1 209 Subscription
+         Subscribe: keep-alive
+         Version: "ej4lhb9z78"                       <-- Current Version
+
+         Version: "ej4lhb9z78"                       + Stream of updates
+         Parents: "oakwn5b8qh", "uc9zwhw7mf"         |
+         Content-Type: application/json              |
+         Merge-Type: sync9                           |
+         Content-Length: 64                          |
+                                                     |
+         [{"text": "Hi, everyone!",                  |
+           "author": {"link": "/user/tommy"}}]       V
+                                                     <-- Now caught up
+
+3.6.  Errors
 
    If a server has dropped the history that a client requests, the
    server can return a 410 GONE response, to tell the client "sorry, I
