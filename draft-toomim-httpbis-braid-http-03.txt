@@ -17,7 +17,7 @@ Intended status: Proposed Standard                             G. Little
       =\=\==/=/   ==|    |\=  ||=     /==  ===/=|=\===  |==\===//
 
                   Braid-HTTP: Synchronization for HTTP
-                   draft-toomim-httpbis-braid-http-02
+                   draft-toomim-httpbis-braid-http-03
 
 Abstract
 
