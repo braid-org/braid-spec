@@ -285,13 +285,13 @@ Table of Contents
          Patches: 2                                            |
                                                                |
          Content-Length: 53                                    | | Patch
-         Content-Range: json=.messages[1:1]                    | |
+         Range: json=.messages[1:1]                            | |
                                                                | |
          [{"text": "Yo!",                                      | |
            "author": {"link": "/user/yobot"}]                  | |
                                                                |
          Content-Length: 40                                    | | Patch
-         Content-Range: json=.latest_change                    | |
+         Range: json=.latest_change                            | |
                                                                | |
          {"type": "date", "value": 1573952202370}              | |
 
@@ -437,7 +437,7 @@ Table of Contents
          Patches: 1                                            |
                                                                |
          Content-Length: 53                                    | | Patch
-         Content-Range: json=.messages[1:1]                    | |
+         Content-Range: json .messages[1:1]                    | |
                                                                | |
          [{"text": "Yo!",                                      | |
            "author": {"link": "/user/yobot"}]                  | |
@@ -449,7 +449,7 @@ Table of Contents
          Patches: 1                                            |
                                                                |
          Content-Length: 58                                    | | Patch
-         Content-Range: json=.messages[2:2]                    | |
+         Content-Range: json .messages[2:2]                    | |
                                                                | |
          [{"text": "Hi, Tommy!",                               | |
            "author": {"link": "/user/sal"}}]                   | |
@@ -629,12 +629,12 @@ Table of Contents
        Patches: 2                      |
                                        |
        Content-Length: 1239            | | Patch
-       Content-Range: bytes=100-200    | |
+       Content-Range: bytes 100-200    | |
                                        | |
        <binary data>                   | |
                                        |
        Content-Length: 62638           | | Patch
-       Content-Range: bytes=348-887    | |
+       Content-Range: bytes 348-887    | |
                                        | | 
        <binary data>                   | |
 
