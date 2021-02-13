@@ -557,10 +557,11 @@ Table of Contents
 
 3.5.  Signaling "all caught up"
 
-   When starting a subscription, the server can indicate which version is
-   current by specifying a "Version" header before starting the stream of
-   versions.  The client can use this information to determine when it has
-   caught up with the server.
+   When starting a subscription, the server can indicate which version
+   is current by specifying a "Current-Versions" header before starting
+   the stream of versions.  This should contain the frontier of time,
+   aka the leaves of the currently-known time DAG.  The client can use
+   this information to determine when it has caught up with the server.
 
 
       Request:
@@ -572,7 +573,7 @@ Table of Contents
 
          HTTP/1.1 209 Subscription
          Subscribe: keep-alive
-         Version: "ej4lhb9z78"                       <-- Current Version
+         Current-Versions: "ej4lhb9z78"              <-- Current Version
 
          Version: "ej4lhb9z78"                       + Stream of updates
          Parents: "oakwn5b8qh", "uc9zwhw7mf"         |
