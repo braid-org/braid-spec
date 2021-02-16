@@ -353,6 +353,8 @@ Table of Contents
    of a resource in GET requests.  To request a historical version, a
    client includes a Version and/or Parents header in the request.
 
+   Servers MAY support handling all specific version requests, or just a
+   subset of specific version requests.
 
       Request:
 
