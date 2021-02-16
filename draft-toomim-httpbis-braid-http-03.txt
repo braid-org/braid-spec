@@ -150,8 +150,8 @@ Table of Contents
      2. Subscriptions (Section 3)
 
         A Subscribe header can be added to GET requests, which promises
-        to push all future versions to the client, until the client says
-        forGET.
+        to push all future versions to the client while the connection
+        is open, and optionally until the client sends a FORGET message.
 
      3. Range Patches [RANGE-PATCH]
 
@@ -546,13 +546,17 @@ Table of Contents
    request with a new Subscribe header.
 
    If a subscription is set to keep-alive, then closing the TCP/QUIC
-   connection won't end the subscription.  Thus a client needs a way to
-   explicitly end the subscription.  In HTTP/1, this is by sending the
-   text "forGET\n" over the TCP connection.  In HTTP/2, this is by
-   issuing a CLOSE event to the GET request's stream.  Alternatively,
-   since today's web browsers do not support sending extra text after a
-   request body, the client can issue a fresh request specified as a
-   FORGET method.
+   connection MAY NOT end the subscription, at the server's discretion.
+   The client can always explicitly terminate the subscription in one of
+   these ways:
+   
+      - In HTTP/1, the client sends the text "FORGET\n" over
+        the TCP connection.
+      - In HTTP/2, the client issues a CLOSE event to
+        the GET request's stream.
+      - Alternatively, since today's web browsers do not support sending
+        extra text after a request body, the client can issue a fresh
+        request specified as a FORGET method.
 
 
 3.5.  Signaling "all caught up"
