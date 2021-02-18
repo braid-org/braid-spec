@@ -149,9 +149,9 @@ Table of Contents
 
      2. Subscriptions (Section 3)
 
-        A Subscribe header can be added to GET requests, which promises
-        to push all future versions to the client while the connection
-        is open, and optionally until the client sends a FORGET message.
+        A Subscribe header can be added to GET requests. The server
+        responds by pushing future versions to the client while the
+        request is open.
 
      3. Range Patches [RANGE-PATCH]
 
@@ -484,19 +484,16 @@ Table of Contents
 
            Subscribe
       or   Subscribe: keep-alive
-      or   Subscribe: keep-alive=<seconds>
 
    If a server implements Subscribe, it MUST include a Subscribe header
    in its response.  The server then SHOULD keep the connection open,
-   and send updates over it.
+   and send updates over it.  A subscription is different from a GET
+   connection (e.g. a TCP connection, or HTTP/2 stream).
 
    In general, a server that implements subscriptions promises to keep
-   its subscribed clients up-to-date by sending changes until the client
-   closes the subscription.  A subscription is different from a GET
-   connection (e.g. a TCP connection, or HTTP/2 stream).  If a client
-   requests "Subscribe: keep-alive", then the subscription will be
-   remembered even after the GET connection closes.  A subscription can
-   be resumed by the client issuing another GET with a Subscribe header.
+   its subscribed clients up-to-date by sending changes until the
+   connection is closed.  Once closed, a subscription can be resumed by
+   the client issuing a subsequent GET request on the same document.
 
 
 3.2.  Sending multiple updates per GET
@@ -518,54 +515,67 @@ Table of Contents
 
 3.3.  Continuing a Subscription
 
-   Even if a connection closes, a subscription might still be active.
-   If a server's response headers for a connection contained:
-
-           Subscribe: keep-alive
-      or   Subscribe: keep-alive=<seconds>
-
-   Then the server SHOULD keep the subscription open even after the
-   connection closes.  This means that the server promises to keep
-   enough history to merge with the client when the client comes back
-   online.
+   Once closed, a braid subscription may be restarted by the client
+   issuing a new subscription request.
 
    When the client reconnects, it may specify the most recent versions
    it saw from the server using the Parents header.  This tells the
-   server which versions of state to catch it up from.
+   server which versions & patches need to be sent, so the client and
+   server's document state will converge.
 
-   The server can suggest how long it will wait for the client by
-   responding with Subscribe: keep-alive=<seconds>.  A server should
-   wait at least <seconds> after a connection closes before dropping the
-   subscription, and clearing its history.
+   For example:
+
+      Initial request:
+
+         GET /chat
+         Subscribe: keep-alive
+
+      Initial response:
+
+         HTTP/1.1 209 Subscription
+         Subscribe: keep-alive
+
+         Version: "ej4lhb9z78"                                 | Version
+         Content-Type: application/json                        |
+         Content-Length: 64                                    |
+                                                               |
+         [{"text": "Hi, everyone!",                            | | Body
+           "author": {"link": "/user/tommy"}}]                 | |
+
+      <Client disconnects>
+
+      Reconnection request:
+
+         GET /chat
+         Subscribe: keep-alive
+         Parents: "ej4lhb9z78"
+
+      Reconnection response:
+
+         HTTP/1.1 209 Subscription
+         Subscribe: keep-alive
+
+         Version: "g09ur8z74r"                                 | Version
+         Parents: "ej4lhb9z78"                                 |
+         Content-Type: application/json                        |
+         Merge-Type: sync9                                     |
+         Patches: 1                                            |
+                                                               |
+         Content-Length: 53                                    | | Patch
+         Content-Range: json=.messages[1:1]                    | |
+                                                               | |
+         [{"text": "Yo!",                                      | |
+           "author": {"link": "/user/yobot"}]                  | |
 
 
-3.4.  Ending a Subscription
+3.4.  Signaling "all caught up"
 
-   Servers and clients MAY drop a subscription at any time, no matter
-   the value of keep-alive.  A client may reconnect by issuing a new GET
-   request with a new Subscribe header.
-
-   If a subscription is set to keep-alive, then closing the TCP/QUIC
-   connection MAY NOT end the subscription, at the server's discretion.
-   The client can always explicitly terminate the subscription in one of
-   these ways:
-   
-      - In HTTP/1, the client sends the text "FORGET\n" over
-        the TCP connection.
-      - In HTTP/2, the client issues a CLOSE event to
-        the GET request's stream.
-      - Alternatively, since today's web browsers do not support sending
-        extra text after a request body, the client can issue a fresh
-        request specified as a FORGET method.
-
-
-3.5.  Signaling "all caught up"
-
-   When starting a subscription, the server can indicate which version
-   is current by specifying a "Current-Versions" header before starting
-   the stream of versions.  This should contain the frontier of time,
-   aka the leaves of the currently-known time DAG.  The client can use
-   this information to determine when it has caught up with the server.
+   When starting or resuming a subscription, the server can indicate
+   which version is current by specifying a "Current-Versions" header
+   before starting the stream of versions.  This should contain the
+   frontier of time, aka the leaves of the currently-known time DAG. The
+   client can use this information to determine when it has caught up
+   with the server.
 
 
       Request:
@@ -589,7 +599,7 @@ Table of Contents
            "author": {"link": "/user/tommy"}}]       V
                                                      <-- Now caught up
 
-3.6.  Errors
+3.5.  Errors
 
    If a server has dropped the history that a client requests, the
    server can return a 410 GONE response, to tell the client "sorry, I
