@@ -4,7 +4,7 @@ This is the working area for the [Braid](https://braid.news) extensions to
 HTTP in the [IETF HTTP Working Group](https://httpwg.org/).  These extensions
 add Synchronization to HTTP.  They are authored in three documents:
 
-### Braid HTTP — [`draft-toomim-httpbis-braid-http-03.txt`](https://raw.githubusercontent.com/braid-work/braid-spec/master/draft-toomim-httpbis-braid-http-03.txt)
+### Braid HTTP — [`draft-toomim-httpbis-braid-http-03.txt`](https://raw.githubusercontent.com/braid-org/braid-spec/master/draft-toomim-httpbis-braid-http-03.txt)
 
 Braid adds to HTTP:
 1. *Versioning* to resources
@@ -13,20 +13,20 @@ Braid adds to HTTP:
 4. *Merge-Types* that specify OT or CRDT behavior
 
 
-### Range Patch — [`draft-toomim-httpbis-range-patch-01.txt`](https://raw.githubusercontent.com/braid-work/braid-spec/master/draft-toomim-httpbis-range-patch-01.txt)
+### Range Patch — [`draft-toomim-httpbis-range-patch-01.txt`](https://raw.githubusercontent.com/braid-org/braid-spec/master/draft-toomim-httpbis-range-patch-01.txt)
 
 A uniform approach for expressing changes to state over HTTP.  Generalizes
 Range Requests to other HTTP methods.  Defines the replacement of a range with
 a new value.
 
-### Merge Types — [`draft-toomim-httpbis-merge-types-00.txt`](https://raw.githubusercontent.com/braid-work/braid-spec/master/draft-toomim-httpbis-merge-types-00.txt)
+### Merge Types — [`draft-toomim-httpbis-merge-types-00.txt`](https://raw.githubusercontent.com/braid-org/braid-spec/master/draft-toomim-httpbis-merge-types-00.txt)
 
 Merge Types specify how to consistently merge a set of simultaneous
 conflicting edits to a resource.  If multiple computers implement the same
 Merge Type, they can guarantee eventual consistency after arbitrary
 multi-writer edits.
 
-### Linked JSON — [`draft-toomim-httpbis-linked-json-00.txt`](https://raw.githubusercontent.com/braid-work/braid-spec/master/draft-toomim-httpbis-linked-json-00.txt)
+### Linked JSON — [`draft-toomim-httpbis-linked-json-00.txt`](https://raw.githubusercontent.com/braid-org/braid-spec/master/draft-toomim-httpbis-linked-json-00.txt)
 
 Linked JSON is an extension of JSON that adds a Link datatype, so that URIs
 can be distinguished from ordinary strings.  This allows JSON documents to
