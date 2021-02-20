@@ -1,6 +1,6 @@
 # Braid: Adding Synchronization to HTTP
 
-This is the working area for the [Braid](https://braid.news) extensions to
+This is the working area for the [Braid](https://braid.org) extensions to
 HTTP in the [IETF HTTP Working Group](https://httpwg.org/).  These extensions
 add Synchronization to HTTP.  They are authored in three documents:
 
