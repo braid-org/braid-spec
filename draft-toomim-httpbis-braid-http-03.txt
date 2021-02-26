@@ -337,7 +337,7 @@ Table of Contents
            { "op": "remove", "path": "/a/b/c" },               | |
            { "op": "add", "path": "/a/b/c", "value": [] },     | |
            { "op": "replace", "path": "/a/b/c", "value": 42 }, | |
-           { "op": "move", "from": "/a/b", "path": "/a/d },    | |
+           { "op": "move", "from": "/a/b", "path": "/a/d" },   | |
            { "op": "copy", "from": "/a/d/d", "path": "/a/d/e" }| |
          ]                                                     | |
 
