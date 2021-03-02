@@ -487,8 +487,7 @@ Table of Contents
 
    If a server implements Subscribe, it MUST include a Subscribe header
    in its response.  The server then SHOULD keep the connection open,
-   and send updates over it.  A subscription is different from a GET
-   connection (e.g. a TCP connection, or HTTP/2 stream).
+   and send updates over it.
 
    In general, a server that implements subscriptions promises to keep
    its subscribed clients up-to-date by sending changes until the
