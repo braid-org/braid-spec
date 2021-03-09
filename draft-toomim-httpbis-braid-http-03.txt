@@ -353,8 +353,6 @@ Table of Contents
    of a resource in GET requests.  To request a historical version, a
    client includes a Version and/or Parents header in the request.
 
-   Servers MAY support handling all specific version requests, or just a
-   subset of specific version requests.
 
       Request:
 
@@ -372,7 +370,7 @@ Table of Contents
                                                                |
          [{"text": "Hi, everyone!",                            | | Body
            "author": {"link": "/user/tommy"}}]                 | |
-   
+
 
    If a GET request contains a Version header:
 
@@ -404,7 +402,24 @@ Table of Contents
    A server MAY refactor or rebase the version history that it provides
    to a client, so long as it does not affect the resulting state, or
    the result of the patch-type's merges.
-
+
+   A server does not need to honor historical version requests for all
+   documents, for all history. If a server no longer has the historical
+   context needed to honor a request, it may respond using the 416 Range
+   Not Satisfiable status code. (Defined in [RFC7233], Section 4.4)
+
+
+      Request:
+
+         GET /chat
+         Version: "ej4lhb9z78"
+
+      Response:
+
+         HTTP/1.1 416 Range Not Satisfiable
+         Version: "ej4lhb9z78"
+
+
 
 3.  Subscriptions for GET
 
