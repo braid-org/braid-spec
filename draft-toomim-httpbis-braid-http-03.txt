@@ -6,6 +6,8 @@ Intended status: Proposed Standard                             G. Little
                                                             Bard College
                                                               B. Bellomy
                                                        Invisible College
+                                                               J. Gentle
+                                                       Invisible College
                                                              Mar 9, 2020
 
       \=/====\\   |//===\\=       /=\      =\==\|\=/==  =|====\==
@@ -932,3 +934,11 @@ Table of Contents
 
    EMail: bryn@signals.io
    Web:   https://invisible.college/@bryn
+
+   Joseph Gentle
+   Invisible College, Berkeley
+   2053 Berkeley Way
+   Berkeley, CA 94704
+
+   EMail: me@josephg.com
+   Web:   https://josephg.com/
