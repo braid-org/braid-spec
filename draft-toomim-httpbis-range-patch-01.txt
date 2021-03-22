@@ -79,8 +79,15 @@ Table of Contents
 2.  Range Patch
 
    [RFC7233] effectively already defines how a patch operating on byte
-   units can be represented over HTTP, using Content-Range,
-   Content-Type, and Content-Length HTTP headers.  Example:
+   units can be represented over HTTP, using the Range header for
+   requests, and Content-Range, Content-Type, and Content-Length HTTP
+   response headers. Example request:
+
+      GET /smileyface.gif HTTP/1.1
+      Host: i.imgur.com
+      Range: bytes=21010-47021
+   
+   Example response:
 
       HTTP/1.1 206 Partial Content
       Date: Wed, 15 Nov 1995 06:25:24 GMT
@@ -117,7 +124,7 @@ Table of Contents
       HTTP/1.1 206 Partial Content
       Date: Thu, 31 Oct 2019 07:51:08 GMT
       Last-Modified: Thu, 18 Oct 2019 17:44:39 GMT
-      Content-Range: json=/foo/bar/3/baz
+      Content-Range: json /foo/bar/3/baz
       Content-Length: 22
       Content-Type: application/json
 
@@ -197,13 +204,13 @@ Table of Contents
 
    When range patches are transmitted outside of HTTP session, a
    stand-alone range patch format can be used.  For example, in this
-   format a patch can be stored in a file, send to a mailing list, or a
+   format a patch can be stored in a file, sent to a mailing list, or a
    code version control system can display the patch in the range patch
    format.  The format reuses structure from HTTP and consists of
    headers separated from the patch body by an empty line.  Only
    Content-Range header is required.  Example:
 
-      Content-Range: json=/foo/bar/3/baz
+      Content-Range: json /foo/bar/3/baz
 
       {"1": {"two": "tree"}}
 
@@ -234,7 +241,7 @@ Table of Contents
       Content-Length: 62
       Content-Type: application/json+patch
 
-      Content-Range: json=/foo/bar/3/baz
+      Content-Range: json /foo/bar/3/baz
 
       {"2": {"three": "flour"}}
 
@@ -243,7 +250,7 @@ Table of Contents
 2.3.  URI Fragment Identifiers
 
    For media types which support range patches, ranges can be used as
-   URI fragment identifies as well.  For example, URI:
+   URI fragment identifiers as well.  For example, URI:
 
       /api/document/1#json=/foo/bar/0
 
@@ -294,7 +301,7 @@ Table of Contents
 
    JSON pointer provides capabilities to identify a single element of a
    data structure.  Here we extend it to allow a range of elements for
-   arrays and strings, by extending the scheme how reference token
+   arrays and strings by extending the scheme how reference token
    modifies which value is referenced from Section 4 of [RFC6901]:
 
    o If the currently referenced value is a JSON array, the reference
@@ -523,7 +530,7 @@ Table of Contents
       Range-Request-Allow-Methods:
       Range-Request-Allow-Units:
 
-   Empty header fields are allowed per [RFC2616] section 2.1.
+   Empty header fields are allowed per [RFC2616] section 4.2.
 
    Also note the presence of the Version header, discussed in section 
    6.  The server may preemptively send this to obviate the need for
