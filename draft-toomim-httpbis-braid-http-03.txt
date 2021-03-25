@@ -370,7 +370,7 @@ Table of Contents
                                                                |
          [{"text": "Hi, everyone!",                            | | Body
            "author": {"link": "/user/tommy"}}]                 | |
-   
+
 
    If a GET request contains a Version header:
 
@@ -402,7 +402,24 @@ Table of Contents
    A server MAY refactor or rebase the version history that it provides
    to a client, so long as it does not affect the resulting state, or
    the result of the patch-type's merges.
-
+
+   A server does not need to honor historical version requests for all
+   documents, for all history. If a server no longer has the historical
+   context needed to honor a request, it may respond using an error code
+   which will be defined in a subsequent version of this RFC draft.
+
+
+      Request:
+
+         GET /chat
+         Version: "ej4lhb9z78"
+
+      Response:
+
+         HTTP/1.1 XXX
+         Version: "ej4lhb9z78"
+
+
 
 3.  Subscriptions for GET
 
