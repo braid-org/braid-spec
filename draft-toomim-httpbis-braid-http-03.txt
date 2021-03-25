@@ -275,7 +275,7 @@ Table of Contents
    One can send an update in a patch by setting the "Patches" header to
    a number, and then set the Message body to a sequence of that many
    patches, separated by blank lines:
-
+
 
       Request:
 
@@ -370,7 +370,7 @@ Table of Contents
                                                                |
          [{"text": "Hi, everyone!",                            | | Body
            "author": {"link": "/user/tommy"}}]                 | |
-   
+
 
    If a GET request contains a Version header:
 
@@ -504,13 +504,19 @@ Table of Contents
    headers:
 
       - Content-Length: N
-      - Transfer-Encoding: chunked
       - Patches: N
 
    Each sub-response must have both headers and a body.  The body may be
    zero-length.
 
-
+   The server MAY insert any number of extra newlines between the end of
+   one sub-resource and the beginning of the next. If present, these
+   newline characters are not included in the preceeding body and thus
+   they will not be included in the preceeding header's Content-Length.
+   Extra newlines may be encoded using either the \r\n ASCII character
+   pair or using a single \n character.
+
+
 
 3.3.  Continuing a Subscription
 
