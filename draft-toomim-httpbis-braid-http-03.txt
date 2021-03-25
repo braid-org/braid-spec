@@ -405,8 +405,8 @@ Table of Contents
 
    A server does not need to honor historical version requests for all
    documents, for all history. If a server no longer has the historical
-   context needed to honor a request, it may respond using the 416 Range
-   Not Satisfiable status code. (Defined in [RFC7233], Section 4.4)
+   context needed to honor a request, it may respond using an error code
+   which will be defined in a subsequent version of this RFC draft.
 
 
       Request:
@@ -416,7 +416,7 @@ Table of Contents
 
       Response:
 
-         HTTP/1.1 416 Range Not Satisfiable
+         HTTP/1.1 XXX
          Version: "ej4lhb9z78"
 
 
