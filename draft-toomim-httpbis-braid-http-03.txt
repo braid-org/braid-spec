@@ -509,12 +509,14 @@ Table of Contents
    Each sub-response must have both headers and a body.  The body may be
    zero-length.
 
-   The server MAY insert any number of extra newlines between the end of
-   one sub-resource and the beginning of the next. If present, these
-   newline characters are not included in the preceeding body and thus
-   they will not be included in the preceeding header's Content-Length.
-   Extra newlines may be encoded using either the \r\n ASCII character
-   pair or using a single \n character.
+   To prevent browsers (and other clients) from closing inactive
+   connections, the server MAY insert any number of extra newlines
+   between the end of one sub-response and the beginning of the next. If
+   present, these newline characters do not constitute part of the
+   preceding body, and thus their length is not included in the
+   preceding header's Content-Length. Any extra newlines may be encoded
+   using either the \r\n ASCII character pairs or singular \n
+   characters.
 
 
 
