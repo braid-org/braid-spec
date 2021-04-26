@@ -275,7 +275,7 @@ Table of Contents
    One can send an update in a patch by setting the "Patches" header to
    a number, and then set the Message body to a sequence of that many
    patches, separated by blank lines:
-
+
 
       Request:
 
@@ -521,13 +521,21 @@ Table of Contents
    headers:
 
       - Content-Length: N
-      - Transfer-Encoding: chunked
       - Patches: N
 
    Each sub-response must have both headers and a body.  The body may be
    zero-length.
 
-
+   To prevent browsers (and other clients) from closing inactive
+   connections, the server MAY insert any number of extra newlines
+   between the end of one sub-response and the beginning of the next. If
+   present, these newline characters do not constitute part of the
+   preceding body, and thus their length is not included in the
+   preceding header's Content-Length. Any extra newlines may be encoded
+   using either the \r\n ASCII character pairs or singular \n
+   characters.
+
+
 
 3.3.  Continuing a Subscription
 
