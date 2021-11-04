@@ -6,6 +6,8 @@ Intended status: Proposed Standard                             G. Little
                                                             Bard College
                                                               B. Bellomy
                                                        Invisible College
+                                                               J. Gentle
+                                                       Invisible College
                                                              Mar 9, 2020
 
       \=/====\\   |//===\\=       /=\      =\==\|\=/==  =|====\==
@@ -149,9 +151,9 @@ Table of Contents
 
      2. Subscriptions (Section 3)
 
-        A Subscribe header can be added to GET requests, which promises
-        to push all future versions to the client, until the client says
-        forGET.
+        A Subscribe header can be added to GET requests. The server
+        responds by pushing future versions to the client while the
+        request is open.
 
      3. Range Patches [RANGE-PATCH]
 
@@ -273,7 +275,7 @@ Table of Contents
    One can send an update in a patch by setting the "Patches" header to
    a number, and then set the Message body to a sequence of that many
    patches, separated by blank lines:
-
+
 
       Request:
 
@@ -285,13 +287,13 @@ Table of Contents
          Patches: 2                                            |
                                                                |
          Content-Length: 53                                    | | Patch
-         Content-Range: json=.messages[1:1]                    | |
+         Range: json=.messages[1:1]                            | |
                                                                | |
          [{"text": "Yo!",                                      | |
            "author": {"link": "/user/yobot"}]                  | |
                                                                |
          Content-Length: 40                                    | | Patch
-         Content-Range: json=.latest_change                    | |
+         Range: json=.latest_change                            | |
                                                                | |
          {"type": "date", "value": 1573952202370}              | |
 
@@ -303,14 +305,12 @@ Table of Contents
 
 
    In order to distinguish each patch within a Version, we need to know
-   the length of the patch.  To know the length of the patch, each patch
-   must include one of the following headers:
+   the length of each patch.  To know the length of each patch, it MUST
+   include the following header:
 
          Content-Length: N
-         Transfer-Encoding: chunked
 
-   Either of these provide a way to determine when the next message
-   starts.
+   This length determines where this patch ends, and next begins.
 
 
    The previous example uses the Range Patch format, which is defined in
@@ -337,7 +337,7 @@ Table of Contents
            { "op": "remove", "path": "/a/b/c" },               | |
            { "op": "add", "path": "/a/b/c", "value": [] },     | |
            { "op": "replace", "path": "/a/b/c", "value": 42 }, | |
-           { "op": "move", "from": "/a/b", "path": "/a/d },    | |
+           { "op": "move", "from": "/a/b", "path": "/a/d" },   | |
            { "op": "copy", "from": "/a/d/d", "path": "/a/d/e" }| |
          ]                                                     | |
 
@@ -370,7 +370,7 @@ Table of Contents
                                                                |
          [{"text": "Hi, everyone!",                            | | Body
            "author": {"link": "/user/tommy"}}]                 | |
-   
+
 
    If a GET request contains a Version header:
 
@@ -402,7 +402,24 @@ Table of Contents
    A server MAY refactor or rebase the version history that it provides
    to a client, so long as it does not affect the resulting state, or
    the result of the patch-type's merges.
-
+
+   A server does not need to honor historical version requests for all
+   documents, for all history. If a server no longer has the historical
+   context needed to honor a request, it may respond using an error code
+   which will be defined in a subsequent version of this RFC draft.
+
+
+      Request:
+
+         GET /chat
+         Version: "ej4lhb9z78"
+
+      Response:
+
+         HTTP/1.1 XXX
+         Version: "ej4lhb9z78"
+
+
 
 3.  Subscriptions for GET
 
@@ -437,7 +454,7 @@ Table of Contents
          Patches: 1                                            |
                                                                |
          Content-Length: 53                                    | | Patch
-         Content-Range: json=.messages[1:1]                    | |
+         Content-Range: json .messages[1:1]                    | |
                                                                | |
          [{"text": "Yo!",                                      | |
            "author": {"link": "/user/yobot"}]                  | |
@@ -449,7 +466,7 @@ Table of Contents
          Patches: 1                                            |
                                                                |
          Content-Length: 58                                    | | Patch
-         Content-Range: json=.messages[2:2]                    | |
+         Content-Range: json .messages[2:2]                    | |
                                                                | |
          [{"text": "Hi, Tommy!",                               | |
            "author": {"link": "/user/sal"}}]                   | |
@@ -484,84 +501,105 @@ Table of Contents
 
            Subscribe
       or   Subscribe: keep-alive
-      or   Subscribe: keep-alive=<seconds>
 
    If a server implements Subscribe, it MUST include a Subscribe header
    in its response.  The server then SHOULD keep the connection open,
    and send updates over it.
 
    In general, a server that implements subscriptions promises to keep
-   its subscribed clients up-to-date by sending changes until the client
-   closes the subscription.  A subscription is different from a GET
-   connection (e.g. a TCP connection, or HTTP/2 stream).  If a client
-   requests "Subscribe: keep-alive", then the subscription will be
-   remembered even after the GET connection closes.  A subscription can
-   be resumed by the client issuing another GET with a Subscribe header.
+   its subscribed clients up-to-date by sending changes until the
+   connection is closed.  Once closed, a subscription can be resumed by
+   the client issuing a subsequent GET request on the same document.
 
 
 3.2.  Sending multiple updates per GET
 
    To send multiple updates, a server concatenates multiple
    sub-responses into a single response body.  Each sub-response must
-   contain its own headers and body.  Each sub-response must have a
-   known length, which means it must contain one of the following
+   contain its own headers and body.  Each sub-response MUST have a
+   known length, which means it MUST contain one of the following
    headers:
 
       - Content-Length: N
-      - Transfer-Encoding: chunked
       - Patches: N
 
    Each sub-response must have both headers and a body.  The body may be
    zero-length.
 
-
+   To prevent browsers (and other clients) from closing inactive
+   connections, the server MAY insert any number of extra newlines
+   between the end of one sub-response and the beginning of the next. If
+   present, these newline characters do not constitute part of the
+   preceding body, and thus their length is not included in the
+   preceding header's Content-Length. Any extra newlines may be encoded
+   using either the \r\n ASCII character pairs or singular \n
+   characters.
+
+
 
 3.3.  Continuing a Subscription
 
-   Even if a connection closes, a subscription might still be active.
-   If a server's response headers for a connection contained:
-
-           Subscribe: keep-alive
-      or   Subscribe: keep-alive=<seconds>
-
-   Then the server SHOULD keep the subscription open even after the
-   connection closes.  This means that the server promises to keep
-   enough history to merge with the client when the client comes back
-   online.
+   Once closed, a braid subscription may be restarted by the client
+   issuing a new subscription request.
 
    When the client reconnects, it may specify the most recent versions
    it saw from the server using the Parents header.  This tells the
-   server which versions of state to catch it up from.
+   server which versions & patches need to be sent, so the client and
+   server's document state will converge.
 
-   The server can suggest how long it will wait for the client by
-   responding with Subscribe: keep-alive=<seconds>.  A server should
-   wait at least <seconds> after a connection closes before dropping the
-   subscription, and clearing its history.
+   For example:
+
+      Initial request:
+
+         GET /chat
+         Subscribe: keep-alive
+
+      Initial response:
+
+         HTTP/1.1 209 Subscription
+         Subscribe: keep-alive
+
+         Version: "ej4lhb9z78"                                 | Version
+         Content-Type: application/json                        |
+         Content-Length: 64                                    |
+                                                               |
+         [{"text": "Hi, everyone!",                            | | Body
+           "author": {"link": "/user/tommy"}}]                 | |
+
+      <Client disconnects>
+
+      Reconnection request:
+
+         GET /chat
+         Subscribe: keep-alive
+         Parents: "ej4lhb9z78"
+
+      Reconnection response:
+
+         HTTP/1.1 209 Subscription
+         Subscribe: keep-alive
+
+         Version: "g09ur8z74r"                                 | Version
+         Parents: "ej4lhb9z78"                                 |
+         Content-Type: application/json                        |
+         Merge-Type: sync9                                     |
+         Patches: 1                                            |
+                                                               |
+         Content-Length: 53                                    | | Patch
+         Content-Range: json=.messages[1:1]                    | |
+                                                               | |
+         [{"text": "Yo!",                                      | |
+           "author": {"link": "/user/yobot"}]                  | |
 
 
-3.4.  Ending a Subscription
+3.4.  Signaling "all caught up"
 
-   Servers and clients MAY drop a subscription at any time, no matter
-   the value of keep-alive.  A client may reconnect by issuing a new GET
-   request with a new Subscribe header.
-
-   If a subscription is set to keep-alive, then closing the TCP/QUIC
-   connection won't end the subscription.  Thus a client needs a way to
-   explicitly end the subscription.  In HTTP/1, this is by sending the
-   text "forGET\n" over the TCP connection.  In HTTP/2, this is by
-   issuing a CLOSE event to the GET request's stream.  Alternatively,
-   since today's web browsers do not support sending extra text after a
-   request body, the client can issue a fresh request specified as a
-   FORGET method.
-
-
-3.5.  Signaling "all caught up"
-
-   When starting a subscription, the server can indicate which version
-   is current by specifying a "Current-Versions" header before starting
-   the stream of versions.  This should contain the frontier of time,
-   aka the leaves of the currently-known time DAG.  The client can use
-   this information to determine when it has caught up with the server.
+   When starting or resuming a subscription, the server can indicate
+   which version is current by specifying a "Current-Versions" header
+   before starting the stream of versions.  This should contain the
+   frontier of time, aka the leaves of the currently-known time DAG. The
+   client can use this information to determine when it has caught up
+   with the server.
 
 
       Request:
@@ -585,7 +623,7 @@ Table of Contents
            "author": {"link": "/user/tommy"}}]       V
                                                      <-- Now caught up
 
-3.6.  Errors
+3.5.  Errors
 
    If a server has dropped the history that a client requests, the
    server can return a 410 GONE response, to tell the client "sorry, I
@@ -630,12 +668,12 @@ Table of Contents
        Patches: 2                      |
                                        |
        Content-Length: 1239            | | Patch
-       Content-Range: bytes=100-200    | |
+       Content-Range: bytes 100-200    | |
                                        | |
        <binary data>                   | |
                                        |
        Content-Length: 62638           | | Patch
-       Content-Range: bytes=348-887    | |
+       Content-Range: bytes 348-887    | |
                                        | | 
        <binary data>                   | |
 
@@ -934,3 +972,11 @@ Table of Contents
 
    EMail: bryn@signals.io
    Web:   https://invisible.college/@bryn
+
+   Joseph Gentle
+   Invisible College, Berkeley
+   2053 Berkeley Way
+   Berkeley, CA 94704
+
+   EMail: me@josephg.com
+   Web:   https://josephg.com/
