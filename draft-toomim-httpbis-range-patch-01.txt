@@ -463,12 +463,12 @@ Table of Contents
 
          For cases defined in +patch, where the fragment identifier does
          not resolve per the +patch rules, then such fragment SHOULD
-         identifies a fragment which is obtained by intersection of the
+         identify a fragment which is obtained by intersection of the
          fragment identifier and the underlying range patch range
          specification for "xxx/yyy+patch".
 
          For cases not defined in +patch, then such fragment SHOULD
-         identifies a fragment which is obtained by intersection of the
+         identify a fragment which is obtained by intersection of the
          fragment identifier and the underlying range patch range
          specification for "xxx/yyy+patch".
 
