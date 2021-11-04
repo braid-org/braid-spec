@@ -259,8 +259,7 @@ Table of Contents
    Merge-Types are specified in [MERGE-TYPES].  The Version and Parents
    headers are optional.  If Version is omitted, the recipient may
    invent a version ID.  If Parents is omitted, the recipient may assume
-   that the current set of leaf versions on its machine is the version's
-   context.
+   that its current version(s) is the version's parents.
 
    This example includes the entire new value of the state, but one can
    also send updates as patches.
@@ -345,6 +344,8 @@ Table of Contents
 
          HTTP/1.1 200 OK
          Patches: OK
+
+   Every patch MUST include either a Content-Type or a Content-Range.
 
 
 2.4.  GET a specific version
@@ -702,12 +703,12 @@ Table of Contents
    A Braid web application can operate offline.  A user can use the app
    from an airplane, and their edits can synchronize when they regain
    internet connections.  Additionally, the Braid protocol can be
-   expressed over peer-to-peer transports (e.g. Braid-WebRTC) to support
-   a peer-to-peer synchronization without a server.  Braid-HTTP clients
-   will be able to interoperate with Braid-WebRTC peers.  For example, a
-   chat application might be served and synchronized on Braid-HTTP,
-   while also establishing redundant peer-to-peer connections on
-   Braid-WebRTC.  The server could then be shut down, and users of the
+   expressed over peer-to-peer transports (e.g. WebRTC) to support a a a
+   a peer-to-peer synchronization without a server.  For example, a chat
+   application might be served and synchronized on Braid-HTTP, while
+   also establishing redundant peer-to-peer connections on WebRTC, and
+   translating all Braid-HTTP messages over the WebRTC connections, and
+   vice versa.  The server could then be shut down, and users of the
    chat app could continue to send messages to one another.
 
    Imagine the server serves the current set of trusted clients' IP
