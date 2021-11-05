@@ -394,7 +394,7 @@ Table of Contents
 
      - If the request also contains a Version, then the server SHOULD
        respond with a set of versions that connect the specified Parents
-       with the specified Version, and then close the connection.
+       with the specified Version.
 
      - If the server does not support historical versions, then it MAY
        ignore the Parents header, but MUST NOT include the Parents
