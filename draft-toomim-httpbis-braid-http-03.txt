@@ -281,6 +281,7 @@ Table of Contents
          PUT /chat
          Version: "g09ur8z74r"                                 | Version
          Parents: "ej4lhb9z78"                                 |
+         Content-Length: 189                                   |
          Content-Type: application/json                        |
          Merge-Type: sync9                                     |
          Patches: 2                                            |
@@ -324,6 +325,7 @@ Table of Contents
          PUT /chat
          Version: "up12vyc5ib"                                 | Version
          Parents: "2bcbi84nsp"                                 |
+         Content-Length: 371                                   |
          Content-Type: application/json                        |
          Merge-Type: sync9                                     |
          Patches: 1                                            |
