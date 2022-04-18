@@ -589,7 +589,7 @@ Table of Contents
          Patches: 1                                            |
                                                                |
          Content-Length: 53                                    | | Patch
-         Content-Range: json=.messages[1:1]                    | |
+         Content-Range: json .messages[1:1]                    | |
                                                                | |
          [{"text": "Yo!",                                      | |
            "author": {"link": "/user/yobot"}]                  | |
