@@ -54,12 +54,13 @@ Table of Contents
       4.2. The +patch Structured Syntax Suffix .......................12
    5. Checking Capabilities ..........................................13
    6. Race Conditions ................................................14
-   7. Security Considerations ........................................14
-   8. Conventions ....................................................14
-   9. Copyright Notice ...............................................14
-   10. References ....................................................15
-      10.1. Normative References .....................................15
-      10.2. Informative References ...................................15
+   7. Related Work ...................................................14
+   8. Security Considerations ........................................14
+   9. Conventions ....................................................14
+   10. Copyright Notice ...............................................14
+   11. References ....................................................15
+      11.1. Normative References .....................................15
+      11.2. Informative References ...................................15
 
 
 
@@ -558,19 +559,25 @@ Table of Contents
    merge the patch at the given version, it must return a 409 Conflict
    response.
 
-7.  Security Considerations
+7.  Related Work
+
+    Todo:
+     - relate to sabre/dav's approach https://sabre.io/dav/http-patch/
+     - relate to recent HTTP Patch work in IETF 116
+
+8.  Security Considerations
 
    Both GET and non-GET requests with a Range header are potentially
    susceptible to denial-of-service attacks because the effort required
    to compute the patch or apply the patch.
 
-8.  Conventions
+9.  Conventions
 
    The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
    "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this
    document are to be interpreted as described in [RFC2119].
 
-9.  Copyright Notice
+10.  Copyright Notice
 
    Copyright (c) 2019 IETF Trust and the persons identified as the
    document authors.  All rights reserved.
@@ -585,9 +592,9 @@ Table of Contents
    the Trust Legal Provisions and are provided without warranty as
    described in the Simplified BSD License.
 
-10.  References
+11.  References
 
-10.1.  Normative References
+11.1.  Normative References
 
    [RFC2119]  Bradner, S., "Key words for use in RFCs to Indicate
               Requirement Levels", BCP 14, RFC 2119, March 1997.
@@ -603,7 +610,7 @@ Table of Contents
               (JSON) Patch", RFC 6902, April 2013.
 
 
-10.2.  Informative References
+11.2.  Informative References
 
    [Merge-Types] draft-toomim-httpbis-merge-types-00
 
