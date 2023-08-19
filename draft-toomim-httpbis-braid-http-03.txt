@@ -421,7 +421,7 @@ Table of Contents
    A server does not need to honor historical version requests for all
    documents, for all history. If a server no longer has the historical
    context needed to honor a request, it may respond using an error code
-   which will be defined in a subsequent version of this RFC draft.
+   to be defined in a subsequent version of this draft.
 
 
       Request:
@@ -529,15 +529,14 @@ Table of Contents
 3.2.  Sending multiple updates per GET
 
    To send multiple updates, a server concatenates multiple updates into
-   a single response body.  Each update must contain its own headers and
-   body.  Each update MUST have a known length, which MUST be specified
-   by one or both of the following headers:
+   a single response body.  Each update MUST include headers and a body,
+   and MUST specify the end of its body by including at least one of the
+   following headers:
 
       - Content-Length: N
       - Patches: N
 
-   Each update must have both headers and a body.  The body may be
-   zero-length.
+   The body may be zero-length.
 
    To prevent browsers (and other clients) from closing inactive
    connections, the server MAY insert any number of extra newlines
@@ -552,7 +551,7 @@ Table of Contents
 
 3.3.  Continuing a Subscription
 
-   Once closed, a braid subscription may be restarted by the client
+   Once closed, a Braid subscription may be restarted by the client
    issuing a new subscription request.
 
    When the client reconnects, it may specify its last known version
