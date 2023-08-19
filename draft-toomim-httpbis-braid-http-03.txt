@@ -333,7 +333,7 @@ Table of Contents
       Request:
 
          PUT /chat
-         Version: "up12vyc5ib"                              | Version
+         Version: "up12vyc5ib"                              | Update
          Parents: "2bcbi84nsp"                              |
          Content-Length: 371                                |
          Content-Type: application/json                     |
