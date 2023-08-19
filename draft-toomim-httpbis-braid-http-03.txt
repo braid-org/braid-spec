@@ -405,13 +405,14 @@ Table of Contents
        a set of versions updating the Parents to the current Version,
        and then subscribe the client to future updates.
 
-     - If the request also contains a Version, then the server SHOULD
-       respond with a set of versions that update the specified Parents
-       to the specified Version.
-
      - If the server does not support historical versions, then it MAY
        ignore the Parents header, but MUST NOT include the Parents
        header in its response.
+
+   If a GET request contains both a Version and Parents header:
+
+     - The server SHOULD respond with a set of updates from the
+       specified Parents to the specified Version.
 
    A server MAY refactor or rebase the version history that it provides
    to a client, so long as it does not affect the resulting state, or
