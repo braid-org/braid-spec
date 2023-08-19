@@ -297,13 +297,13 @@ Table of Contents
          Merge-Type: sync9                                  |
          Patches: 2                                         |
                                                             |
-         Content-Length: 53                                 | | Patch
+         Patch-Length: 53                                   | | Patch
          Range: json=.messages[1:1]                         | |
                                                             | |
          [{"text": "Yo!",                                   | |
            "author": {"link": "/user/yobot"}]               | |
                                                             |
-         Content-Length: 40                                 | | Patch
+         Patch-Length: 40                                   | | Patch
          Range: json=.latest_change                         | |
                                                             | |
          {"type": "date", "value": 1573952202370}           | |
@@ -318,14 +318,14 @@ Table of Contents
    To distinguish the boundaries between patches in an Update, each
    patch MUST include the following header:
 
-         Content-Length: N
+         Patch-Length: N
 
    This length determines where each patch ends, and next begins.
 
 
    The previous example uses the Range Patch format, which is defined in
    [RANGE-PATCH].  However, one can use any patch format, by sending a
-   patch with a Content-Type set to a patch format with a defined
+   patch with a Patch-Type header set to a patch format with a defined
    behavior, such as application/json-patch+json (as specified in
    [RFC6902]):
 
@@ -340,8 +340,8 @@ Table of Contents
          Merge-Type: sync9                                  |
          Patches: 1                                         |
                                                             |
-         Content-Length: 288                                | | Patch
-         Content-Type: application/json-patch+json          | |
+         Patch-Length: 288                                  | | Patch
+         Patch-Type: application/json-patch+json            | |
                                                             | |
          [                                                  | |
           {"op": "test", "path": "/a/b/c", "value": "foo"}, | |
@@ -358,7 +358,7 @@ Table of Contents
          Patches: OK
 
 
-   Every patch MUST include either a Content-Type or a Content-Range.
+   Every patch MUST include either a Patch-Type or a Content-Range.
 
 
 2.4.  GET a specific version
@@ -467,7 +467,7 @@ Table of Contents
          Merge-Type: sync9                                  |
          Patches: 1                                         |
                                                             |
-         Content-Length: 53                                 | | Patch
+         Patch-Length: 53                                   | | Patch
          Content-Range: json .messages[1:1]                 | |
                                                             | |
          [{"text": "Yo!",                                   | |
@@ -479,7 +479,7 @@ Table of Contents
          Merge-Type: sync9                                  |
          Patches: 1                                         |
                                                             |
-         Content-Length: 58                                 | | Patch
+         Patch-Length: 58                                   | | Patch
          Content-Range: json .messages[2:2]                 | |
                                                             | |
          [{"text": "Hi, Tommy!",                            | |
@@ -491,8 +491,8 @@ Table of Contents
          Merge-Type: sync9                                  |
          Patches: 1                                         |
                                                             |
-         Content-Length: 288                                | | Patch
-         Content-Type: application/json-patch+json          | |
+         Patch-Length: 288                                  | | Patch
+         Patch-Type: application/json-patch+json            | |
                                                             | |
          [                                                  | |
           {"op": "test", "path": "/a/b/c", "value": "foo"}, | |
@@ -530,7 +530,7 @@ Table of Contents
 
    To send multiple updates, a server concatenates multiple updates into
    a single response body.  Each update MUST include headers and a body,
-   and MUST specify the end of its body by including at least one of the
+   and MUST define the end of its body by including at least one of the
    following headers:
 
       - Content-Length: N
@@ -597,7 +597,7 @@ Table of Contents
          Merge-Type: sync9                                  |
          Patches: 1                                         |
                                                             |
-         Content-Length: 53                                 | | Patch
+         Patch-Length: 53                                   | | Patch
          Content-Range: json .messages[1:1]                 | |
                                                             | |
          [{"text": "Yo!",                                   | |
@@ -687,12 +687,12 @@ Table of Contents
        Content-Type: image/png         | Update
        Patches: 2                      |
                                        |
-       Content-Length: 1239            | | Patch
+       Patch-Length: 1239              | | Patch
        Content-Range: bytes 100-200    | |
                                        | |
        <binary data>                   | |
                                        |
-       Content-Length: 62638           | | Patch
+       Patch-Length: 62638             | | Patch
        Content-Range: bytes 348-887    | |
                                        | | 
        <binary data>                   | |
