@@ -113,7 +113,7 @@ Table of Contents
 
 1.  Introduction
 
-   HTTP transfers a static version of state within a single request and
+   HTTP transfers a single version of state within a single request and
    response.  If the state changes, HTTP does not automatically update
    clients with the new versions.  This design satisficed when webpages
    were mostly static and written by hand; however today's websites are
@@ -178,37 +178,42 @@ Table of Contents
 2.  Versioning for Resources
 
    Each Braid resource has a current version, and a version history.
-   Versions are specified as a string in the [STRUCTURED-HEADERS]
-   format.  Each version string must be unique, to differentiate any two
-   points in time.  To specify the version of content in a request or
-   response body, a Version header MAY be included in a request for a
-   PUT, PATCH or POST, or in the response to a GET:
+   Versions are specified as a set of one or more strings (called
+   "version IDs") in the [STRUCTURED-HEADERS] format.  Each version ID
+   must be unique, to differentiate distinct changes at distinct points
+   in time.
+
+   To specify the version of content in a request or response body, a
+   Version header MAY be included in a request for a PUT, PATCH or POST,
+   or in the response to a GET:
 
            Version: "dkn7ov2vwg"
 
-   Every version has a set of Parents that denote the most recent parent
-   version(s) that were known at the time the version was created.  The
-   full graph of parents forms a Directed Acyclic Graph (DAG),
-   representing the known partial order of all versions.  A version A is
-   known to have occurred before a version B if and only if A is an
-   ancestor of B in the partial order.
+   Parallel edits can be merged, into single version with multiple IDs:
 
-   Parents are also specified with a header in a PUT request or GET
-   response:
+           Version: "dkn7ov2vwg", "v2vwgdkn7o"
+
+   Every version also has a set of parents, denoting the version(s)
+   immediately before the version, that it derives from.  The full graph
+   of parents forms a Directed Acyclic Graph (DAG), representing the
+   partial order of all versions.  A version A is known to have occurred
+   before a version B if and only if A is an ancestor of B in the
+   partial order.
+
+   Parents are specified with a header in a PUT request or GET response:
 
            Parents: "ajtva12kid", "cmdpvkpll2"
 
-   The Parents header is a List of Strings, in the syntax of HTTP's
-   [STRUCTURED-HEADERS].  Each string is a version.  For any two parent
-   versions A and B that are specified in a Parents header, A cannot be
-   a descendent of B or vice versa.  The ordering of versions in the
-   list carries no meaning, and SHOULD be sorted lexicographically.
+   For any two versions A and B that are specified in a Version or
+   Parents header, A cannot be a descendent of B or vice versa.  The
+   ordering of versions in the list carries no meaning, and SHOULD be
+   sorted lexicographically.
 
    If a client or server does not specify a Version for a resource it
-   transfers, the recipient MAY generate a new version ID of its own
-   choosing.  If a client or server does not specify a Parents header
-   when transferring a new version, the recipient MAY presume that the
-   most recent versions it has seen are the parents of the new version.
+   transfers, the recipient MAY generate and assign it new version IDs.
+   If a client or server does not specify a Parents header when
+   transferring a new version, the recipient MAY presume that the most
+   recent versions it has seen are the parents of the new version.
 
 
 2.1.  Comparison with ETag
@@ -232,7 +237,7 @@ Table of Contents
 2.2.  PUT a new version
 
    When a PUT request changes the state of a resource, it can specify
-   the new version of the resource, the parent versions that existed
+   the new version of the resource, the parent version IDs that existed
    when it was created, and the way multiple simultaneous changes should
    be merged (the "Merge-Type"):
 
@@ -240,14 +245,14 @@ Table of Contents
       Request:
 
          PUT /chat
-         Version: "ej4lhb9z78"                                 | Version
-         Parents: "oakwn5b8qh", "uc9zwhw7mf"                   |
-         Content-Type: application/json                        |
-         Merge-Type: sync9                                     |
-         Content-Length: 64                                    |
-                                                               |
-         [{"text": "Hi, everyone!",                            | | Body
-           "author": {"link": "/user/tommy"}}]                 | |
+         Version: "ej4lhb9z78"                              | Update
+         Parents: "oakwn5b8qh", "uc9zwhw7mf"                |
+         Content-Type: application/json                     |
+         Merge-Type: sync9                                  |
+         Content-Length: 64                                 |
+                                                            |
+         [{"text": "Hi, everyone!",                         | | Snapshot
+           "author": {"link": "/user/tommy"}}]              | |
                   
 
       Response:
@@ -258,44 +263,50 @@ Table of Contents
 
    Merge-Types are specified in [MERGE-TYPES].  The Version and Parents
    headers are optional.  If Version is omitted, the recipient may
-   invent a version ID.  If Parents is omitted, the recipient may assume
-   that its current version(s) is the version's parents.
+   assign new version IDs.  If Parents is omitted, the recipient may
+   assume that its current version is the version's parents.
 
-   This example includes the entire new value of the state, but one can
-   also send updates as patches.
+   We call the set of data that updates a resource from one version to
+   another an "Update".  An update consists of a set of headers and a
+   body.  In this example, the update includes a snapshot of the entire
+   new value of the resource.  However, one can also specify the update
+   as a set of patches.
 
 
 2.3.  PUT a new version as a patch
 
-   Not only are patches smaller, and thus more efficient; they also
-   provide useful information for merging two simultaneous edits, for
-   instance in collaborative editing.
+   Expressing updates as patches provides two benefits:
 
-   One can send an update in a patch by setting the "Patches" header to
-   a number, and then set the Message body to a sequence of that many
-   patches, separated by blank lines:
+     o Patches are generally smaller and more efficient
+
+     o Patches articulate *how* changes occur, which enables Merge-Types
+       to intelligently merge, e.g. in collaborative editing.
+
+   To format an update as a set of patches, include a header called
+   "Patches" and assign it to the number of patches included, and format
+   those patches in the body as a sequence separated by blank lines:
 
 
       Request:
 
          PUT /chat
-         Version: "g09ur8z74r"                                 | Version
-         Parents: "ej4lhb9z78"                                 |
-         Content-Length: 189                                   |
-         Content-Type: application/json                        |
-         Merge-Type: sync9                                     |
-         Patches: 2                                            |
-                                                               |
-         Content-Length: 53                                    | | Patch
-         Range: json=.messages[1:1]                            | |
-                                                               | |
-         [{"text": "Yo!",                                      | |
-           "author": {"link": "/user/yobot"}]                  | |
-                                                               |
-         Content-Length: 40                                    | | Patch
-         Range: json=.latest_change                            | |
-                                                               | |
-         {"type": "date", "value": 1573952202370}              | |
+         Version: "g09ur8z74r"                              | Update
+         Parents: "ej4lhb9z78"                              |
+         Content-Length: 189                                |
+         Content-Type: application/json                     |
+         Merge-Type: sync9                                  |
+         Patches: 2                                         |
+                                                            |
+         Content-Length: 53                                 | | Patch
+         Range: json=.messages[1:1]                         | |
+                                                            | |
+         [{"text": "Yo!",                                   | |
+           "author": {"link": "/user/yobot"}]               | |
+                                                            |
+         Content-Length: 40                                 | | Patch
+         Range: json=.latest_change                         | |
+                                                            | |
+         {"type": "date", "value": 1573952202370}           | |
 
 
       Response:
@@ -304,13 +315,12 @@ Table of Contents
          Patches: OK
 
 
-   In order to distinguish each patch within a Version, we need to know
-   the length of each patch.  To know the length of each patch, it MUST
-   include the following header:
+   To distinguish the boundaries between patches in an Update, each
+   patch MUST include the following header:
 
          Content-Length: N
 
-   This length determines where this patch ends, and next begins.
+   This length determines where each patch ends, and next begins.
 
 
    The previous example uses the Range Patch format, which is defined in
@@ -323,29 +333,30 @@ Table of Contents
       Request:
 
          PUT /chat
-         Version: "up12vyc5ib"                                 | Version
-         Parents: "2bcbi84nsp"                                 |
-         Content-Length: 371                                   |
-         Content-Type: application/json                        |
-         Merge-Type: sync9                                     |
-         Patches: 1                                            |
-                                                               |
-         Content-Length: 326                                   | | Patch
-         Content-Type: application/json-patch+json             | |
-                                                               | |
-         [                                                     | |
-           { "op": "test", "path": "/a/b/c", "value": "foo" }, | |
-           { "op": "remove", "path": "/a/b/c" },               | |
-           { "op": "add", "path": "/a/b/c", "value": [] },     | |
-           { "op": "replace", "path": "/a/b/c", "value": 42 }, | |
-           { "op": "move", "from": "/a/b", "path": "/a/d" },   | |
-           { "op": "copy", "from": "/a/d/d", "path": "/a/d/e" }| |
-         ]                                                     | |
+         Version: "up12vyc5ib"                              | Version
+         Parents: "2bcbi84nsp"                              |
+         Content-Length: 371                                |
+         Content-Type: application/json                     |
+         Merge-Type: sync9                                  |
+         Patches: 1                                         |
+                                                            |
+         Content-Length: 288                                | | Patch
+         Content-Type: application/json-patch+json          | |
+                                                            | |
+         [                                                  | |
+          {"op": "test", "path": "/a/b/c", "value": "foo"}, | |
+          {"op": "remove", "path": "/a/b/c"},               | |
+          {"op": "add", "path": "/a/b/c", "value": []},     | |
+          {"op": "replace", "path": "/a/b/c", "value": 42}, | |
+          {"op": "move", "from": "/a/b", "path": "/a/d"},   | |
+          {"op": "copy", "from": "/a/d", "path": "/a/d/e"}  | |
+         ]                                                  | |
 
       Response:
 
          HTTP/1.1 200 OK
          Patches: OK
+
 
    Every patch MUST include either a Content-Type or a Content-Range.
 
@@ -365,14 +376,14 @@ Table of Contents
       Response:
 
          HTTP/1.1 200 OK
-         Version: "ej4lhb9z78"                                 | Version
-         Parents: "oakwn5b8qh", "uc9zwhw7mf"                   |
-         Content-Type: application/json                        |
-         Merge-Type: sync9                                     |
-         Content-Length: 64                                    |
-                                                               |
-         [{"text": "Hi, everyone!",                            | | Body
-           "author": {"link": "/user/tommy"}}]                 | |
+         Version: "ej4lhb9z78"                              | Update
+         Parents: "oakwn5b8qh", "uc9zwhw7mf"                |
+         Content-Type: application/json                     |
+         Merge-Type: sync9                                  |
+         Content-Length: 64                                 |
+                                                            |
+         [{"text": "Hi, everyone!",                         | | Snapshot
+           "author": {"link": "/user/tommy"}}]              | |
 
 
    If a GET request contains a Version header:
@@ -391,12 +402,12 @@ Table of Contents
 
      - If the request does not also contain a Version, then the request
        MUST also contain a Subscribe header, and the server SHOULD send
-       a set of versions connecting the Parents to the current Version,
+       a set of versions updating the Parents to the current Version,
        and then subscribe the client to future updates.
 
      - If the request also contains a Version, then the server SHOULD
-       respond with a set of versions that connect the specified Parents
-       with the specified Version.
+       respond with a set of versions that update the specified Parents
+       to the specified Version.
 
      - If the server does not support historical versions, then it MAY
        ignore the Parents header, but MUST NOT include the Parents
@@ -427,9 +438,8 @@ Table of Contents
 3.  Subscriptions for GET
 
    If a GET request includes the Subscribe header, it will return a
-   stream of versions; a new version pushed with each change.  Each
-   version can contain either the new contents in its body, or a set of
-   Patches.
+   stream of updates; one for each new version.  Each update can express
+   the new content either as a snapshot, or a set of Patches.
 
       Request:
 
@@ -441,63 +451,59 @@ Table of Contents
          HTTP/1.1 209 Subscription
          Subscribe: keep-alive
 
-         Version: "ej4lhb9z78"                                 | Version
-         Parents: "oakwn5b8qh", "uc9zwhw7mf"                   |
-         Content-Type: application/json                        |
-         Merge-Type: sync9                                     |
-         Content-Length: 64                                    |
-                                                               |
-         [{"text": "Hi, everyone!",                            | | Body
-           "author": {"link": "/user/tommy"}}]                 | |
+         Version: "ej4lhb9z78"                              | Update
+         Parents: "oakwn5b8qh", "uc9zwhw7mf"                |
+         Content-Type: application/json                     |
+         Merge-Type: sync9                                  |
+         Content-Length: 64                                 |
+                                                            |
+         [{"text": "Hi, everyone!",                         | | Snapshot
+           "author": {"link": "/user/tommy"}}]              | |
 
-         Version: "g09ur8z74r"                                 | Version
-         Parents: "ej4lhb9z78"                                 |
-         Content-Type: application/json                        |
-         Merge-Type: sync9                                     |
-         Patches: 1                                            |
-                                                               |
-         Content-Length: 53                                    | | Patch
-         Content-Range: json .messages[1:1]                    | |
-                                                               | |
-         [{"text": "Yo!",                                      | |
-           "author": {"link": "/user/yobot"}]                  | |
+         Version: "g09ur8z74r"                              | Update
+         Parents: "ej4lhb9z78"                              |
+         Content-Type: application/json                     |
+         Merge-Type: sync9                                  |
+         Patches: 1                                         |
+                                                            |
+         Content-Length: 53                                 | | Patch
+         Content-Range: json .messages[1:1]                 | |
+                                                            | |
+         [{"text": "Yo!",                                   | |
+           "author": {"link": "/user/yobot"}]               | |
 
-         Version: "2bcbi84nsp"                                 | Version
-         Parents: "g09ur8z74r"                                 |
-         Content-Type: application/json                        |
-         Merge-Type: sync9                                     |
-         Patches: 1                                            |
-                                                               |
-         Content-Length: 58                                    | | Patch
-         Content-Range: json .messages[2:2]                    | |
-                                                               | |
-         [{"text": "Hi, Tommy!",                               | |
-           "author": {"link": "/user/sal"}}]                   | |
+         Version: "2bcbi84nsp"                              | Update
+         Parents: "g09ur8z74r"                              |
+         Content-Type: application/json                     |
+         Merge-Type: sync9                                  |
+         Patches: 1                                         |
+                                                            |
+         Content-Length: 58                                 | | Patch
+         Content-Range: json .messages[2:2]                 | |
+                                                            | |
+         [{"text": "Hi, Tommy!",                            | |
+           "author": {"link": "/user/sal"}}]                | |
 
-         Version: "up12vyc5ib"                                 | Version
-         Parents: "2bcbi84nsp"                                 |
-         Content-Type: application/json                        |
-         Merge-Type: sync9                                     |
-         Patches: 1                                            |
-                                                               |
-         Content-Length: 326                                   | | Patch
-         Content-Type: application/json-patch+json             | |
-                                                               | |
-         [                                                     | |
-           { "op": "test", "path": "/a/b/c", "value": "foo" }, | |
-           { "op": "remove", "path": "/a/b/c" },               | |
-           { "op": "add", "path": "/a/b/c", "value": [] },     | |
-           { "op": "replace", "path": "/a/b/c", "value": 42 }, | |
-           { "op": "move", "from": "/a/b", "path": "/a/d },    | |
-           { "op": "copy", "from": "/a/d/d", "path": "/a/d/e" }| |
-         ]                                                     | |
+         Version: "up12vyc5ib"                              | Update
+         Parents: "2bcbi84nsp"                              |
+         Content-Type: application/json                     |
+         Merge-Type: sync9                                  |
+         Patches: 1                                         |
+                                                            |
+         Content-Length: 288                                | | Patch
+         Content-Type: application/json-patch+json          | |
+                                                            | |
+         [                                                  | |
+          {"op": "test", "path": "/a/b/c", "value": "foo"}, | |
+          {"op": "remove", "path": "/a/b/c"},               | |
+          {"op": "add", "path": "/a/b/c", "value": []},     | |
+          {"op": "replace", "path": "/a/b/c", "value": 42}, | |
+          {"op": "move", "from": "/a/b", "path": "/a/d"},   | |
+          {"op": "copy", "from": "/a/d", "path": "/a/d/e"}  | |
+         ]                                                  | |
 
 
 3.1.  Creating a Subscription
-
-   The "Subscribe" header on a GET request modifies the method semantics
-   to request a subscription to future updates to the data, rather than
-   only the current version of the representation data.
 
    A client requests a subscription by issuing a GET request with a
    Subscribe header:
@@ -505,9 +511,13 @@ Table of Contents
            Subscribe
       or   Subscribe: keep-alive
 
-   If a server implements Subscribe, it MUST include a Subscribe header
-   in its response.  The server then SHOULD keep the connection open,
-   and send updates over it.
+   This header modifies the normal GET method's semantics, to request a
+   subscription to future updates to the data, rather than only
+   returning the current version of the representation data.
+
+   A server implementing Subscribe MUST include a Subscribe header in
+   its response.  The server then SHOULD keep the connection open, and
+   send updates over it.
 
    In general, a server that implements subscriptions promises to keep
    its subscribed clients up-to-date by sending changes until the
@@ -517,16 +527,15 @@ Table of Contents
 
 3.2.  Sending multiple updates per GET
 
-   To send multiple updates, a server concatenates multiple
-   sub-responses into a single response body.  Each sub-response must
-   contain its own headers and body.  Each sub-response MUST have a
-   known length, which means it MUST contain one of the following
-   headers:
+   To send multiple updates, a server concatenates multiple updates into
+   a single response body.  Each update must contain its own headers and
+   body.  Each update MUST have a known length, which MUST be specified
+   by one or both of the following headers:
 
       - Content-Length: N
       - Patches: N
 
-   Each sub-response must have both headers and a body.  The body may be
+   Each update must have both headers and a body.  The body may be
    zero-length.
 
    To prevent browsers (and other clients) from closing inactive
@@ -545,12 +554,12 @@ Table of Contents
    Once closed, a braid subscription may be restarted by the client
    issuing a new subscription request.
 
-   When the client reconnects, it may specify the most recent versions
-   it saw from the server using the Parents header.  This tells the
-   server which versions & patches need to be sent, so the client and
-   server's document state will converge.
+   When the client reconnects, it may specify its last known version
+   using the Parents header.  The server can then send only the updates
+   since that version.
 
-   For example:
+   Example:
+
 
       Initial request:
 
@@ -562,12 +571,12 @@ Table of Contents
          HTTP/1.1 209 Subscription
          Subscribe: keep-alive
 
-         Version: "ej4lhb9z78"                                 | Version
-         Content-Type: application/json                        |
-         Content-Length: 64                                    |
-                                                               |
-         [{"text": "Hi, everyone!",                            | | Body
-           "author": {"link": "/user/tommy"}}]                 | |
+         Version: "ej4lhb9z78"                              | Update
+         Content-Type: application/json                     |
+         Content-Length: 64                                 |
+                                                            |
+         [{"text": "Hi, everyone!",                         | | Snapshot
+           "author": {"link": "/user/tommy"}}]              | |
 
       <Client disconnects>
 
@@ -582,27 +591,28 @@ Table of Contents
          HTTP/1.1 209 Subscription
          Subscribe: keep-alive
 
-         Version: "g09ur8z74r"                                 | Version
-         Parents: "ej4lhb9z78"                                 |
-         Content-Type: application/json                        |
-         Merge-Type: sync9                                     |
-         Patches: 1                                            |
-                                                               |
-         Content-Length: 53                                    | | Patch
-         Content-Range: json .messages[1:1]                    | |
-                                                               | |
-         [{"text": "Yo!",                                      | |
-           "author": {"link": "/user/yobot"}]                  | |
+         Version: "g09ur8z74r"                              | Update
+         Parents: "ej4lhb9z78"                              |
+         Content-Type: application/json                     |
+         Merge-Type: sync9                                  |
+         Patches: 1                                         |
+                                                            |
+         Content-Length: 53                                 | | Patch
+         Content-Range: json .messages[1:1]                 | |
+                                                            | |
+         [{"text": "Yo!",                                   | |
+           "author": {"link": "/user/yobot"}]               | |
 
 
 3.4.  Signaling "all caught up"
 
    When starting or resuming a subscription, the server can indicate
-   which version is current by specifying a "Current-Versions" header
+   which version is current by specifying a "Current-Version" header
    before starting the stream of versions.  This should contain the
-   frontier of time, aka the leaves of the currently-known time DAG. The
+   frontier of time -- the leaves of the currently-known time DAG.  The
    client can use this information to determine when it has caught up
-   with the server.
+   with the server's version at the time it received the client's
+   request.
 
 
       Request:
@@ -614,16 +624,23 @@ Table of Contents
 
          HTTP/1.1 209 Subscription
          Subscribe: keep-alive
-         Current-Versions: "ej4lhb9z78"              <-- Current Version
+         Current-Version: "ej4lhb9z78"               <-- Current Version
 
-         Version: "ej4lhb9z78"                       + Stream of updates
-         Parents: "oakwn5b8qh", "uc9zwhw7mf"         |
-         Content-Type: application/json              |
-         Merge-Type: sync9                           |
-         Content-Length: 64                          |
-                                                     |
-         [{"text": "Hi, everyone!",                  |
-           "author": {"link": "/user/tommy"}}]       V
+         Version: "b9z78ej4lh"                     | Updates
+         Content-Type: application/json            |
+         Merge-Type: sync9                         |
+         Content-Length: 2                         |
+                                                   |
+         []                                        |
+                                                   |
+         Version: "ej4lhb9z78"                     | <-- Current Version
+         Parents: "b9z78ej4lh"                     |
+         Content-Type: application/json            |
+         Merge-Type: sync9                         |
+         Content-Length: 64                        |
+                                                   |
+         [{"text": "Hi, everyone!",                |
+           "author": {"link": "/user/tommy"}}]     V
                                                      <-- Now caught up
 
 3.5.  Errors
@@ -667,7 +684,7 @@ Table of Contents
      Response:
        HTTP/1.1 209 Subscribe
        Subscribe
-       Content-Type: image/png         | Version
+       Content-Type: image/png         | Update
        Patches: 2                      |
                                        |
        Content-Length: 1239            | | Patch
@@ -812,6 +829,7 @@ Table of Contents
    | Merge-Type          | http     | experimental | Section 2.2 |
    | Patches             | http     | experimental | Section 2.3 |
    | Subscribe           | http     | experimental | Section 4   |
+   | Current-Version     | http     | experimental | Section 3.4 |
    +---------------------+----------+--------------+-------------+
 
    The change controller is: "IETF (iesg@ietf.org) - Internet
