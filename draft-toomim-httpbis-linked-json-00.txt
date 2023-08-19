@@ -136,8 +136,12 @@ Table of Contents
    transclude the author object into the book object, for instance, or
    transform the relative link to absolute.
 
-   JSON-LD [JSONLD] supports also supports linking in JSON, but forces
-   implementors to adopt a number of other complex features as well.
+   JSON-LD [JSONLD] also supports linking in JSON, but requires a number
+   of other features to be implemented as well.  Linked JSON is lighter
+   and easier to implement for the specific purpose of linking JSON.
+
+   (Todo: compare with HAL, Siren, JSON:API, and Collection+JSON as
+   described at https://github.com/badgateway/ketting)
 
 3.  Resolution
 
