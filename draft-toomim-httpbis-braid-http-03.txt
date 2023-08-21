@@ -297,14 +297,14 @@ Table of Contents
          Merge-Type: sync9                                  |
          Patches: 2                                         |
                                                             |
-         Patch-Length: 53                                   | | Patch
-         Range: json=.messages[1:1]                         | |
+         Patch-Range: json .messages[1:1]                   | | Patch
+         Patch-Length: 53                                   | |
                                                             | |
          [{"text": "Yo!",                                   | |
            "author": {"link": "/user/yobot"}]               | |
                                                             |
-         Patch-Length: 40                                   | | Patch
-         Range: json=.latest_change                         | |
+         Patch-Range: json .latest_change                   | | Patch
+         Patch-Length: 40                                   | |
                                                             | |
          {"type": "date", "value": 1573952202370}           | |
 
@@ -340,8 +340,8 @@ Table of Contents
          Merge-Type: sync9                                  |
          Patches: 1                                         |
                                                             |
-         Patch-Length: 288                                  | | Patch
-         Patch-Type: application/json-patch+json            | |
+         Patch-Type: application/json-patch+json            | | Patch
+         Patch-Length: 288                                  | |
                                                             | |
          [                                                  | |
           {"op": "test", "path": "/a/b/c", "value": "foo"}, | |
@@ -467,8 +467,8 @@ Table of Contents
          Merge-Type: sync9                                  |
          Patches: 1                                         |
                                                             |
-         Patch-Length: 53                                   | | Patch
-         Content-Range: json .messages[1:1]                 | |
+         Patch-Range: json .messages[1:1]                   | | Patch
+         Patch-Length: 53                                   | |
                                                             | |
          [{"text": "Yo!",                                   | |
            "author": {"link": "/user/yobot"}]               | |
@@ -479,8 +479,8 @@ Table of Contents
          Merge-Type: sync9                                  |
          Patches: 1                                         |
                                                             |
-         Patch-Length: 58                                   | | Patch
-         Content-Range: json .messages[2:2]                 | |
+         Patch-Range: json .messages[2:2]                   | | Patch
+         Patch-Length: 58                                   | |
                                                             | |
          [{"text": "Hi, Tommy!",                            | |
            "author": {"link": "/user/sal"}}]                | |
@@ -491,8 +491,8 @@ Table of Contents
          Merge-Type: sync9                                  |
          Patches: 1                                         |
                                                             |
-         Patch-Length: 288                                  | | Patch
-         Patch-Type: application/json-patch+json            | |
+         Patch-Type: application/json-patch+json            | | Patch
+         Patch-Length: 288                                  | |
                                                             | |
          [                                                  | |
           {"op": "test", "path": "/a/b/c", "value": "foo"}, | |
@@ -597,8 +597,8 @@ Table of Contents
          Merge-Type: sync9                                  |
          Patches: 1                                         |
                                                             |
-         Patch-Length: 53                                   | | Patch
-         Content-Range: json .messages[1:1]                 | |
+         Patch-Range: json .messages[1:1]                   | | Patch
+         Patch-Length: 53                                   | |
                                                             | |
          [{"text": "Yo!",                                   | |
            "author": {"link": "/user/yobot"}]               | |
@@ -687,13 +687,13 @@ Table of Contents
        Content-Type: image/png         | Update
        Patches: 2                      |
                                        |
-       Patch-Length: 1239              | | Patch
-       Content-Range: bytes 100-200    | |
+       Patch-Range: bytes 100-200      | | Patch
+       Patch-Length: 1239              | |
                                        | |
        <binary data>                   | |
                                        |
-       Patch-Length: 62638             | | Patch
-       Content-Range: bytes 348-887    | |
+       Patch-Range: bytes 348-887      | | Patch
+       Patch-Length: 62638             | |
                                        | | 
        <binary data>                   | |
 
