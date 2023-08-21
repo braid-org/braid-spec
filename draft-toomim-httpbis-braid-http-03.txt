@@ -667,6 +667,11 @@ Table of Contents
      Response:
        HTTP/1.1 209 Subscribe
        Subscribe
+       Content-Type: image/png         | Update
+       Content-Length: 170763          |
+                                       |
+       <binary data>                   |
+
        Content-Type: image/png         | Version
        Patches: 2                      |
                                        |
