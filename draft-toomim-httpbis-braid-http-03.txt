@@ -554,8 +554,8 @@ Table of Contents
    issuing a new subscription request.
 
    When the client reconnects, it may specify its last known version
-   using the Parents header.  The server can then send only the updates
-   since that version.
+   using the Parents header.  The server SHOULD then send only the
+   updates since that version.
 
    Example:
 
