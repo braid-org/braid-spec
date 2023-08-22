@@ -538,14 +538,13 @@ Table of Contents
 
    The body may be zero-length.
 
-   To prevent browsers (and other clients) from closing inactive
-   connections, the server MAY insert any number of extra newlines
-   between the end of one sub-response and the beginning of the next. If
-   present, these newline characters do not constitute part of the
-   preceding body, and thus their length is not included in the
-   preceding header's Content-Length. Any extra newlines may be encoded
-   using either the \r\n ASCII character pairs or singular \n
-   characters.
+   To prevent clients from closing inactive connections, the server MAY
+   insert any number of extra newlines between the end of one update and
+   the beginning of the next.  If present, these newline characters do
+   not constitute part of the preceding body, and thus their length is
+   not included in the preceding header's Content-Length.  Any extra
+   newlines may be encoded using either the \r\n ASCII character pairs
+   or singular \n characters.
 
 
 
