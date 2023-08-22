@@ -434,12 +434,12 @@ Table of Contents
       Request:
 
          GET /chat
-         Subscribe: keep-alive
+         Subscribe:
 
       Response:
 
          HTTP/1.1 209 Subscription
-         Subscribe: keep-alive
+         Subscribe:
 
          Version: "ej4lhb9z78"                                 | Version
          Parents: "oakwn5b8qh", "uc9zwhw7mf"                   |
@@ -502,8 +502,10 @@ Table of Contents
    A client requests a subscription by issuing a GET request with a
    Subscribe header:
 
-           Subscribe
-      or   Subscribe: keep-alive
+           Subscribe: <Parameters>
+
+   <Parameters> may be blank, set to "true", or contain arbitrary data,
+   and is reserved for future use.
 
    If a server implements Subscribe, it MUST include a Subscribe header
    in its response.  The server then SHOULD keep the connection open,
@@ -555,12 +557,12 @@ Table of Contents
       Initial request:
 
          GET /chat
-         Subscribe: keep-alive
+         Subscribe:
 
       Initial response:
 
          HTTP/1.1 209 Subscription
-         Subscribe: keep-alive
+         Subscribe:
 
          Version: "ej4lhb9z78"                                 | Version
          Content-Type: application/json                        |
@@ -574,13 +576,13 @@ Table of Contents
       Reconnection request:
 
          GET /chat
-         Subscribe: keep-alive
+         Subscribe:
          Parents: "ej4lhb9z78"
 
       Reconnection response:
 
          HTTP/1.1 209 Subscription
-         Subscribe: keep-alive
+         Subscribe:
 
          Version: "g09ur8z74r"                                 | Version
          Parents: "ej4lhb9z78"                                 |
@@ -608,12 +610,12 @@ Table of Contents
       Request:
 
          GET /chat
-         Subscribe: keep-alive
+         Subscribe:
 
       Response:
 
          HTTP/1.1 209 Subscription
-         Subscribe: keep-alive
+         Subscribe:
          Current-Versions: "ej4lhb9z78"              <-- Current Version
 
          Version: "ej4lhb9z78"                       + Stream of updates
@@ -723,7 +725,7 @@ Table of Contents
    /peers state with:
 
       GET /peers
-      Subscribe: keep-alive
+      Subscribe:
       -------
       [ {ip: '13.55.32.158', pubkey: 'x371...8382'},
         {ip: '244.38.55.83', pubkey: 'o2u8...2s73'},
