@@ -684,6 +684,11 @@ Table of Contents
        HTTP/1.1 209 Subscribe
        Subscribe
        Content-Type: image/png         | Update
+       Content-Length: 170763          |
+                                       |
+       <binary data>                   | | Snapshot
+
+       Content-Type: image/png         | Update
        Patches: 2                      |
                                        |
        Content-Length: 1239            | | Patch
