@@ -670,7 +670,7 @@ Table of Contents
        Content-Type: image/png         | Update
        Content-Length: 170763          |
                                        |
-       <binary data>                   |
+       <binary data>                   | | Snapshot
 
        Content-Type: image/png         | Version
        Patches: 2                      |
