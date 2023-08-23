@@ -42,8 +42,8 @@ Abstract
    arbitrary content-types, under arbitrary network delays and
    partitions, while guaranteeing consistency across multiple clients
    and servers.  This improves caching and network performance, and
-   enables natively peer-to-peer, collaboratively-editable,
-   offline-first web applications.
+   enables natively peer-to-peer, collaboratively-editable, local-first
+   web applications.
 
 
 Status of this Memo
