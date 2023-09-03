@@ -536,16 +536,18 @@ Table of Contents
       - Content-Length: N
       - Patches: N
 
-   The body may be zero-length.
+   The body may be zero-length.  A server MAY separate each update with
+   one or more blank lines.  These lines do not count towards
+   Content-Length.  They can by used to visually separate updates, or to
+   guide the behavior of certain proxies or clients:
 
-   To prevent clients from closing inactive connections, the server MAY
-   insert any number of extra newlines between the end of one update and
-   the beginning of the next.  If present, these newline characters do
-   not constitute part of the preceding body, and thus their length is
-   not included in the preceding header's Content-Length.  Any extra
-   newlines may be encoded using either the \r\n ASCII character pairs
-   or singular \n characters.
+       1. Certain clients or proxies close inactive connections.  A
+          server signal that a connection is still active by
+          periodically sending additional blank lines between updates.
 
+       2. Some clients (e.g. Firefox) only flush incoming data after a
+          receiving a chunk of a certain size.  A server can ensure
+          small updates get flushed by padding them with blank lines.
 
 
 3.3.  Continuing a Subscription
