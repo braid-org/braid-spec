@@ -451,7 +451,6 @@ Table of Contents
 
          HTTP/1.1 209 Subscription
          Subscribe: keep-alive
-
          Version: "ej4lhb9z78"                              | Update
          Parents: "oakwn5b8qh", "uc9zwhw7mf"                |
          Content-Type: application/json                     |
@@ -528,10 +527,11 @@ Table of Contents
 
 3.2.  Sending multiple updates per GET
 
-   To send multiple updates, a server concatenates multiple updates into
-   a single response body.  Each update MUST include headers and a body,
-   and MUST specify the end of its body by including at least one of the
-   following headers:
+   To send multiple updates, a server sends the first update as usual,
+   but then leaves the connection open, and appends additional updates
+   to the end of the response body.  Each update MUST include headers
+   and a body, and MUST specify the end of its body by including at
+   least one of the following headers:
 
       - Content-Length: N
       - Patches: N
@@ -571,7 +571,6 @@ Table of Contents
 
          HTTP/1.1 209 Subscription
          Subscribe: keep-alive
-
          Version: "ej4lhb9z78"                              | Update
          Content-Type: application/json                     |
          Content-Length: 64                                 |
@@ -591,7 +590,6 @@ Table of Contents
 
          HTTP/1.1 209 Subscription
          Subscribe: keep-alive
-
          Version: "g09ur8z74r"                              | Update
          Parents: "ej4lhb9z78"                              |
          Content-Type: application/json                     |
@@ -625,8 +623,7 @@ Table of Contents
 
          HTTP/1.1 209 Subscription
          Subscribe: keep-alive
-         Current-Version: "ej4lhb9z78"               <-- Current Version
-
+         Current-Version: "ej4lhb9z78"             | <-- Current Version
          Version: "b9z78ej4lh"                     | Updates
          Content-Type: application/json            |
          Merge-Type: sync9                         |
