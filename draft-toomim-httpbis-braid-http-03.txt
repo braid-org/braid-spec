@@ -253,7 +253,6 @@ Table of Contents
       Response:
 
          HTTP/1.1 200 OK
-         Patches: OK
 
 
    Merge-Types are specified in [MERGE-TYPES].  The Version and Parents
@@ -301,7 +300,6 @@ Table of Contents
       Response:
 
          HTTP/1.1 200 OK
-         Patches: OK
 
 
    In order to distinguish each patch within a Version, we need to know
@@ -345,7 +343,7 @@ Table of Contents
       Response:
 
          HTTP/1.1 200 OK
-         Patches: OK
+
 
    Every patch MUST include either a Content-Type or a Content-Range.
 
