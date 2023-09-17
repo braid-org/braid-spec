@@ -409,7 +409,7 @@ Table of Contents
    A server does not need to honor historical version requests for all
    documents, for all history. If a server no longer has the historical
    context needed to honor a request, it may respond using an error code
-   which will be defined in a subsequent version of this RFC draft.
+   which will be defined in a subsequent version of this draft.
 
 
       Request:
