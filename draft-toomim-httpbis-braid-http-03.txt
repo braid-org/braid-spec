@@ -287,13 +287,13 @@ Table of Contents
          Patches: 2                                            |
                                                                |
          Content-Length: 53                                    | | Patch
-         Range: json=.messages[1:1]                            | |
+         Conent-Range: json .messages[1:1]                     | |
                                                                | |
          [{"text": "Yo!",                                      | |
            "author": {"link": "/user/yobot"}]                  | |
                                                                |
          Content-Length: 40                                    | | Patch
-         Range: json=.latest_change                            | |
+         Content-Range: json .latest_change                    | |
                                                                | |
          {"type": "date", "value": 1573952202370}              | |
 
