@@ -113,14 +113,14 @@ Table of Contents
 
 1.  Introduction
 
-   HTTP transfers a static version of state within a single request and
-   response.  If the state changes, HTTP does not automatically update
-   clients with the new versions.  This design satisficed when webpages
-   were mostly static and written by hand; however today's websites are
-   dynamic, generated from layers of state in databases, and provide
-   realtime updates across multiple clients and servers.  Programmers
-   today need to *synchronize*, not just *transfer* state, and to do
-   this, they must work around HTTP.
+   HTTP [RFC9110] transfers a static version of state within a single
+   request and response.  If the state changes, HTTP does not
+   automatically update clients with the new versions.  This design
+   satisficed when webpages were mostly static and written by hand;
+   however today's websites are dynamic, generated from layers of state
+   in databases, and provide realtime updates across multiple clients
+   and servers.  Programmers today need to *synchronize*, not just
+   *transfer* state, and to do this, they must work around HTTP.
 
    The web has a long history of these workarounds.  The original web
    required users to click reload when a page changed.  XMLHTTPRequest
@@ -912,6 +912,9 @@ Table of Contents
 
    [RFC6902]  Bryan, P., Nottingham, M., "Javascript Object Notation
               (JSON) Patch", RFC 6902.
+
+   [RFC9110]  Fielding, R., Nottingham, M., Reschke, J., "HTTP
+              Semantics", RFC 9110
 
    [BCP90]    Klyne, G., Nottingham, M., and J. Mogul, "Registration
               Procedures for Message Header Fields", BCP 90, RFC 3864,
