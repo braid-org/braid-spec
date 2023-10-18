@@ -138,11 +138,11 @@ Table of Contents
    the server to define.
 
    When issuing a non-GET request to a resource, a range patch can be
-   provided using Range header field.
+   provided using Content-Range header field.
 
       PATCH /api/image/1 HTTP/1.1
       Host: example.com
-      Range: bytes=21010-47021
+      Content-Range: bytes 21010-47021
       Content-Length: 26012
       Content-Type: image/gif
 
@@ -152,7 +152,7 @@ Table of Contents
 
       PATCH /api/document/1 HTTP/1.1
       Host: example.com
-      Range: json=/foo/bar/3/baz
+      Content-Range: json /foo/bar/3/baz
       Content-Length: 25
       Content-Type: application/json
 
@@ -192,12 +192,12 @@ Table of Contents
 
       --THIS_STRING_SEPARATES
       Content-Type: application/json
-      Range: json=/foo/bar/2/mo
+      Content-Range: json /foo/bar/2/mo
 
       42
       --THIS_STRING_SEPARATES
       Content-Type: application/json
-      Range: json=/foo/bar/1/no
+      Content-Range: json /foo/bar/1/no
 
       "person"
 
@@ -222,11 +222,11 @@ Table of Contents
       Content-Type: multipart/byteranges; boundary=THIS_STRING_SEPARATES
 
       --THIS_STRING_SEPARATES
-      Content-Range: json=/foo/bar/2/mo
+      Content-Range: json /foo/bar/2/mo
 
       42
       --THIS_STRING_SEPARATES
-      Content-Range: json=/foo/bar/1/no
+      Content-Range: json /foo/bar/1/no
 
       "person"
 

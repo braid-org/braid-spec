@@ -258,7 +258,6 @@ Table of Contents
       Response:
 
          HTTP/1.1 200 OK
-         Patches: OK
 
 
    Merge-Types are specified in [MERGE-TYPES].  The Version and Parents
@@ -298,13 +297,13 @@ Table of Contents
          Patches: 2                                         |
                                                             |
          Content-Length: 53                                 | | Patch
-         Range: json=.messages[1:1]                         | |
+         Content-Range: json .messages[1:1]                 | |
                                                             | |
          [{"text": "Yo!",                                   | |
            "author": {"link": "/user/yobot"}]               | |
                                                             |
          Content-Length: 40                                 | | Patch
-         Range: json=.latest_change                         | |
+         Content-Range: json .latest_change                 | |
                                                             | |
          {"type": "date", "value": 1573952202370}           | |
 
@@ -312,7 +311,6 @@ Table of Contents
       Response:
 
          HTTP/1.1 200 OK
-         Patches: OK
 
 
    To distinguish the boundaries between patches in an Update, each
@@ -355,7 +353,7 @@ Table of Contents
       Response:
 
          HTTP/1.1 200 OK
-         Patches: OK
+
 
 
    Every patch MUST include either a Content-Type or a Content-Range.
@@ -421,7 +419,7 @@ Table of Contents
    A server does not need to honor historical version requests for all
    documents, for all history. If a server no longer has the historical
    context needed to honor a request, it may respond using an error code
-   to be defined in a subsequent version of this draft.
+   that will be defined in a subsequent version of this draft.
 
 
       Request:
@@ -445,12 +443,12 @@ Table of Contents
       Request:
 
          GET /chat
-         Subscribe: keep-alive
+         Subscribe:
 
       Response:
 
          HTTP/1.1 209 Subscription
-         Subscribe: keep-alive
+         Subscribe:
 
          Version: "ej4lhb9z78"                              | Update
          Parents: "oakwn5b8qh", "uc9zwhw7mf"                |
@@ -509,8 +507,10 @@ Table of Contents
    A client requests a subscription by issuing a GET request with a
    Subscribe header:
 
-           Subscribe
-      or   Subscribe: keep-alive
+           Subscribe: <Parameters>
+
+   <Parameters> may be blank, set to "true", or contain arbitrary data,
+   and is reserved for future use.
 
    This header modifies the normal GET method's semantics, to request a
    subscription to future updates to the data, rather than only
@@ -565,12 +565,12 @@ Table of Contents
       Initial request:
 
          GET /chat
-         Subscribe: keep-alive
+         Subscribe:
 
       Initial response:
 
          HTTP/1.1 209 Subscription
-         Subscribe: keep-alive
+         Subscribe:
 
          Version: "ej4lhb9z78"                              | Update
          Content-Type: application/json                     |
@@ -584,13 +584,13 @@ Table of Contents
       Reconnection request:
 
          GET /chat
-         Subscribe: keep-alive
+         Subscribe:
          Parents: "ej4lhb9z78"
 
       Reconnection response:
 
          HTTP/1.1 209 Subscription
-         Subscribe: keep-alive
+         Subscribe:
 
          Version: "g09ur8z74r"                              | Update
          Parents: "ej4lhb9z78"                              |
@@ -619,12 +619,12 @@ Table of Contents
       Request:
 
          GET /chat
-         Subscribe: keep-alive
+         Subscribe:
 
       Response:
 
          HTTP/1.1 209 Subscription
-         Subscribe: keep-alive
+         Subscribe:
          Current-Version: "ej4lhb9z78"               <-- Current Version
 
          Version: "b9z78ej4lh"                     | Updates
@@ -741,7 +741,7 @@ Table of Contents
    /peers state with:
 
       GET /peers
-      Subscribe: keep-alive
+      Subscribe:
       -------
       [ {ip: '13.55.32.158', pubkey: 'x371...8382'},
         {ip: '244.38.55.83', pubkey: 'o2u8...2s73'},
