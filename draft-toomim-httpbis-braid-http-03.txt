@@ -424,8 +424,8 @@ Table of Contents
 
 3.  Subscriptions for GET
 
-   If a GET request includes the Subscribe header, it will return a
-   stream of versions; a new version pushed with each change.  Each
+   If a GET request includes the Subscribe header, the server can return
+   a stream of versions; a new version pushed with each change.  Each
    version can contain either the new contents in its body, or a set of
    Patches.
 
