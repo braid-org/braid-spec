@@ -316,14 +316,15 @@ Table of Contents
 
    The previous example uses the Range Patch format, which is defined in
    [RANGE-PATCH].  However, one can use any patch format, by sending a
-   patch with a Content-Type set to a patch format with a defined
-   behavior, such as application/json-patch+json (as specified in
-   [RFC6902]):
+   patch with a Patch-Type set to a content-type with a defined behavior
+   for the HTTP PATCH method, such as application/json-patch+json (as
+   specified in [RFC6902]):
 
 
       Request:
 
          PUT /chat
+
          Version: "up12vyc5ib"                              | Update
          Parents: "2bcbi84nsp"                              |
          Content-Length: 371                                |
@@ -332,7 +333,7 @@ Table of Contents
          Patches: 1                                         |
                                                             |
          Content-Length: 288                                | | Patch
-         Content-Type: application/json-patch+json          | |
+         Patch-Type: application/json-patch+json            | |
                                                             | |
          [                                                  | |
           {"op": "test", "path": "/a/b/c", "value": "foo"}, | |
@@ -349,7 +350,7 @@ Table of Contents
 
 
 
-   Every patch MUST include either a Content-Type or a Content-Range.
+   Every patch MUST include either a Patch-Type or a Content-Range.
 
 
 2.4.  GET a specific version
@@ -483,7 +484,7 @@ Table of Contents
          Patches: 1                                         |
                                                             |
          Content-Length: 288                                | | Patch
-         Content-Type: application/json-patch+json          | |
+         Patch-Type: application/json-patch+json          | |
                                                             | |
          [                                                  | |
           {"op": "test", "path": "/a/b/c", "value": "foo"}, | |
