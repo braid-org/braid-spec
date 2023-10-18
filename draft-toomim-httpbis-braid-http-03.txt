@@ -24,33 +24,26 @@ Intended status: Proposed Standard                             G. Little
 Abstract
 
    Braid is a set of extensions that generalize HTTP from a state
-   *transfer* protocol into a state *synchronization* protocol.  Braid
-   puts the power of Operational Transform and CRDTs on the web,
-   improving network performance and enabling natively peer-to-peer,
-   collaboratively-editable, offline-first web applications.
+   *transfer* protocol into a full-featured state *synchronization*
+   protocol.
 
-   Braid is composed of four extensions to HTTP:
+   Braid is composed of four independent extensions to HTTP:
 
-     1. VERSIONING on resources
-     2. SUBSCRIPTIONS on GET requests
-     3. PATCHES created from Range Requests
+     1. VERSIONING of resource history
+     2. SUBSCRIPTIONS to updates over time
+     3. PATCHES to ranges of space
      4. MERGE-TYPES that specify OT or CRDT behavior
 
-   These extensions are independent; each provides a distinct value for
-   a stand-alone use-case.  However, when used together, they enable a
-   web resource to synchronize automatically across multiple clients,
-   servers and proxies, and support arbitrary simultaneous edits by
-   multiple writers, under arbitrary network delays and partitions,
-   while guaranteeing consistency using a OT, CRDT, or other algorithm.
+   Each extension provides a distinct value for a stand-alone use-case.
 
-   These synchronization features provide a step towards a standard for
-   the dynamic internal state of websites.  Web programmers currently
-   synchronize state across clients and servers with layers of
-   non-standard Javascript frameworks.  A synchronization standard built
-   upon REST can enable programmers to read and write the internal state
-   of any website as easily as a local variable on their own site.  This
-   could enable a separation of UI from state, and allow any user to
-   edit or choose their own UI for any website's state.
+   However, these extensions can compose together to support the full
+   power of CRDTs and Operational Transforms directly on web resources.
+   This allows multiple writers to make simultaneous mutations to
+   arbitrary content-types, under arbitrary network delays and
+   partitions, while guaranteeing consistency across multiple clients
+   and servers.  This improves caching and network performance, and
+   enables natively peer-to-peer, collaboratively-editable, local-first
+   web applications.
 
 
 Status of this Memo
