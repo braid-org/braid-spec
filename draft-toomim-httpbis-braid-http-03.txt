@@ -1,5 +1,5 @@
 Internet-Draft                                                 M. Toomim
-Expires: Jul 10, 2020                                  Invisible College
+Expires: Apr 10, 2020                                  Invisible College
 Intended status: Proposed Standard                             G. Little
                                                        Invisible College
                                                                R. Walker
@@ -8,7 +8,7 @@ Intended status: Proposed Standard                             G. Little
                                                        Invisible College
                                                                J. Gentle
                                                        Invisible College
-                                                             Mar 9, 2020
+                                                            Oct 23, 2022
 
       \=/====\\   |//===\\=       /=\      =\==\|\=/==  =|====\==
       ||/    |\\  ||\    |\\    /|| \|\        |//      //|    \\\
@@ -24,8 +24,7 @@ Intended status: Proposed Standard                             G. Little
 Abstract
 
    Braid is a set of extensions that generalize HTTP from a state
-   *transfer* protocol into a full-featured state *synchronization*
-   protocol.
+   *transfer* protocol into a full state *synchronization* protocol.
 
    Braid is composed of four independent extensions to HTTP:
 
@@ -35,15 +34,13 @@ Abstract
      4. MERGE-TYPES that specify OT or CRDT behavior
 
    Each extension provides a distinct value for a stand-alone use-case.
-
-   However, these extensions can compose together to support the full
-   power of CRDTs and Operational Transforms directly on web resources.
-   This allows multiple writers to make simultaneous mutations to
-   arbitrary content-types, under arbitrary network delays and
-   partitions, while guaranteeing consistency across multiple clients
-   and servers.  This improves caching and network performance, and
-   enables natively peer-to-peer, collaboratively-editable, local-first
-   web applications.
+   However, they can compose together to support the full power of CRDTs
+   and Operational Transforms on web resources.  This allows multiple
+   writers to make simultaneous mutations to arbitrary content-types,
+   under arbitrary network delays and partitions, while guaranteeing
+   consistency across multiple clients and servers.  This improves web
+   caching and network performance, and enables natively peer-to-peer,
+   collaboratively-editable, local-first web applications.
 
 
 Status of this Memo
@@ -120,17 +117,19 @@ Table of Contents
    [XHR] made it possible to update just part of a page, running a GET
    request behind the scenes.  However, a GET request still could not
    push updates.  To work around this, web programmers would poll the
-   resource, which was inefficient.  Long-polling was invented to
-   overcome the inefficiencies, which was standardized as Server-Sent
-   Events [SSE].  Yet, SSE provides semantics of an event-stream, not an
-   update-stream, and although a programmer can encode a protocol within
-   the event stream for updating a resource, there is still no standard
-   way to express the update of a resource.
+   resource with repeated GETs, which was inefficient.  Long-polling was
+   invented to reduce redundant requests, but still requires the client
+   to initiate a round-trip for each update.  Server-Sent Events [SSE]
+   finally created a standard for the server to push events, but SSE
+   provides semantics of an event-stream, not an update-stream, and SSE
+   programmers must encode the semantics of updating a resource within
+   the event stream.  Today there is still no standard way for a server
+   to update its clients when a resource changes.
 
    In practice, web programmers today often give up on using standards
    for "data that changes", and instead send custom messages over a
    WebSocket -- a hand-rolled synchronization protocol.  Unfortunately,
-   this forfeits the benefits of HTTP and ReST, such as caching, and a
+   this forfeits the benefits of HTTP and ReST, such as caching and a
    uniform interface [REST].  As the web becomes increasingly dynamic,
    web applications are forced to implement additional layers of
    non-standard Javascript frameworks to synchronize changes to state.
@@ -182,7 +181,7 @@ Table of Contents
 
            Version: "dkn7ov2vwg"
 
-   Parallel edits can be merged, into single version with multiple IDs:
+   Parallel edits can merge into a single version with multiple IDs:
 
            Version: "dkn7ov2vwg", "v2vwgdkn7o"
 
@@ -199,8 +198,7 @@ Table of Contents
 
    For any two versions A and B that are specified in a Version or
    Parents header, A cannot be a descendent of B or vice versa.  The
-   ordering of versions in the list carries no meaning, and SHOULD be
-   sorted lexicographically.
+   ordering of versions in the list carries no meaning.
 
    If a client or server does not specify a Version for a resource it
    transfers, the recipient MAY generate and assign it new version IDs.
@@ -259,7 +257,7 @@ Table of Contents
    assume that its current version is the version's parents.
 
    We call the set of data that updates a resource from one version to
-   another an "Update".  An update consists of a set of headers and a
+   another an "update".  An update consists of a set of headers and a
    body.  In this example, the update includes a snapshot of the entire
    new value of the resource.  However, one can also specify the update
    as a set of patches.
@@ -269,7 +267,7 @@ Table of Contents
 
    Expressing updates as patches provides two benefits:
 
-     o Patches are generally smaller and more efficient
+     o Patches are usually smaller and more efficient
 
      o Patches articulate *how* changes occur, which enables Merge-Types
        to intelligently merge, e.g. in collaborative editing.
@@ -306,7 +304,7 @@ Table of Contents
          HTTP/1.1 200 OK
 
 
-   To distinguish the boundaries between patches in an Update, each
+   To distinguish the boundaries between patches in an update, each
    patch MUST include the following header:
 
          Content-Length: N
