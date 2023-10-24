@@ -4,14 +4,13 @@ This is the working area for the [Braid](https://braid.org) extensions to
 HTTP in the [IETF HTTP Working Group](https://httpwg.org/).  These extensions
 add Synchronization to HTTP.  They are authored in three documents:
 
-### Braid HTTP — [`draft-toomim-httpbis-braid-http-03.txt`](https://raw.githubusercontent.com/braid-org/braid-spec/master/draft-toomim-httpbis-braid-http-03.txt)
+### Braid HTTP — [`draft-toomim-httpbis-braid-http-04.txt`](https://raw.githubusercontent.com/braid-org/braid-spec/master/draft-toomim-httpbis-braid-http-04.txt)
 
 Braid adds to HTTP:
-1. *Versioning* to resources
-2. *Subscriptions* to GET requests
-3. *Patches* built on Range Requests
+1. *Versioning* of resource history
+2. *Updates* sent as patches
+3. *Subscriptions* to updates over time
 4. *Merge-Types* that specify OT or CRDT behavior
-
 
 ### Range Patch — [`draft-toomim-httpbis-range-patch-01.txt`](https://raw.githubusercontent.com/braid-org/braid-spec/master/draft-toomim-httpbis-range-patch-01.txt)
 
