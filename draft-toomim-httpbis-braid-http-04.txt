@@ -413,11 +413,12 @@ Table of Contents
 
      - The server SHOULD send the set of versions updating the Parents
        to the specified Version.  If no Version is specified, then it
-       should update the client to the current version.
+       should update the client to the server's current version.
 
-     - If the request contains a Subscribe header, then it SHOULD leave
-       the request open and subscribe the client to future updates.
-       Otherwise, it should close the connection.
+       - If the request contains a Subscribe header, then it SHOULD
+         additionally leave the request open and subscribe the client to
+         future updates.  Otherwise, it should close the connection
+         after sending the updates.
 
      - If the server does not support historical versions, then it MAY
        ignore the Parents header, but MUST NOT include the Parents
@@ -453,19 +454,19 @@ Table of Contents
 
    There are two reasons to send an update as a patch:
 
-     o Patches are smaller and more efficient
+     - Patches are smaller and more efficient
 
-     o Patches articulate *how* changes occur, which enables Merge-Types
+     - Patches articulate *how* changes occur, which enables Merge-Types
        to intelligently merge, e.g. in collaborative editing.
 
    There are two types of patches:
 
-     o Custom patch-types: As defined in HTTP PATCH [RFC5789], a custom
+     - Custom patch-types: As defined in HTTP PATCH [RFC5789], a custom
        patch type can be specified as a Content-Type.  Any such patch
        can included in any Braid-HTTP update, by adding a Content-Type
        header to the update or patch.
 
-     o Range Patches: If a Content-Range header is specified on the
+     - Range Patches: If a Content-Range header is specified on the
        update or patch, then it defines the region of the document that
        is being replaced by the content, as specified in [RANGE-PATCH].
 
@@ -578,9 +579,9 @@ Table of Contents
    safely.  Instead of specifying the patch in the request body of the
    PUT, the request can:
 
-     o Set the "Patches: 1" header
+     - Set the "Patches: 1" header
 
-     o Move the "Content-Length" and "Content-Range" headers into patch
+     - Move the "Content-Length" and "Content-Range" headers into patch
        headers on the request body
 
    Here is how the example from Section 3.1 could be so translated to be
