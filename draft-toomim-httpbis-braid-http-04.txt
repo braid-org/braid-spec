@@ -1030,6 +1030,10 @@ Table of Contents
    We wish to integrate this work with the excellent related efforts
    already underway:
 
+   Per Resource Events [draft-gupta-httpbis-per-resource-events] also
+   provides alternative form for subscriptions, and a mechanism to
+   define types of updates, including patches.
+
    Resumable Uploads [draft-ietf-httpbis-resumable-upload] can also be
    expressed as a sequence of patches, from client to server.  Each
    patch can specify a version in an "uploading" branch of time.  Once
