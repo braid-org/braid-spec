@@ -1044,8 +1044,6 @@ Table of Contents
    Byte-Range-Patch [draft-wright-http-patch-byterange] also enables
    general patches using Content-Range.
 
-   These efforts share our goals.
-
 
 7.3.  Web Frameworks
 
