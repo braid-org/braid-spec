@@ -1030,19 +1030,20 @@ Table of Contents
    We wish to integrate this work with the excellent related efforts
    already underway:
 
-   Per Resource Events [draft-gupta-httpbis-per-resource-events] also
-   provides alternative form for subscriptions, and a mechanism to
-   define types of updates, including patches.
+   - Per Resource Events [draft-gupta-httpbis-per-resource-events] also
+     provides subscriptions for HTTP resources, and also provides a
+     mechanism to define types of updates, including patches.
 
-   Resumable Uploads [draft-ietf-httpbis-resumable-upload] can also be
-   expressed as a sequence of patches, from client to server.  Each
-   patch can specify a version in an "uploading" branch of time.  Once
-   the upload is complete, the branch can be "merged" back into the main
-   version history.  A subsequent version of this draft will show an
-   example.
+   - Resumable Uploads [draft-ietf-httpbis-resumable-upload] can be
+     expressed in Braid-HTTP as a sequence of patches, from client to
+     server.  Each patch can specify a version in an "uploading" branch
+     of time.  Once the upload is complete, the branch can be "merged"
+     back into the main version history.  A subsequent version of this
+     draft will provide examples.
 
-   Byte-Range-Patch [draft-wright-http-patch-byterange] also enables
-   general patches using Content-Range.
+   - Byte-Range-Patch [draft-wright-http-patch-byterange] also enables
+     general patches using Content-Range, and has useful mechanisms to
+     avoid Partial PUTs on legacy servers.
 
 
 7.3.  Web Frameworks
