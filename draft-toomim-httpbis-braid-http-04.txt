@@ -541,7 +541,7 @@ Table of Contents
            "author": {"link": "/user/yobot"}]               | |
 
 
-   Or with Content-Type:
+   Or a custom patch type, using Content-Type:
 
 
       Response:
