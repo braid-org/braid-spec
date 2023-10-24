@@ -1,14 +1,14 @@
 Internet-Draft                                                 M. Toomim
 Expires: Apr 10, 2020                                  Invisible College
 Intended status: Proposed Standard                             G. Little
-                                                       Invisible College
-                                                               R. Walker
                                                             Bard College
+                                                               R. Walker
+                                                       Invisible College
                                                               B. Bellomy
                                                        Invisible College
                                                                J. Gentle
                                                        Invisible College
-                                                            Oct 23, 2022
+                                                            Oct 23, 2023
 
       \=/====\\   |//===\\=       /=\      =\==\|\=/==  =|====\==
       ||/    |\\  ||\    |\\    /|| \|\        |//      //|    \\\
@@ -69,39 +69,51 @@ Status of this Memo
 Table of Contents
 
    1.  Introduction ..................................................4
-   2.  Versioning for Resources ......................................5
-   2.1.  Comparison with ETag ........................................5
-   2.2.  PUT a new version ...........................................6
-   2.3.  PUT a new version as a patch ................................6
-   2.4.  GET a specific version ......................................8
-   3.  Subscriptions for GET .........................................9
-   3.1.  Creating a Subscription ....................................11
-   3.2.  Sending multiple updates per GET ...........................11
-   3.3.  Continuing a Subscription ..................................12
-   3.4.  Ending a Subscription ......................................12
-   3.5.  Signaling "all caught up" ..................................12
-   3.6.  Errors .....................................................12
-   4.  Design Goals..................................................13
-   5.  Use Cases ....................................................13
-   5.1.  Dynamic Resources ..........................................13
-   5.2.  Dynamic Proxies and Caches .................................14
-   5.3.  A Serverless Chat Example ..................................14
-   6.  Related Work .................................................15
-   6.1.  Web Frameworks .............................................15
-   6.2.  Existing IETF Standards ....................................16
-   7.  IANA Considerations ..........................................16
-   7.1.  Header Field Registration ..................................16
-   8.  Security Considerations ......................................16
-   9.  Conventions ..................................................16
-   10. Copyright Notice .............................................17
-   11. References ...................................................17
-   11.1. Normative References .......................................17
-   11.2. Informative References .....................................18
-   12. Acknowledgements .............................................19
-   13. Authors' Addresses ...........................................20
+   1.1.  HTTP applications need state Synchronization ................4
+   1.2.  The General Challenge of State Synchronization ..............4
+   1.3.  Braid extends HTTP for State Synchronization ................5
+   2.  Versioning for Resources ......................................6
+   2.1.  Comparison with ETag ........................................6
+   2.2.  PUT a new version ...........................................7
+   2.3.  GET a specific version ......................................8
+   2.4.  GET a range of historical versions ..........................9
+   2.5.  Rules for Version and Parents headers ......................10
+   3.  Updates can be expressed as Patches or Snapshots .............11
+   3.1.  PUT an update as a patch ...................................12
+   3.2.  GET an update as a patch ...................................13
+   3.3.  PUT an update as a set of patches ..........................14
+   3.3.  PUT an update as a custom patch-type .......................15
+   4.  Subscriptions for GET ........................................16
+   4.1.  Creating a Subscription ....................................17
+   4.2.  Sending multiple updates per GET ...........................18
+   4.3.  Continuing a Subscription ..................................19
+   4.4.  Ending a Subscription ......................................20
+   4.5.  Signaling "all caught up" ..................................21
+   4.6.  Errors .....................................................21
+   5.  Design Goals..................................................22
+   6.  Use Cases ....................................................22
+   6.1.  Dynamic Resources ..........................................22
+   6.2.  Dynamic Proxies and Caches .................................23
+   6.3.  A Serverless Chat Example ..................................23
+   7.  Related Work .................................................24
+   7.1.  Existing IETF Standards ....................................24
+   7.3.  IETF Work in Progress ......................................24
+   7.3.  Web Frameworks .............................................23
+   8.  IANA Considerations ..........................................24
+   8.1.  Header Field Registration ..................................24
+   9.  Security Considerations ......................................24
+   10.  Conventions .................................................24
+   11. Copyright Notice .............................................25
+   12. References ...................................................25
+   12.1. Normative References .......................................25
+   12.2. Informative References .....................................26
+   13. Acknowledgements .............................................27
+   14. Authors' Addresses ...........................................28
 
 
 1.  Introduction
+
+1.1.  HTTP applications need state Synchronization, not just Transfer
 
    HTTP [RFC9110] transfers a static version of state within a single
    request and response.  If the state changes, HTTP does not
@@ -134,23 +146,46 @@ Table of Contents
    web applications are forced to implement additional layers of
    non-standard Javascript frameworks to synchronize changes to state.
 
-   Braid generalizes HTTP into a synchronization protocol, and ReST into
-   a synchronization architecture.  It adds these features:
+
+1.2.  The General Challenge of State Synchronization
+
+   Part of the issue is that general case of the state synchronization
+   problem is inherently complex.  Programmers find it easy to implement
+   a single update, for a single use-case, but it becomes difficult to
+   support multiple writers, for multiple types of edits, with robust
+   conflict resolution, offline edits, and different merge semantics on
+   arbitrary content types, network topologies, and network conditions.
+   Recent research on OT, CRDT, and Version Control algorithms have
+   solved many of these problems in the last decade -- but even today,
+   each OT or CRDT algorithm proposes a different protocol, creating
+   lock-in.
+
+   However, recent research by these authors has demonstrated that
+   although despite having different protocols; the information each
+   algorithm needs to send over the wire is equivalent.  Thus, it is
+   possible to design a general protocol that supports any OT, CRDT, or
+   Version Control algorithm.
+
+
+1.3.  Braid extends HTTP for State Synchronization
+
+   Braid-HTTP expresses this general model of synchronization in four
+   extensions to HTTP:
 
      1. Versioning (Section 2)
 
         Each resource has a history of changes, ordered in time.
 
-     2. Subscriptions (Section 3)
+     2. Patches (Section 3)
+
+        Each resource can express updates as either *snapshots* or
+        *patches*; bidrectionally as client->server and server->client.
+
+     3. Subscriptions (Section 4)
 
         A Subscribe header can be added to GET requests. The server
         responds by pushing future versions to the client while the
         request is open.
-
-     3. Range Patches [RANGE-PATCH]
-
-        Express changes to versions in patches, with a uniform format
-        based on Range Requests.
 
      4. Merge Types [MERGE-TYPES]
 
@@ -158,22 +193,36 @@ Table of Contents
         resource, they can guarantee a consistent resulting state by
         implementing the same Merge Type.  Resources specify their Merge
         Type with a header.
+
+   Each extension provides standalone value, and can be used separately.
+   For instance, a /current-temp URL can implement Subscriptions
+   (Section 4) to push a stream of updates, without needing any complex
+   OT/CRDT machinery.
+
+   However, if an implementation combines these extensions together, it
+   generalizes HTTP into a full synchronization protocol, and ReST into
+   a synchronization architecture:
+
+         HTTP:         Hypertext *Transfer* Protocol
+         can become:   State *Synchronization* Protocol
+
+         ReST:         Representational State *Transfer*
+         can become:   Representational State *Synchronization*
+
+   This allows an arbitrary set of clients and servers to make arbitrary
+   edits to arbitrary resources, under arbitrary network delays and
+   paritions, and merge all edits consistently, receiving updates as
+   soon as they reconnect.  This enables caches to support dynamic
+   content, web applications to feature an offline mode, and textareas
+   to support collaborative editing.
+
 
-   Taken together, these features allow an arbitrary set of clients and
-   servers to make arbitrary edits to resources, under arbitrary network
-   delays and paritions, and merge all edits consistently, receiving
-   updates as soon as they reconnect.  This enables caches to support
-   dynamic content, web applications to feature an offline mode, and
-   textareas to support collaborative editing.
-
-
 2.  Versioning for Resources
 
    Each Braid resource has a current version, and a version history.
    Versions are specified as a set of one or more strings (called
-   "version IDs") in the [STRUCTURED-HEADERS] format.  Each version ID
-   must be unique, to differentiate distinct changes at distinct points
-   in time.
+   "version IDs") in the [RFC8941] format.  Each version ID must be
+   unique, to differentiate distinct changes at distinct points in time.
 
    To specify the version of content in a request or response body, a
    Version header MAY be included in a request for a PUT, PATCH or POST,
@@ -223,8 +272,8 @@ Table of Contents
       algorithm.
 
    Versions can be used in a variety of requests, as we explain next.
-
 
+
 2.2.  PUT a new version
 
    When a PUT request changes the state of a resource, it can specify
@@ -262,99 +311,13 @@ Table of Contents
    new value of the resource.  However, one can also specify the update
    as a set of patches.
 
-
-2.3.  PUT a new version as a patch
-
-   Expressing updates as patches provides two benefits:
-
-     o Patches are usually smaller and more efficient
-
-     o Patches articulate *how* changes occur, which enables Merge-Types
-       to intelligently merge, e.g. in collaborative editing.
-
-   To format an update as a set of patches, include a header called
-   "Patches" and assign it to the number of patches included, and format
-   those patches in the body as a sequence separated by blank lines:
-
-
-      Request:
-
-         PUT /chat
-         Version: "g09ur8z74r"                              | Update
-         Parents: "ej4lhb9z78"                              |
-         Content-Length: 189                                |
-         Content-Type: application/json                     |
-         Merge-Type: sync9                                  |
-         Patches: 2                                         |
-                                                            |
-         Content-Length: 53                                 | | Patch
-         Content-Range: json .messages[1:1]                 | |
-                                                            | |
-         [{"text": "Yo!",                                   | |
-           "author": {"link": "/user/yobot"}]               | |
-                                                            |
-         Content-Length: 40                                 | | Patch
-         Content-Range: json .latest_change                 | |
-                                                            | |
-         {"type": "date", "value": 1573952202370}           | |
-
-
-      Response:
-
-         HTTP/1.1 200 OK
-
-
-   To distinguish the boundaries between patches in an update, each
-   patch MUST include the following header:
-
-         Content-Length: N
-
-   This length determines where each patch ends, and next begins.
 
+2.3.  GET a specific version
 
-   The previous example uses the Range Patch format, which is defined in
-   [RANGE-PATCH].  However, one can use any patch format, by sending a
-   patch with a Content-Type set to a patch format with a defined
-   behavior, such as application/json-patch+json (as specified in
-   [RFC6902]):
-
-
-      Request:
-
-         PUT /chat
-         Version: "up12vyc5ib"                              | Update
-         Parents: "2bcbi84nsp"                              |
-         Content-Length: 371                                |
-         Content-Type: application/json                     |
-         Merge-Type: sync9                                  |
-         Patches: 1                                         |
-                                                            |
-         Content-Length: 288                                | | Patch
-         Content-Type: application/json-patch+json          | |
-                                                            | |
-         [                                                  | |
-          {"op": "test", "path": "/a/b/c", "value": "foo"}, | |
-          {"op": "remove", "path": "/a/b/c"},               | |
-          {"op": "add", "path": "/a/b/c", "value": []},     | |
-          {"op": "replace", "path": "/a/b/c", "value": 42}, | |
-          {"op": "move", "from": "/a/b", "path": "/a/d"},   | |
-          {"op": "copy", "from": "/a/d", "path": "/a/d/e"}  | |
-         ]                                                  | |
-
-      Response:
-
-         HTTP/1.1 200 OK
-
-
-
-   Every patch MUST include either a Content-Type or a Content-Range.
-
-
-2.4.  GET a specific version
-
-   A server can optionally allow clients to request historical versions
-   of a resource in GET requests.  To request a historical version, a
-   client includes a Version and/or Parents header in the request.
+   A server can allow clients to request historical versions of a
+   resource in GET requests by responding to the Version and Parents
+   headers.  A client can specify a specific version that it wants with
+   the Version header:
 
 
       Request:
@@ -374,6 +337,54 @@ Table of Contents
          [{"text": "Hi, everyone!",                         | | Snapshot
            "author": {"link": "/user/tommy"}}]              | |
 
+
+2.4.  GET a range of historical versions
+
+   A client can request a range of history by including a Parents and a
+   Version header together.  The Parents marks the beginning of the
+   range (the oldest versions) and the Version marks the end of the
+   range (the newest versions) that it requests.
+
+
+      Request:
+
+         GET /chat
+         Version: "3"
+         Parents: "1a", "1b"
+
+      Response:
+
+         HTTP/1.1 200 OK
+         Version: "2"
+         Parents: "1a", "1b"
+
+         Version: "2"                                       | Update
+         Parents: "1a", "1b"                                |
+         Content-Type: application/json                     |
+         Merge-Type: sync9                                  |
+         Content-Length: 64                                 |
+                                                            |
+         [{"text": "Hi, everyone!",                         | | Snapshot
+           "author": {"link": "/user/tommy"}}]              | |
+
+         Version: "3"                                       | Update
+         Parents: "2"                                       |
+         Content-Type: application/json                     |
+         Merge-Type: sync9                                  |
+         Content-Length: 117                                |
+                                                            |
+         [{"text": "Hi, everyone!",                         | | Snapshot
+           "author": {"link": "/user/tommy"}}               | |
+          {"text": "Yo!",                                   | |
+           "author": {"link": "/user/yobot"}]               | |
+   
+
+   To express a range of updates, the response body contains a sequence
+   of updates; each with its own content-length.  The format of this
+   sequence is defined in the upcoming (Section 4.2) on Subscriptions.
+
+
+2.5.  Rules for Version and Parents headers
 
    If a GET request contains a Version header:
 
@@ -423,9 +434,170 @@ Table of Contents
          HTTP/1.1 XXX
          Version: "ej4lhb9z78"
 
+
+3.  Updates can be expressed as Patches or Snapshots
+
+   Whereas today's HTTP sends the current version of a resource as a
+   "snapshot" in the body of a GET response, or a PUT request, and
+   additionally allows clients to send a patch in a PATCH request, a
+   full state synchronization protocol also needs to allow patches to be
+   sent from server to client, within subscriptions and requests for
+   history.
+
+   This section describes a general form for updates that can be sent
+   both client->server or server->client.  Updates can be sent as
+   snapshots or patches.  When sent as patches, a single update can
+   contain a single patch, or multiple patches.  Unlike the PATCH
+   method, these updates can be sent with idempotence when versioning
+   information is included -- a client or server that receives the same
+   update twice, for the same version, can discard the second update,
+   and thus maintain idempotence.
+
+   There are two reasons to send an update as a patch:
+
+     o Patches are smaller and more efficient
+
+     o Patches articulate *how* changes occur, which enables Merge-Types
+       to intelligently merge, e.g. in collaborative editing.
+
+   There are two types of patches:
+
+     o Custom patch-types: As defined in HTTP PATCH [RFC5789] method, a
+       custom patch type can be specified as a Content-Type.  Any such
+       patch can included in an update, by adding a Content-Type header
+       to the udpate.
+
+     o Range Patches: If a Content-Range header is specified on the
+       update or patch, then it defines the region of the document that
+       is being replaced by the content, as specified in [RANGE-PATCH].
+
+   Every patch MUST include either a Content-Type or a Content-Range.
+
+
+3.1.  PUT an update as a patch
+
+   A Partial PUT [RFC9110] can express a patch with a Content-Range
+   header:
+
+      Request:
+
+         PUT /chat
+         Version: "g09ur8z74r"                              | Update
+         Parents: "ej4lhb9z78"                              |
+         Content-Type: application/json                     |
+         Merge-Type: sync9                                  |
+         Content-Length: 53                                 | | Patch
+         Content-Range: json .messages[1:1]                 | |
+                                                            | |
+         [{"text": "Yo!",                                   | |
+           "author": {"link": "/user/yobot"}]               | |
 
 
-3.  Subscriptions for GET
+      Response:
+
+         HTTP/1.1 200 OK
+   
+
+3.2.  GET an update as a patch
+
+   A GET response can also express a patch, using Content-Range:
+
+      Request:
+
+         GET /chat
+         Version: "g09ur8z74r"                              | Update
+         Parents: "ej4lhb9z78"                              |
+
+
+      Response:
+
+         HTTP/1.1 200 OK
+         Content-Type: application/json                     |
+         Merge-Type: sync9                                  |
+         Content-Length: 53                                 | | Patch
+         Content-Range: json .messages[1:1]                 | |
+                                                            | |
+         [{"text": "Yo!",                                   | |
+           "author": {"link": "/user/yobot"}]               | |
+
+
+3.3.  PUT an update as a set of patches
+
+   To format an update as a set of patches, include a header called
+   "Patches" and assign it to the number of patches included, and format
+   those patches in the body as a sequence separated by blank lines:
+
+
+      Request:
+
+         PUT /chat
+         Version: "g09ur8z74r"                              | Update
+         Parents: "ej4lhb9z78"                              |
+         Content-Length: 189                                |
+         Content-Type: application/json                     |
+         Merge-Type: sync9                                  |
+         Patches: 2                                         |
+                                                            |
+         Content-Length: 53                                 | | Patch
+         Content-Range: json .messages[1:1]                 | |
+                                                            | |
+         [{"text": "Yo!",                                   | |
+           "author": {"link": "/user/yobot"}]               | |
+                                                            |
+         Content-Length: 40                                 | | Patch
+         Content-Range: json .latest_change                 | |
+                                                            | |
+         {"type": "date", "value": 1573952202370}           | |
+
+
+      Response:
+
+         HTTP/1.1 200 OK
+
+
+   To distinguish the boundaries between patches in an update, each
+   patch MUST include the following header:
+
+         Content-Length: N
+
+   This length determines where each patch ends, and next begins.
+
+
+3.4.  PUT an update as a custom patch-type
+
+   Since PATCH is not idempotent, a client may want to send a patch
+   idempotently using a PUT.  The client SHOULD include a Version and
+   Parents header to ensure idempotency.  The server can then discard
+   duplicate patches that it has already received.
+
+
+      Request:
+
+         PUT /chat
+         Version: "up12vyc5ib"                              | Update
+         Parents: "2bcbi84nsp"                              |
+         Content-Length: 371                                |
+         Merge-Type: sync9                                  |
+         Patches: 1                                         |
+                                                            |
+         Content-Length: 288                                | | Patch
+         Content-Type: application/json-patch+json          | |
+                                                            | |
+         [                                                  | |
+          {"op": "test", "path": "/a/b/c", "value": "foo"}, | |
+          {"op": "remove", "path": "/a/b/c"},               | |
+          {"op": "add", "path": "/a/b/c", "value": []},     | |
+          {"op": "replace", "path": "/a/b/c", "value": 42}, | |
+          {"op": "move", "from": "/a/b", "path": "/a/d"},   | |
+          {"op": "copy", "from": "/a/d", "path": "/a/d/e"}  | |
+         ]                                                  | |
+
+      Response:
+
+         HTTP/1.1 200 OK
+
+
+4.  Subscriptions for GET
 
    If a GET request includes the Subscribe header, the server can return
    a stream of updates; one for each new version.  Each update can
@@ -491,9 +663,9 @@ Table of Contents
           {"op": "move", "from": "/a/b", "path": "/a/d"},   | |
           {"op": "copy", "from": "/a/d", "path": "/a/d/e"}  | |
          ]                                                  | |
-
 
-3.1.  Creating a Subscription
+
+4.1.  Creating a Subscription
 
    A client requests a subscription by issuing a GET request with a
    Subscribe header:
@@ -516,8 +688,8 @@ Table of Contents
    connection is closed.  Once closed, a subscription can be resumed by
    the client issuing a subsequent GET request on the same document.
 
-
-3.2.  Sending multiple updates per GET
+
+4.2.  Sending multiple updates per GET
 
    To send multiple updates, a server concatenates multiple updates into
    a single response body.  Each update MUST include headers and a body,
@@ -540,8 +712,8 @@ Table of Contents
           receiving a chunk of a certain size.  A server can ensure
           small updates get flushed by padding them with blank lines.
 
-
-3.3.  Continuing a Subscription
+
+4.3.  Continuing a Subscription
 
    Once closed, a Braid subscription may be restarted by the client
    issuing a new subscription request.
@@ -594,9 +766,9 @@ Table of Contents
                                                             | |
          [{"text": "Yo!",                                   | |
            "author": {"link": "/user/yobot"}]               | |
+
 
-
-3.4.  Signaling "all caught up"
+4.4.  Signaling "all caught up"
 
    When starting or resuming a subscription, the server can indicate
    which version is current by specifying a "Current-Version" header
@@ -635,14 +807,14 @@ Table of Contents
            "author": {"link": "/user/tommy"}}]     V
                                                      <-- Now caught up
 
-3.5.  Errors
+4.5.  Errors
 
    If a server has dropped the history that a client requests, the
    server can return a 410 GONE response, to tell the client "sorry, I
    don't have the history necessary to synchronize with you."
-
 
-4.  Design Goals
+
+5.  Design Goals
 
    This spec is designed to be:
 
@@ -657,9 +829,9 @@ Table of Contents
       CRDT algorithm.
 
 
-5.  Use Cases
+6.  Use Cases
 
-5.1.  Dynamic Resources: Animating a PNG
+6.1.  Dynamic Resources: Animating a PNG
 
    Braid allows resources to become inherently dynamic -- able to change
    over time.  You can use this to make a resource animate.
@@ -693,9 +865,9 @@ Table of Contents
        Content-Range: bytes 348-887    | |
                                        | | 
        <binary data>                   | |
-
 
-5.2.  Dynamic Proxies and Caches
+
+6.2.  Dynamic Proxies and Caches
 
    Since updates aren't pushed, today's web often uses timeouts to
    trigger a cache becoming stale.  Unfortunately, sometimes the timeout
@@ -714,7 +886,7 @@ Table of Contents
    force-reload caches for any data amongst them.
 
 
-5.3.  A Serverless Chat Example
+6.3.  A Serverless Chat Example
 
    A Braid web application can operate offline.  A user can use the app
    from an airplane, and their edits can synchronize when they regain
@@ -744,10 +916,38 @@ Table of Contents
    peers over that connection.
 
 
+7.  Related Work
 
-6.  Related Work
+7.1.  Existing IETF Standards
 
-6.1.  Web Frameworks
+   A number of IETF specifications already standardize aspects of
+   synchronization for specific domains.  IMAP [RFC9051] provides
+   synchronization of email.  WebDAV provides the synchronization of
+   "collections" [RFC6578], and has been extended specifically for
+   calendar data in CalDAV [RFC4791], and vCards in [RFC6350].  More
+   recently, JMAP [RFC8620] provides an updated method of
+   synchronization, supporting mail, calendars, and contacts.
+
+
+7.2.  IETF Work in Progress
+
+   We wish to integrate this work with the excellent related efforts
+   already underway:
+
+   Resumable Uploads [draft-ietf-httpbis-resumable-upload] can also be
+   expressed as a sequence of patches, from client to server.  Each
+   patch can specify a version in an "uploading" branch of time.  Once
+   the upload is complete, the branch can be "merged" back into the main
+   version history.  A subsequent version of this draft will show an
+   example.
+
+   Byte-Range-Patch [draft-wright-http-patch-byterange] also enables
+   general patches using Content-Range.
+
+   These efforts share our goals.
+
+
+7.3.  Web Frameworks
 
    Web applications typically synchronize the state of a client and
    server with layers of models, views, and controllers in web
@@ -792,23 +992,11 @@ Table of Contents
                                          Braid guarantees network
                                          synchronization.
 
-
 
 
-6.2.  Existing IETF Standards
+8. IANA Considerations
 
-   A number of IETF specifications already standardize aspects of
-   synchronization for specific domains.  IMAP [RFC3501] provides
-   synchronization of email.  WebDAV provides the synchronization of
-   "collections" [RFC6578], and has been extended specifically for
-   calendar data in CalDAV [RFC4791], and vCards in [RFC6350].  More
-   recently, JMAP [RFC8620] provides an updated method of
-   synchronization, supporting mail, calendars, and contacts.
-
-
-7. IANA Considerations
-
-7.1.  Header Field Registration
+8.1.  Header Field Registration
 
    HTTP header fields are registered within the "Message Headers"
    registry maintained at
@@ -825,7 +1013,7 @@ Table of Contents
    | Parents             | http     | experimental | Section 2   |
    | Merge-Type          | http     | experimental | Section 2.2 |
    | Patches             | http     | experimental | Section 2.3 |
-   | Subscribe           | http     | experimental | Section 4   |
+   | Subscribe           | http     | experimental | Section 3   |
    | Current-Version     | http     | experimental | Section 3.4 |
    +---------------------+----------+--------------+-------------+
 
@@ -833,21 +1021,21 @@ Table of Contents
    Engineering Task Force".
 
 
-8. Security Considerations
+9. Security Considerations
 
    XXX Todo
 
 
-9.  Conventions
+10.  Conventions
 
    The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
    "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this
    document are to be interpreted as described in [RFC2119].
 
 
-10.  Copyright Notice
+11.  Copyright Notice
 
-   Copyright (c) 2020 IETF Trust and the persons identified as the
+   Copyright (c) 2023 IETF Trust and the persons identified as the
    document authors.  All rights reserved.
 
    This document is subject to BCP 78 and the IETF Trust's Legal
@@ -860,17 +1048,19 @@ Table of Contents
    the Trust Legal Provisions and are provided without warranty as
    described in the Simplified BSD License.
 
-11.  References
+12.  References
 
-11.1.  Normative References
+12.1.  Normative References
 
-   [RFC7230]  "HTTP/1.1 Message Syntax and Routing", RFC 7230.
+   [RFC5789]  "PATCH Method for HTTP", RFC 5789.
 
-   [RFC7231]  "HTTP/1.1 Semantics and Content", RFC 7231.
+   [RFC9110]  "HTTP Semantics", RFC 9110.
 
-   [RFC7233]  "HTTP/1.2 Range Requests", RFC 7233.
+   [RFC9111]  "HTTP Caching", RFC 9111.
 
-   [RFC7234]  "HTTP/1.2 Caching", RFC 7234.
+   [RFC9112]  "HTTP/1.1", RFC 9112.
+
+   [RFC8941]  "Structured Field Values for HTTP"
 
    [RFC2119]  Bradner, S., "Key words for use in RFCs to Indicate
               Requirement Levels", BCP 14, RFC 2119, March 1997.
@@ -879,12 +1069,10 @@ Table of Contents
 
    [RANGE-PATCH] draft-toomim-httpbis-range-patch-00
 
-   [STRUCTURED-HEADERS] draft-ietf-httpbis-header-structure-14
-
 
 
 
-11.2.  Informative References
+12.2.  Informative References
 
    [XHR]      Van Kestern, A., Aubourg, J., Song, J., and R. M.
               Steen, H.  "XMLHttpRequest", September 2019.
@@ -898,9 +1086,9 @@ Table of Contents
               Network-based Software Architectures"  Doctoral
               dissertation, University of California, Irvine, 2000.
 
-   [RFC3501]  Crispin, M.,  "Internet Message Access Protocol - Version
-              4rev1", RFC 3501, DOI 10.17487/RFC3501, March 2003,
-              <https://www.rfc-editor.org/info/rfc3501>.
+   [RFC9051]  Melnikov, Ed., Leiba, Ed., "Internet Message Access
+              Protocol - Version 4rev2", RFC 9051, DOI 10.17487/RFC9051,
+              August 2021, <https://www.rfc-editor.org/info/rfc9051>.
 
    [RFC6578]  Daboo, C., Quillaud, A., "Collection Synchronization
               for Web Distributed Authoring and Versioning (WebDAV)",
@@ -931,12 +1119,11 @@ Table of Contents
               September 2004.
 
 
-12.  Acknowledgements
+13.  Acknowledgements
 
    In addition to the authors, this spec contains intellectual
    contributions from the following people:
 
-      - Seph Gentle
       - Mitar Milutinovic
       - Sarah Allen
       - Duane Johnson
@@ -954,13 +1141,14 @@ Table of Contents
       - Olli Vanhoja
       - Julian Reschke
       - Chris Lemmons
+      - Rahul Gupta
 
    We also thank Mark Nottingham, Fred Baker, Adam Roach, and Barry
    Leiba for facilitating a productive environment within the IETF.
 
 
 
-13.  Authors' Addresses
+14.  Authors' Addresses
 
    For more information, the authors of this document are best contacted
    via Internet mail:
