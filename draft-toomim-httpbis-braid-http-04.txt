@@ -210,11 +210,11 @@ Table of Contents
    can generalize HTTP into a full synchronization protocol, and ReST
    into a synchronization architecture:
 
-         HTTP:         Hypertext (state) *Transfer* Protocol
-         Braid-HTTP:   Hypertext (state) *Synchronization* Protocol
+         HTTP:         HyperText  *Transfer* Protocol
+         becomes:      HyperState *Synchronization* Protocol
 
          ReST:         Representational State *Transfer*
-         ReSS:         Representational State *Synchronization*
+         becomes:      Representational State *Synchronization*
 
    This allows an arbitrary set of clients and servers to make arbitrary
    edits to arbitrary resources, under arbitrary network delays and
@@ -223,15 +223,16 @@ Table of Contents
    content, web applications to feature an offline mode, and textareas
    to support collaborative editing.
 
-   The following sections explain each extension, in turn.
+   The extensions are explained in the following sections, in turn.
 
 
 2.  Versioning for Resources
 
    Each Braid resource has a current version, and a version history.
    Versions are specified as a set of one or more strings (called
-   "version IDs") in the [RFC8941] format.  Each version ID must be
-   unique, to differentiate distinct changes at distinct points in time.
+   "version IDs") in the Structured Headers [RFC8941] format.  Each
+   version ID must be unique, to differentiate distinct changes at
+   distinct points in time.
 
    To specify the version of content in a request or response body, a
    Version header MAY be included in a request for a PUT, PATCH or POST,
@@ -399,9 +400,10 @@ Table of Contents
 
      - The Subscribe header (Section 4) MUST be absent.
 
-     - The server SHOULD return a single response, containing that
-       version of the resource in its body, with the Version header set
-       to the version requested by the client.
+     - If the Parents header is absent, the server SHOULD return a
+       single response, containing the requested version of the resource
+       in its body, with the Version response header set to the same
+       version.
 
      - If the server does not support historical versions, it MAY ignore
        the Version header and respond as usual, but MUST NOT include the
@@ -409,19 +411,17 @@ Table of Contents
 
    If a GET request contains a Parents header:
 
-     - If the request does not also contain a Version, then the request
-       MUST also contain a Subscribe header, and the server SHOULD send
-       a set of versions updating the Parents to the current Version,
-       and then subscribe the client to future updates.
+     - The server SHOULD send the set of versions updating the Parents
+       to the specified Version.  If no Version is specified, then it
+       should update the client to the current version.
+
+     - If the request contains a Subscribe header, then it SHOULD leave
+       the request open and subscribe the client to future updates.
+       Otherwise, it should close the connection.
 
      - If the server does not support historical versions, then it MAY
        ignore the Parents header, but MUST NOT include the Parents
        header in its response.
-
-   If a GET request contains both a Version and Parents header:
-
-     - The server SHOULD respond with a set of updates from the
-       specified Parents to the specified Version.
 
    A server MAY refactor or rebase the version history that it provides
    to a client, so long as it does not affect the resulting state, or
@@ -431,17 +431,6 @@ Table of Contents
    documents, for all history. If a server no longer has the historical
    context needed to honor a request, it may respond using an error code
    that will be defined in a subsequent version of this draft.
-
-
-      Request:
-
-         GET /chat
-         Version: "ej4lhb9z78"
-
-      Response:
-
-         HTTP/1.1 XXX
-         Version: "ej4lhb9z78"
 
 
 3.  Updates as Patches or Snapshots
