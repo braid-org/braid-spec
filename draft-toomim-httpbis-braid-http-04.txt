@@ -437,34 +437,32 @@ Table of Contents
 3.  Updates as Patches or Snapshots
 
    Whereas today's HTTP sends the current version of a resource as a
-   "snapshot" in the body of a GET response, or a PUT request, and
-   additionally allows clients to send a patch in a PATCH request, a
-   full state synchronization protocol also needs to allow patches to be
-   sent from server to client, within subscriptions and requests for
-   history.
+   "snapshot" in the body of a GET response or PUT request, and allows
+   clients to send a "patch" in a PATCH request, a general state
+   synchronization protocol needs updates that travel in both directions
+   (both server->client and client->server) and across multiple methods.
 
-   This section describes a general form for updates that can be sent
-   both client->server and server->client.  Updates can be sent as
-   snapshots or patches.  When sent as patches, a single update can
-   contain a single patch, or multiple patches.  Unlike the PATCH
-   method, these updates can be sent idempotently by including
-   versioning information -- a client or server that receives the same
-   update twice, for the same version, can discard the second update,
-   and thus maintain idempotence.
+   This section describes a general form for bidirectional updates.
+   Updates can be sent as snapshots or patches.  When sent as patches, a
+   single update can contain a single patch, or multiple patches.
+   Unlike the PATCH method, these updates can be sent idempotently by
+   including versioning information -- a client or server that receives
+   the same update twice, for the same version, can discard the second
+   update, and thus maintain idempotence.
 
    There are two reasons to send an update as a patch:
 
-     - Patches are smaller and more efficient
+     - Patches can be smaller and more efficient
 
      - Patches articulate *how* changes occur, which enables Merge-Types
        to intelligently merge, e.g. in collaborative editing.
 
-   There are two types of patches:
+   There are two ways to express patches:
 
-     - Custom patch-types: As defined in HTTP PATCH [RFC5789], a custom
-       patch type can be specified as a Content-Type.  Any such patch
-       can included in any Braid-HTTP update, by adding a Content-Type
-       header to the update or patch.
+     - Custom patch Content-Types: As defined in HTTP PATCH [RFC5789], a
+       custom patch format can be specified as a Content-Type.  Any such
+       patch can included in any Braid-HTTP update, by adding its
+       Content-Type to its update or patch header.
 
      - Range Patches: If a Content-Range header is specified on the
        update or patch, then it defines the region of the document that
@@ -472,11 +470,22 @@ Table of Contents
 
    Every patch MUST include either a Content-Type or a Content-Range.
 
+   There are two ways to frame patches within an HTTP message:
+
+     - If the update contains only a single patch, its headers and body
+       go directly into the HTTP message's headers and body.
+
+     - If the update contains multiple patches, the update can include a
+       "Patches: N" header, and set the body to a concatenation of that
+       many patches.
+
+   These scenarios are elaborated below.
+
 
 3.1.  PUT an update as a patch
 
-   A Partial PUT [RFC9110] can express a patch with a Content-Range
-   header:
+   A single Range-Patch can be constructed as a Partial PUT [RFC9110] --
+   a PUT with a Content-Range header:
 
 
       Request:
@@ -505,7 +514,8 @@ Table of Contents
 
    To avoid this, only use Partial PUTs on servers that you know support
    them, or do feature detection (to be defined in a subsequent draft)
-   to determine what they support.
+   to determine what they support.  You can also reformulate a Partial
+   PUT with Patches: 1 as in (Section 3.4) below, as a safe alternative.
 
 
 3.2.  GET an update as a patch
@@ -515,20 +525,40 @@ Table of Contents
       Request:
 
          GET /chat
-         Version: "g09ur8z74r"                              | Update
-         Parents: "ej4lhb9z78"                              |
+         Version: "g09ur8z74r"
+         Parents: "ej4lhb9z78"
 
 
       Response:
 
          HTTP/1.1 200 OK
-         Content-Type: application/json                     |
+         Content-Type: application/json                     | Update
          Merge-Type: sync9                                  |
          Content-Length: 53                                 | | Patch
          Content-Range: json .messages[1:1]                 | |
                                                             | |
          [{"text": "Yo!",                                   | |
            "author": {"link": "/user/yobot"}]               | |
+
+
+   Or with Content-Type:
+
+
+      Response:
+
+         HTTP/1.1 200 OK
+         Merge-Type: sync9                                  | Update
+         Content-Length: 53                                 | | Patch
+         Content-Type: application/json-patch+json          | |
+                                                            | |
+         [                                                  | |
+          {"op": "test", "path": "/a/b/c", "value": "foo"}, | |
+          {"op": "remove", "path": "/a/b/c"},               | |
+          {"op": "add", "path": "/a/b/c", "value": []},     | |
+          {"op": "replace", "path": "/a/b/c", "value": 42}, | |
+          {"op": "move", "from": "/a/b", "path": "/a/d"},   | |
+          {"op": "copy", "from": "/a/d", "path": "/a/d/e"}  | |
+         ]                                                  | |
 
 
 3.3.  PUT an update as a set of patches
@@ -575,17 +605,17 @@ Table of Contents
 
 3.4.  Using Patches: 1 for safe Partial PUTs
 
-   The Patches header happens to enable clients to send Partial PUTs
-   safely.  Instead of specifying the patch in the request body of the
+   The "Patches" header also provides a safe alternative to Partial
+   PUTs.  Instead of specifying the patch in the request body of the
    PUT, the request can:
 
-     - Set the "Patches: 1" header
+     - set the "Patches: 1" header
 
-     - Move the "Content-Length" and "Content-Range" headers into patch
+     - move the "Content-Length" and "Content-Range" headers into patch
        headers on the request body
 
-   Here is how the example from Section 3.1 could be so translated to be
-   made safe:
+   For example, the Partial PUT example of Section 3.1 would translate
+   like this:
 
 
       Request:
@@ -609,19 +639,21 @@ Table of Contents
          HTTP/1.1 200 OK
 
 
-   Because the PUT request has no Content-Length, legacy servers will
-   not know when the request body ends, and will never know that the
-   body has been successfully sent.  Servers that support patches will
-   understand Patches: 1, know to look at the patch inside to find the
-   true Content-Length, and be able to complete the request.
+   Because this PUT request has no Content-Length, legacy servers will
+   not know where the request body ends, and will not recognize a
+   complete PUT.  (Any server that accepts a PUT before it is complete
+   also risks data corruption from network failures during a PUT.)
+   Servers that understand Patches: 1, on the other hand, know to look
+   at the patch inside to find the true Content-Length, and will be able
+   to complete the request.
 
 
 3.5.  PUT an update with a custom patch-type
 
    Since PATCH is not idempotent, a client may want to send a patch
    idempotently using a PUT.  The client SHOULD include a Version and
-   Parents header to ensure idempotency.  The server can then discard
-   duplicate patches that it has already received.
+   Parents header to ensure idempotency.  The server SHOULD discard
+   duplicate patches (for the same Version) to satisfy idempotence.
 
 
       Request:
@@ -654,7 +686,7 @@ Table of Contents
 
    If a GET request includes the Subscribe header, the server can return
    a stream of updates; one for each new version.  Each update can
-   express the new content either as a snapshot, or a set of Patches.
+   express the new content either as a snapshot, or a set of patches.
 
       Request:
 
@@ -722,10 +754,11 @@ Table of Contents
    subscriptions to be smuggled through existing HTTP clients (such as
    browser fetch() APIs), which will interpret the sequence of updates
    as a long response body of unspecified length.  Application
-   programmers can then parse the updates via polyfill libraries.  In
-   future versions of this draft, it could be advantageous to remove the
-   blank line, and interpret the initial response headers and body as
-   the headers and body for the first update.
+   programmers can then parse the updates via polyfill libraries on top
+   of existing client libraries.  In future versions of this draft, it
+   could be advantageous to remove the blank line for upgraded clients,
+   which can interpret the initial response headers and body as the
+   headers and body for the first update, directly.
 
 
 4.1.  Creating a Subscription
