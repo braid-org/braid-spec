@@ -148,30 +148,29 @@ Table of Contents
    non-standard Javascript frameworks to synchronize changes to state.
 
 
-1.2.  The General challenge of State Synchronization
+1.2.  The General Challenge of State Synchronization
 
-   Part of the issue is the complexity inherint in the general state
-   synchronization problem.  Whereas it is algorithmically simple to
+   Part of the issue is the complexity inherent to solving general state
+   synchronization.  Whereas it can be algorithmically simple to
    implement a single update for a single use-case, it becomes much more
-   difficult to write algorithms that support multiple simultaneous
-   writers, over various network topologies and conditions, with robust
-   conflict resolution, performance, and consistency guarantees.
-   Fortunately, recent advances in OT, CRDT, and Version Control
-   algorithms have solved many of these problems; but each algorithm
-   today presents different tradeoffs in robustness and performance, and
-   implements a different network protocol, creating lock-in to its
-   particular characteristics.
+   difficult to implement support for multiple simultaneous writers,
+   over general network topologies and conditions, with robust conflict
+   resolution, performance, and consistency guarantees.  Fortunately,
+   recent advances in OT, CRDT, and Version Control algorithms have
+   solved many of these problems; but each algorithm today presents
+   different tradeoffs in robustness and performance, over a different
+   network protocol.
 
-   On the other hand, reserarch by these authors has demonstrated that
-   all OT, CRDT and Version Control algorithms actually have equivalent
-   informational needs, and that their network messages can be
-   translated and made interoperable.  Thus, it is possible to design a
-   general protocol that supports any OT, CRDT, or Version Control
-   algorithm, and it is possible to translate the network messages of
-   any algorithm into and out of a single general protocol.  The primary
-   difference that remains between synchronization algorithms is their
-   way of merging conflicts -- their Merge-Type -- which we can specify
-   as a header in the protocol.
+   On the other hand, reserarch by this document's authors has
+   demonstrated that all OT, CRDT and Version Control algorithms
+   actually have equivalent informational needs, and that their network
+   messages can be translated and made interoperable.  Thus, it is
+   possible to design a general protocol that supports any OT, CRDT, or
+   Version Control algorithm, and it is possible to translate the
+   network messages of any algorithm into and out of a single general
+   protocol.  The primary difference that remains between
+   synchronization algorithms is their way of merging conflicts -- their
+   Merge-Type -- which we specify as a header in the protocol.
 
 
 1.3.  Braid extends HTTP for State Synchronization
