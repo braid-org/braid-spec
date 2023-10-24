@@ -29,8 +29,8 @@ Abstract
    Braid is composed of four independent extensions to HTTP:
 
      1. VERSIONING of resource history
-     2. SUBSCRIPTIONS to updates over time
-     3. PATCHES to ranges of space
+     2. UPDATES sent as patches
+     3. SUBSCRIPTIONS to updates over time
      4. MERGE-TYPES that specify OT or CRDT behavior
 
    Each extension provides a distinct value for a stand-alone use-case.
@@ -69,7 +69,7 @@ Status of this Memo
 Table of Contents
 
    1.  Introduction ..................................................4
-   1.1.  HTTP applications need state Synchronization ................4
+   1.1.  HTTP applications need State Synchronization ................4
    1.2.  The General Challenge of State Synchronization ..............4
    1.3.  Braid extends HTTP for State Synchronization ................5
    2.  Versioning for Resources ......................................6
@@ -78,7 +78,7 @@ Table of Contents
    2.3.  GET a specific version ......................................8
    2.4.  GET a range of historical versions ..........................9
    2.5.  Rules for Version and Parents headers ......................10
-   3.  Updates can be expressed as Patches or Snapshots .............11
+   3.  Updates as Patches or Snapshots ..............................11
    3.1.  PUT an update as a patch ...................................12
    3.2.  GET an update as a patch ...................................13
    3.3.  PUT an update as a set of patches ..........................14
@@ -135,8 +135,8 @@ Table of Contents
    finally created a standard for the server to push events, but SSE
    provides semantics of an event-stream, not an update-stream, and SSE
    programmers must encode the semantics of updating a resource within
-   the event stream.  Today there is still no standard way for a server
-   to update its clients when a resource changes.
+   the event stream.  Today there is still no standard for synchronizing
+   a resource's changing state.
 
    In practice, web programmers today often give up on using standards
    for "data that changes", and instead send custom messages over a
@@ -147,24 +147,27 @@ Table of Contents
    non-standard Javascript frameworks to synchronize changes to state.
 
 
-1.2.  The General Challenge of State Synchronization
+1.2.  The General challenge of State Synchronization
 
-   Part of the issue is that general case of the state synchronization
-   problem is inherently complex.  Programmers find it easy to implement
-   a single update, for a single use-case, but it becomes difficult to
-   support multiple writers, for multiple types of edits, with robust
-   conflict resolution, offline edits, and different merge semantics on
-   arbitrary content types, network topologies, and network conditions.
-   Recent research on OT, CRDT, and Version Control algorithms have
-   solved many of these problems in the last decade -- but even today,
-   each OT or CRDT algorithm proposes a different protocol, creating
-   lock-in.
+   Part of the issue is the complexity inherint in the general state
+   synchronization problem.  Whereas it is algorithmically simple to
+   implement a single update for a single use-case, it becomes much more
+   difficult to write algorithms to support simultaneous multiple
+   writers, issuing multiple types of edits, over arbitrary network
+   topologies and conditions, with robust conflict resolution,
+   performance, and consistency guarantees.  Fortunately, recent
+   advances in OT, CRDT, and Version Control algorithms have solved many
+   of these problems; but each algorithm today is different, presenting
+   different tradeoffs in robustness and performance, and proposes a
+   different network protocol, creating lock-in to its particular
+   characteristics.
 
-   However, recent research by these authors has demonstrated that
-   although despite having different protocols; the information each
-   algorithm needs to send over the wire is equivalent.  Thus, it is
-   possible to design a general protocol that supports any OT, CRDT, or
-   Version Control algorithm.
+   On the other hand, the authors' research has demonstrated that
+   despite these concrete differences in protocols, the informational
+   needs of each algorithm can be equivalent.  Thus, it is possible to
+   design a general protocol that supports any OT, CRDT, or Version
+   Control algorithm, and it is possible to translate the network
+   messages of any algorithm into and out of a single general protocol.
 
 
 1.3.  Braid extends HTTP for State Synchronization
@@ -176,10 +179,11 @@ Table of Contents
 
         Each resource has a history of changes, ordered in time.
 
-     2. Patches (Section 3)
+     2. Updates as Patches or Snapshots (Section 3)
 
-        Each resource can express updates as either *snapshots* or
-        *patches*; bidrectionally as client->server and server->client.
+        Each resource can express updates as either *patches* or
+        *snapshots*; in bidirectional client->server and server->client
+        messages.
 
      3. Subscriptions (Section 4)
 
@@ -195,19 +199,19 @@ Table of Contents
         Type with a header.
 
    Each extension provides standalone value, and can be used separately.
-   For instance, a /current-temp URL can implement Subscriptions
-   (Section 4) to push a stream of updates, without needing any complex
-   OT/CRDT machinery.
+   For instance, a /current-temperature URL can implement Subscriptions
+   (Section 4) to push a stream of updates for the current temperature,
+   without needing any complex OT/CRDT machinery.
 
    However, if an implementation combines these extensions together, it
-   generalizes HTTP into a full synchronization protocol, and ReST into
-   a synchronization architecture:
+   can generalize HTTP into a full synchronization protocol, and ReST
+   into a synchronization architecture:
 
-         HTTP:         Hypertext *Transfer* Protocol
-         can become:   State *Synchronization* Protocol
+         HTTP:         Hypertext (state) *Transfer* Protocol
+         Braid-HTTP:   Hypertext (state) *Synchronization* Protocol
 
          ReST:         Representational State *Transfer*
-         can become:   Representational State *Synchronization*
+         ReSS:         Representational State *Synchronization*
 
    This allows an arbitrary set of clients and servers to make arbitrary
    edits to arbitrary resources, under arbitrary network delays and
@@ -215,6 +219,8 @@ Table of Contents
    soon as they reconnect.  This enables caches to support dynamic
    content, web applications to feature an offline mode, and textareas
    to support collaborative editing.
+
+   The following sections explain each extension, in turn.
 
 
 2.  Versioning for Resources
@@ -435,7 +441,7 @@ Table of Contents
          Version: "ej4lhb9z78"
 
 
-3.  Updates can be expressed as Patches or Snapshots
+3.  Updates as Patches or Snapshots
 
    Whereas today's HTTP sends the current version of a resource as a
    "snapshot" in the body of a GET response, or a PUT request, and
@@ -663,6 +669,16 @@ Table of Contents
           {"op": "move", "from": "/a/b", "path": "/a/d"},   | |
           {"op": "copy", "from": "/a/d", "path": "/a/d/e"}  | |
          ]                                                  | |
+
+
+   Note the blank line after the "Subscribe:" header.  This allows
+   subscriptions to be smuggled through existing HTTP clients (such as
+   browser fetch() APIs), which will interpret the sequence of updates
+   as a long response body of unspecified length.  Application
+   programmers can then parse the updates via polyfill libraries.  In
+   future versions of this draft, it could be advantageous to remove the
+   blank line, and interpret the initial response headers and body as
+   the headers and body for the first update.
 
 
 4.1.  Creating a Subscription
