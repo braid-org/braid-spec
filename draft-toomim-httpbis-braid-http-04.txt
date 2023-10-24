@@ -83,7 +83,7 @@ Table of Contents
    3.2.  GET an update as a patch ...................................13
    3.3.  PUT an update as a set of patches ..........................14
    3.4.  Using Patches: 1 for safe Partial PUTs .....................15
-   3.5.  PUT an update as a custom patch-type .......................16
+   3.5.  PUT an update with a custom patch-type .....................16
    4.  Subscriptions for GET ........................................17
    4.1.  Creating a Subscription ....................................18
    4.2.  Sending multiple updates per GET ...........................19
@@ -125,19 +125,19 @@ Table of Contents
    and servers.  Programmers today need to *synchronize*, not just
    *transfer* state, and to do this, they must work around HTTP.
 
-   The web has a long history of these workarounds.  The original web
-   required users to click reload when a page changed.  XMLHTTPRequest
-   [XHR] made it possible to update just part of a page, running a GET
-   request behind the scenes.  However, a GET request still could not
-   push updates.  To work around this, web programmers would poll the
-   resource with repeated GETs, which was inefficient.  Long-polling was
-   invented to reduce redundant requests, but still requires the client
-   to initiate a round-trip for each update.  Server-Sent Events [SSE]
-   finally created a standard for the server to push events, but SSE
-   provides semantics of an event-stream, not an update-stream, and SSE
-   programmers must encode the semantics of updating a resource within
-   the event stream.  Today there is still no standard for synchronizing
-   a resource's changing state.
+   The web has a long history of such workarounds.  The original web
+   required users to click reload when a page changed.  Javascript and
+   XMLHTTPRequest [XHR] made it possible to update just part of a page,
+   running a GET request behind the scenes.  However, a GET request
+   still could not push server-initiated updates.  To work around this,
+   web programmers would poll the resource with repeated GETs, which was
+   inefficient.  Long-polling was invented to reduce redundant requests,
+   but still requires the client to initiate a round-trip for each
+   update.  Server-Sent Events [SSE] finally created a standard for the
+   server to push events, but SSE provides semantics of an event-stream,
+   not an update-stream, and SSE programmers must encode the semantics
+   of updating a resource within the event stream.  Today there is still
+   no standard to push updates to a resource's state.
 
    In practice, web programmers today often give up on using standards
    for "data that changes", and instead send custom messages over a
@@ -153,22 +153,25 @@ Table of Contents
    Part of the issue is the complexity inherint in the general state
    synchronization problem.  Whereas it is algorithmically simple to
    implement a single update for a single use-case, it becomes much more
-   difficult to write algorithms to support simultaneous multiple
-   writers, issuing multiple types of edits, over arbitrary network
-   topologies and conditions, with robust conflict resolution,
-   performance, and consistency guarantees.  Fortunately, recent
-   advances in OT, CRDT, and Version Control algorithms have solved many
-   of these problems; but each algorithm today is different, presenting
-   different tradeoffs in robustness and performance, and proposes a
-   different network protocol, creating lock-in to its particular
-   characteristics.
+   difficult to write algorithms that support multiple simultaneous
+   writers, over various network topologies and conditions, with robust
+   conflict resolution, performance, and consistency guarantees.
+   Fortunately, recent advances in OT, CRDT, and Version Control
+   algorithms have solved many of these problems; but each algorithm
+   today presents different tradeoffs in robustness and performance, and
+   implements a different network protocol, creating lock-in to its
+   particular characteristics.
 
-   On the other hand, the authors' research has demonstrated that
-   despite these concrete differences in protocols, the informational
-   needs of each algorithm can be equivalent.  Thus, it is possible to
-   design a general protocol that supports any OT, CRDT, or Version
-   Control algorithm, and it is possible to translate the network
-   messages of any algorithm into and out of a single general protocol.
+   On the other hand, reserarch by these authors has demonstrated that
+   all OT, CRDT and Version Control algorithms actually have equivalent
+   informational needs, and that their network messages can be
+   translated and made interoperable.  Thus, it is possible to design a
+   general protocol that supports any OT, CRDT, or Version Control
+   algorithm, and it is possible to translate the network messages of
+   any algorithm into and out of a single general protocol.  The primary
+   difference that remains between synchronization algorithms is their
+   way of merging conflicts -- their Merge-Type -- which we can specify
+   as a header in the protocol.
 
 
 1.3.  Braid extends HTTP for State Synchronization
@@ -196,8 +199,7 @@ Table of Contents
 
         If multiple clients and servers simultaneously edit the same
         resource, they can guarantee a consistent resulting state by
-        implementing the same Merge Type.  Resources specify their Merge
-        Type with a header.
+        implementing the same Merge Type.
 
    Each extension provides standalone value, and can be used separately.
    For instance, a /current-temperature URL can implement Subscriptions
@@ -216,7 +218,7 @@ Table of Contents
 
    This allows an arbitrary set of clients and servers to make arbitrary
    edits to arbitrary resources, under arbitrary network delays and
-   paritions, and merge all edits consistently, receiving updates as
+   partitions, and merge all edits consistently, receiving updates as
    soon as they reconnect.  This enables caches to support dynamic
    content, web applications to feature an offline mode, and textareas
    to support collaborative editing.
@@ -624,7 +626,7 @@ Table of Contents
    true Content-Length, and be able to complete the request.
 
 
-3.5.  PUT an update as a custom patch-type
+3.5.  PUT an update with a custom patch-type
 
    Since PATCH is not idempotent, a client may want to send a patch
    idempotently using a PUT.  The client SHOULD include a Version and
