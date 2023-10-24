@@ -1,5 +1,5 @@
 Internet-Draft                                                 M. Toomim
-Expires: Apr 10, 2020                                  Invisible College
+Expires: Apr 10, 2023                                  Invisible College
 Intended status: Proposed Standard                             G. Little
                                                        Invisible College
                                                                R. Walker
@@ -175,8 +175,8 @@ Table of Contents
 
 1.3.  Braid extends HTTP for State Synchronization
 
-   Braid-HTTP expresses this general model of synchronization in four
-   extensions to HTTP:
+   Braid-HTTP expresses this general model of synchronization through
+   four extensions to HTTP:
 
      1. Versioning (Section 2)
 
