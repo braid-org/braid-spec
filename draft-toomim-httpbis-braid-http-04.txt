@@ -82,33 +82,34 @@ Table of Contents
    3.1.  PUT an update as a patch ...................................12
    3.2.  GET an update as a patch ...................................13
    3.3.  PUT an update as a set of patches ..........................14
-   3.3.  PUT an update as a custom patch-type .......................15
-   4.  Subscriptions for GET ........................................16
-   4.1.  Creating a Subscription ....................................17
-   4.2.  Sending multiple updates per GET ...........................18
-   4.3.  Continuing a Subscription ..................................19
-   4.4.  Ending a Subscription ......................................20
-   4.5.  Signaling "all caught up" ..................................21
-   4.6.  Errors .....................................................21
-   5.  Design Goals..................................................22
-   6.  Use Cases ....................................................22
-   6.1.  Dynamic Resources ..........................................22
-   6.2.  Dynamic Proxies and Caches .................................23
-   6.3.  A Serverless Chat Example ..................................23
-   7.  Related Work .................................................24
-   7.1.  Existing IETF Standards ....................................24
-   7.3.  IETF Work in Progress ......................................24
-   7.3.  Web Frameworks .............................................23
-   8.  IANA Considerations ..........................................24
-   8.1.  Header Field Registration ..................................24
-   9.  Security Considerations ......................................24
-   10.  Conventions .................................................24
-   11. Copyright Notice .............................................25
-   12. References ...................................................25
-   12.1. Normative References .......................................25
-   12.2. Informative References .....................................26
-   13. Acknowledgements .............................................27
-   14. Authors' Addresses ...........................................28
+   3.4.  Using Patches: 1 for safe Partial PUTs .....................15
+   3.5.  PUT an update as a custom patch-type .......................16
+   4.  Subscriptions for GET ........................................17
+   4.1.  Creating a Subscription ....................................18
+   4.2.  Sending multiple updates per GET ...........................19
+   4.3.  Continuing a Subscription ..................................20
+   4.4.  Ending a Subscription ......................................21
+   4.5.  Signaling "all caught up" ..................................22
+   4.6.  Errors .....................................................22
+   5.  Design Goals..................................................23
+   6.  Use Cases ....................................................23
+   6.1.  Dynamic Resources ..........................................23
+   6.2.  Dynamic Proxies and Caches .................................24
+   6.3.  A Serverless Chat Example ..................................24
+   7.  Related Work .................................................25
+   7.1.  Existing IETF Standards ....................................25
+   7.3.  IETF Work in Progress ......................................25
+   7.3.  Web Frameworks .............................................26
+   8.  IANA Considerations ..........................................27
+   8.1.  Header Field Registration ..................................27
+   9.  Security Considerations ......................................27
+   10.  Conventions .................................................27
+   11. Copyright Notice .............................................28
+   12. References ...................................................28
+   12.1. Normative References .......................................28
+   12.2. Informative References .....................................29
+   13. Acknowledgements .............................................30
+   14. Authors' Addresses ...........................................31
 
 
 1.  Introduction
@@ -451,11 +452,11 @@ Table of Contents
    history.
 
    This section describes a general form for updates that can be sent
-   both client->server or server->client.  Updates can be sent as
+   both client->server and server->client.  Updates can be sent as
    snapshots or patches.  When sent as patches, a single update can
    contain a single patch, or multiple patches.  Unlike the PATCH
-   method, these updates can be sent with idempotence when versioning
-   information is included -- a client or server that receives the same
+   method, these updates can be sent idempotently by including
+   versioning information -- a client or server that receives the same
    update twice, for the same version, can discard the second update,
    and thus maintain idempotence.
 
@@ -468,10 +469,10 @@ Table of Contents
 
    There are two types of patches:
 
-     o Custom patch-types: As defined in HTTP PATCH [RFC5789] method, a
-       custom patch type can be specified as a Content-Type.  Any such
-       patch can included in an update, by adding a Content-Type header
-       to the udpate.
+     o Custom patch-types: As defined in HTTP PATCH [RFC5789], a custom
+       patch type can be specified as a Content-Type.  Any such patch
+       can included in any Braid-HTTP update, by adding a Content-Type
+       header to the update or patch.
 
      o Range Patches: If a Content-Range header is specified on the
        update or patch, then it defines the region of the document that
@@ -484,6 +485,7 @@ Table of Contents
 
    A Partial PUT [RFC9110] can express a patch with a Content-Range
    header:
+
 
       Request:
 
@@ -503,6 +505,16 @@ Table of Contents
 
          HTTP/1.1 200 OK
    
+
+   Note that Partial PUTs can result in data loss if sent to a server
+   that does not support them.  Legacy servers ignore headers they do
+   not understand, and will interpret the patch as the entire resource,
+   replacing the resource's state with just the region being patched.
+
+   To avoid this, only use Partial PUTs on servers that you know support
+   them, or do feature detection (to be defined in a subsequent draft)
+   to determine what they support.
+
 
 3.2.  GET an update as a patch
 
@@ -569,7 +581,50 @@ Table of Contents
    This length determines where each patch ends, and next begins.
 
 
-3.4.  PUT an update as a custom patch-type
+3.4.  Using Patches: 1 for safe Partial PUTs
+
+   The Patches header happens to enable clients to send Partial PUTs
+   safely.  Instead of specifying the patch in the request body of the
+   PUT, the request can:
+
+     o Set the "Patches: 1" header
+
+     o Move the "Content-Length" and "Content-Range" headers into patch
+       headers on the request body
+
+   Here is how the example from Section 3.1 could be so translated to be
+   made safe:
+
+
+      Request:
+
+         PUT /chat
+         Version: "g09ur8z74r"                              | Update
+         Parents: "ej4lhb9z78"                              |
+         Content-Type: application/json                     |
+         Merge-Type: sync9                                  |
+         Patches: 1                                         |
+                                                            |
+         Content-Length: 53                                 | | Patch
+         Content-Range: json .messages[1:1]                 | |
+                                                            | |
+         [{"text": "Yo!",                                   | |
+           "author": {"link": "/user/yobot"}]               | |
+
+
+      Response:
+
+         HTTP/1.1 200 OK
+
+
+   Because the PUT request has no Content-Length, legacy servers will
+   not know when the request body ends, and will never know that the
+   body has been successfully sent.  Servers that support patches will
+   understand Patches: 1, know to look at the patch inside to find the
+   true Content-Length, and be able to complete the request.
+
+
+3.5.  PUT an update as a custom patch-type
 
    Since PATCH is not idempotent, a client may want to send a patch
    idempotently using a PUT.  The client SHOULD include a Version and
