@@ -91,7 +91,7 @@ Table of Contents
    4.4.  Signaling "all caught up" ..................................21
    4.5.  Errors .....................................................21
    5.  Design Goals..................................................22
-   6.  Use Cases ....................................................22
+   6.  Example Use Cases ............................................22
    6.1.  Dynamic Resources ..........................................22
    6.2.  Dynamic Proxies and Caches .................................23
    6.3.  A Serverless Chat Example ..................................23
@@ -918,7 +918,7 @@ Table of Contents
       CRDT algorithm.
 
 
-6.  Use Cases
+6.  Example Use Cases
 
 6.1.  Dynamic Resources: Animating a PNG
 
