@@ -95,20 +95,23 @@ Table of Contents
    6.1.  Dynamic Resources ..........................................22
    6.2.  Dynamic Proxies and Caches .................................23
    6.3.  A Serverless Chat Example ..................................23
-   7.  Related Work .................................................24
-   7.1.  Existing IETF Standards ....................................24
-   7.3.  IETF Work in Progress ......................................24
-   7.3.  Web Frameworks .............................................25
-   8.  IANA Considerations ..........................................26
-   8.1.  Header Field Registration ..................................26
-   9.  Security Considerations ......................................26
-   10.  Conventions .................................................26
-   11. Copyright Notice .............................................27
-   12. References ...................................................27
-   12.1. Normative References .......................................27
-   12.2. Informative References .....................................28
-   13. Acknowledgements .............................................29
-   14. Authors' Addresses ...........................................30
+   6.4.  Resumeable Uploads .........................................24
+   6.4.1.  Version-Type: bytestream .................................24
+   6.4.2.  The protocol for resuming uploads ........................24
+   7.  Related Work .................................................26
+   7.1.  Existing IETF Standards ....................................26
+   7.3.  IETF Work in Progress ......................................26
+   7.3.  Web Frameworks .............................................27
+   8.  IANA Considerations ..........................................28
+   8.1.  Header Field Registration ..................................28
+   9.  Security Considerations ......................................28
+   10.  Conventions .................................................28
+   11. Copyright Notice .............................................29
+   12. References ...................................................29
+   12.1. Normative References .......................................29
+   12.2. Informative References .....................................30
+   13. Acknowledgements .............................................31
+   14. Authors' Addresses ...........................................32
 
 1.  Introduction
 
@@ -1000,6 +1003,102 @@ Table of Contents
    Each peer can then choose a set of those peers with whom to establish
    a WebRTC connection.  It will then exchange Braid messages with those
    peers over that connection.
+
+
+6.4.  Resumeable Uploads
+
+   Braid semantics are expressive enough to implement resumeable
+   uploads.  This provides an alternative approach to the work in
+   [draft-ietf-httpbis-resumable-upload].
+
+
+6.4.1.  Version-Type: bytestream
+
+   The uploading resource can be considered an append-only bytestream.
+   We can declare this with a header:
+
+           Version-Type: bytestream
+
+   "Bytestream" versions look like:
+
+           Version: "x82ha-344"
+
+   Which refers to "the resource after appending 344 bytes by agent
+   `x82ha`".
+
+   This creates a direct correspondence to time and space -- at each
+   timestep, the size of the document is one byte longer.
+
+
+6.4.2.  The protocol for resuming uploads
+
+   A client starts an upload by simply specifying this special
+   Version-Type, along with the version it will reach when it's
+   complete, via the Current-Version header:
+
+     Request:
+       PUT /something
+       Current-Version: "abwejf-900"
+       Version-Type: bytestream
+       Content-Length: 900
+
+       <binary data of length 900>
+
+   Now if the upload succeeds, the server will give a 200 OK as usual:
+
+     Response:
+       200 OK
+
+   However, if the upload fails mid-stream, the client will want to
+   re-initiate the upload.  It first asks the header how much has been
+   received by issueing a HEAD request, and seeing what version of the
+   bytestream the the server is at:
+
+     Request:
+       HEAD /something
+       Parents: "abwejf-0"
+
+   (A) If the server has received everything, it will report a 200 OK at
+       the final version:
+
+         Response:
+           200 OK
+           Parents: "abwejf-0"
+           Version: "abwejf-900"
+
+   (B) If server has only received a part, it will respond with a
+       version partway through the bytestream:
+
+         Response:
+           206 Partial Content
+           Parents: "abwejf-0"
+           Version: "abwejf-400"
+
+   (C) If the server has received nothing, it will not have any versions
+       of the bytestream starting with the version "abwejf-0" initiated
+       by the client:
+
+         Response:
+           416 Range Not Satisfiable
+
+   The client now responds accordingly:
+
+     - In case (A), the client is done.
+     - In case (B), the client resumes the upload as follows:
+
+         Request:
+           PUT /something
+           Current-Version: "abwejf-900"
+           Parents: "abwejf-400"
+
+           <binary data from 400-900>
+
+     - In case (C), the client restarts the upload from scratch.
+
+   This simple protocol allows the functionality of resumeable uploads
+   to be implemented on top of existing synchronization semantics and
+   libraries.  They only need to implement a "bytestream" versioning
+   type.
 
 
 7.  Related Work
