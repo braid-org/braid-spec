@@ -148,16 +148,16 @@ Table of Contents
 
 1.2.  The General Challenge of State Synchronization
 
-   Part of the issue is the complexity inherent to solving general state
-   synchronization.  Whereas it can be algorithmically simple to
+   Part of the issue is the complexity inherent to the general state
+   synchronization problem.  Whereas it can be algorithmically simple to
    implement a single update for a single use-case, it becomes much more
    difficult to implement support for multiple simultaneous writers,
-   over general network topologies and conditions, with robust conflict
-   resolution, performance, and consistency guarantees.  Fortunately,
-   recent advances in OT, CRDT, and Version Control algorithms have
-   solved many of these problems; but each algorithm today presents
-   different tradeoffs in robustness and performance, over a different
-   network protocol.
+   over arbitrary network topologies and conditions, while achieving
+   robust conflict resolution, performance, and consistency guarantees.
+   Fortunately, recent advances in OT, CRDT, and Version Control
+   algorithms have solved many of these problems; but each algorithm
+   today presents different tradeoffs in robustness and performance,
+   over a different network protocol.
 
    On the other hand, reserarch by this document's authors has
    demonstrated that all OT, CRDT and Version Control algorithms
@@ -189,8 +189,8 @@ Table of Contents
      3. Subscriptions (Section 4)
 
         A Subscribe header can be added to GET requests. The server
-        responds by pushing future versions to the client while the
-        request is open.
+        responds by pushing updates to the client while the request is
+        open.
 
      4. Merge Types [MERGE-TYPES]
 
@@ -362,8 +362,6 @@ Table of Contents
       Response:
 
          HTTP/1.1 200 OK
-         Version: "2"
-         Parents: "1a", "1b"
 
          Version: "2"                                       | Update
          Parents: "1a", "1b"                                |
@@ -458,7 +456,7 @@ Table of Contents
 
      - Custom patch Content-Types: As defined in HTTP PATCH [RFC5789], a
        custom patch format can be specified as a Content-Type.  Any such
-       patch can included in any Braid-HTTP update, by adding its
+       patch can be included in any Braid-HTTP update, by adding its
        Content-Type to its update or patch header.
 
      - Range Patches: If a Content-Range header is specified on the
@@ -467,14 +465,9 @@ Table of Contents
 
    Every patch MUST include either a Content-Type or a Content-Range.
 
-   There are two ways to frame patches within an HTTP message:
-
-     - If the update contains only a single patch, its headers and body
-       go directly into the HTTP message's headers and body.
-
-     - If the update contains multiple patches, the update can include a
-       "Patches: N" header, and set the body to a concatenation of that
-       many patches.
+   Finally, it is possible to include multiple patches within a single
+   update by including a "Patches: N" header, and setting the body to a
+   concatenation of that many patches.
 
    These scenarios are elaborated below.
 
