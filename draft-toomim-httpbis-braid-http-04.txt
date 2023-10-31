@@ -1036,27 +1036,27 @@ Table of Contents
    Version-Type, along with the version it will reach when it's
    complete, via the Current-Version header:
 
-     Request:
-       PUT /something
-       Current-Version: "abwejf-900"
-       Version-Type: bytestream
-       Content-Length: 900
+         Request:
+           PUT /something
+           Current-Version: "abwejf-900"
+           Version-Type: bytestream
+           Content-Length: 900
 
-       <binary data of length 900>
+           <binary data of length 900>
 
    Now if the upload succeeds, the server will give a 200 OK as usual:
 
-     Response:
-       200 OK
+         Response:
+           200 OK
 
    However, if the upload fails mid-stream, the client will want to
    re-initiate the upload.  It first asks the header how much has been
    received by issueing a HEAD request, and seeing what version of the
    bytestream the the server is at:
 
-     Request:
-       HEAD /something
-       Parents: "abwejf-0"
+         Request:
+           HEAD /something
+           Parents: "abwejf-0"
 
    (A) If the server has received everything, it will report a 200 OK at
        the final version:
@@ -1090,6 +1090,7 @@ Table of Contents
            PUT /something
            Current-Version: "abwejf-900"
            Parents: "abwejf-400"
+           Content-Range: bytes 400-900
 
            <binary data from 400-900>
 
