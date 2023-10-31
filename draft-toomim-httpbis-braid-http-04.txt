@@ -365,6 +365,7 @@ Table of Contents
       Response:
 
          HTTP/1.1 200 OK
+         Current-Version: "3"
 
          Version: "2"                                       | Update
          Parents: "1a", "1b"                                |
@@ -1090,7 +1091,8 @@ Table of Contents
            PUT /something
            Current-Version: "abwejf-900"
            Parents: "abwejf-400"
-           Content-Range: bytes 400-900
+           Content-Range: bytes 400-900/900
+           Content-Length: 500
 
            <binary data from 400-900>
 
@@ -1098,8 +1100,8 @@ Table of Contents
 
    This simple protocol allows the functionality of resumeable uploads
    to be implemented on top of existing synchronization semantics and
-   libraries.  They only need to implement a "bytestream" versioning
-   type.
+   libraries.  A server that implements Braid-HTTP along with the
+   "bytestream" version-type can support resumeable uploads for free.
 
 
 7.  Related Work
