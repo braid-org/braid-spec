@@ -682,6 +682,7 @@ Table of Contents
    a stream of updates; one for each new version.  Each update can
    express the new content either as a snapshot, or a set of patches.
 
+
       Request:
 
          GET /chat
@@ -1144,6 +1145,7 @@ Table of Contents
    server with layers of models, views, and controllers in web
    frameworks.  By automating synchronization within HTTP, programmers
    have to write fewer layers of code on top of it.
+
 
       ====== Legacy Websites ======      ====== Braid Websites ======
 
