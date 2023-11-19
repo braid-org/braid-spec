@@ -156,20 +156,21 @@ Table of Contents
 
 1.2.  Braid-HTTP is four extensions to HTTP
 
-   State Synchronization implementations come in many forms.  At its
-   simplest, an implementation might transfer state from Alice to Bob,
-   at one time.  Yet, as they grow more advanced, implementations can
-   develop support for pushed updates, with delivery guarantees, and/or
-   support multiple writers, for multiple types of edits, with automatic
-   conflict resolution, offline modes, and various merge semantics on
-   different content types, and/or function over different network
-   topologies and conditions.  Different systems have different needs,
-   and today implement different variations of features, with different
+   State synchronization implementations come in many forms.  The
+   simplest perform one-off transfers of state from one computer to
+   another, but as implementations advance, they may develop support for
+   pushed updates, delivery guarantees, multiple writers, multiple types
+   of edits, expressed as diffs or patches, with automatic conflict
+   resolution, offline modes, merge semantics over multiple content
+   types, and/or function over different network topologies and
+   conditions.  Different systems have different needs, and
+   implementations today come in multiple variations, with different
    network protocols.
-
-   Braid-HTTP can support any combination of the above features, by
-   extending HTTP with four simple extensions to existing features:
 
+   Fortunately, it turns out that any implementation's network protocol
+   (for the above features) can be decomposed into the same simple set
+   of four extensions to HTTP semantics:
+
      1. Versioning (Section 2)
 
         Each resource has a history of changes, ordered in time.
@@ -192,9 +193,10 @@ Table of Contents
         resource, they can guarantee a consistent resulting state by
         implementing the same Merge Type.
 
-   Each extension provides standalone value, and can be used separately.
-   (See Section 6.)  However, if an implementation combines these
-   extensions together, it can generalize HTTP into a full
+   The first three extensions are improvements to existing HTTP
+   features, which are valuable in HTTP on their own, aside from from
+   state synchronization.  (For examples, see Section 6.)  However, by
+   composing these extensions together, HTTP can genrealize into a full
    synchronization protocol, and ReST into a synchronization
    architecture:
 
@@ -210,16 +212,6 @@ Table of Contents
    as soon as they reconnect.  This enables caches to support dynamic
    content, web applications to feature an offline mode, and textareas
    to support collaborative editing.
-
-   Four simple extensions (below) transform HTTP into a general-purpose
-   State Synchronization protocol -— keeping simple cases simple, while
-   also enabling the most advanced distributed synchronization (OT and
-   CRDT) algorithms.  These support multiple writers, making
-   simultaneous edits, over arbitrary network conditions (offline or
-   online), while guaranteeing consistency with peer-to-peer
-   merge-semantics.  HTTP becomes a general-purpose Distributed State
-   Abstraction: a protocol that guarantees your local cache of state is
-   always editable, and always up-to-date.
 
    The extensions are explained in the following sections, in turn.
 
