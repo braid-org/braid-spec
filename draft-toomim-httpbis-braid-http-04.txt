@@ -168,8 +168,8 @@ Table of Contents
    network protocols.
 
    Fortunately, it turns out that any implementation's network protocol
-   (for the above features) can be decomposed into the same simple set
-   of four extensions to HTTP semantics:
+   for these features can be decomposed into the same simple set of four
+   extensions to HTTP semantics:
 
      1. Versioning (Section 2)
 
@@ -206,12 +206,12 @@ Table of Contents
          ReST:         Representational State *Transfer*
          becomes:      Representational State *Synchronization*
 
-   This allows an arbitrary set of clients and servers to make arbitrary
-   mutations to arbitrary resources, under arbitrary network delays and
-   partitions, and merge all mutations consistently, receiving updates
-   as soon as they reconnect.  This enables caches to support dynamic
-   content, web applications to feature an offline mode, and textareas
-   to support collaborative editing.
+   Together, they allow an arbitrary set of clients and servers to make
+   arbitrary mutations to arbitrary resources, under arbitrary network
+   delays and partitions, and merge all mutations consistently,
+   receiving updates as soon as they reconnect.  This enables caches to
+   support dynamic content, web applications to feature an offline mode,
+   and textareas to support collaborative editing.
 
    The extensions are explained in the following sections, in turn.
 
@@ -253,8 +253,9 @@ Table of Contents
            Version: "dkn7ov2vwg", "v2vwgdkn7o"
 
    However, any single mutation SHOULD create only a single version ID,
-   and mergers themselves need not be announced over the network except
-   implicitly in the Parents of subsequent mutations.
+   and mergers themselves need not be announced over the network when
+   created.  They only need to be referenced after the fact, in some
+   situations.
 
    If a client or server does not specify a Version for a resource it
    transfers, the recipient MAY generate and assign it new version IDs.
