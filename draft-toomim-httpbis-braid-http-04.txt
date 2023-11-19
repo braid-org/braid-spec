@@ -1,5 +1,5 @@
 Internet-Draft                                                 M. Toomim
-Expires: Apr 10, 2023                                  Invisible College
+Expires: Mar 10, 2024                                  Invisible College
 Intended status: Proposed Standard                             G. Little
                                                        Invisible College
                                                                R. Walker
@@ -8,7 +8,7 @@ Intended status: Proposed Standard                             G. Little
                                                        Invisible College
                                                                J. Gentle
                                                        Invisible College
-                                                            Oct 23, 2023
+                                                            Nov 19, 2023
 
       \=/====\\   |//===\\=       /=\      =\==\|\=/==  =|====\==
       ||/    |\\  ||\    |\\    /|| \|\        |//      //|    \\\
@@ -997,13 +997,13 @@ Table of Contents
 
 6.1.2.  Versioning of source code
 
-   Source code is often hosted at web URIs for specific versions, such as:
+   Source code is often hosted at URIs with embedded versions, such as:
 
        https://code.jquery.com/jquery-3.7.1.js
 
    However, doing so sacrifices having a universal name for the
-   resource, as each version gets its own URL.  there is no standard way
-   to know which URLs are the same resource.
+   resource, as each version gets its own URI.  there is no standard way
+   to know which URIs are the same resource.
 
    Braid versions can instead be specified with the Version: header:
 
@@ -1311,7 +1311,7 @@ Table of Contents
          Server
 
       Today's programmers have to        Each piece of Braid state (o)
-      learn each API, and wire them      has a URL; whether public or
+      learn each API, and wire them      has a URI; whether public or
       together, making sure that         internal.  State can be a
       changes to shared state            function of other state, and
       synchronize across all             and automatically recompute
