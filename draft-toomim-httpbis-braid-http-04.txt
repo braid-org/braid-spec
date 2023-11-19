@@ -70,10 +70,9 @@ Table of Contents
 
    1.  Introduction ..................................................4
    1.1.  HTTP applications need State Synchronization ................4
-   1.2.  The General Challenge of State Synchronization ..............4
-   1.3.  Braid extends HTTP for State Synchronization ................5
+   1.2.  Braid-HTTP is four extensions to HTTP .......................4
    2.  Versioning for Resources ......................................6
-   2.1.  Comparison with ETag ........................................6
+   2.1.  Comparison with ETag ........................................7
    2.2.  PUT a new version ...........................................7
    2.3.  GET a specific version ......................................8
    2.4.  GET a range of historical versions ..........................9
@@ -92,29 +91,35 @@ Table of Contents
    4.5.  Errors .....................................................21
    5.  Design Goals..................................................22
    6.  Example Use Cases ............................................22
-   6.1.  Dynamic Resources ..........................................22
-   6.2.  Dynamic Proxies and Caches .................................23
-   6.3.  A Serverless Chat Example ..................................23
-   6.4.  Resumeable Uploads .........................................24
-   6.4.1.  Version-Type: bytestream .................................24
-   6.4.2.  The protocol for resuming uploads ........................24
-   7.  Related Work .................................................26
-   7.1.  Existing IETF Standards ....................................26
-   7.3.  IETF Work in Progress ......................................26
-   7.3.  Web Frameworks .............................................27
-   8.  IANA Considerations ..........................................28
-   8.1.  Header Field Registration ..................................28
-   9.  Security Considerations ......................................28
-   10.  Conventions .................................................28
-   11. Copyright Notice .............................................29
-   12. References ...................................................29
-   12.1. Normative References .......................................29
-   12.2. Informative References .....................................30
-   13. Acknowledgements .............................................31
-   14. Authors' Addresses ...........................................32
+   6.1.  Basic Examples .............................................22
+   6.1.1.  Subscribing to the current temperature ...................23
+   6.1.2.  Versioning of source code ................................24
+   6.1.3.  Patches can append to server logs ........................24
+   6.2.  Combination examples .......................................25
+   6.2.1.  Resumeable uploads .......................................25
+   6.2.1.1.  Version-Type: bytestream ...............................25
+   6.2.1.2.  Protocol for resuming uploads ..........................25
+   6.2.2.  Dynamic resources: animating a PNG .......................27
+   6.2.3.  Dynamic proxies and caches ...............................28
+   6.2.4.  Serverless chat example ..................................28
+   7.  Related Work .................................................29
+   7.1.  Existing IETF Standards ....................................29
+   7.3.  IETF Work in Progress ......................................29
+   7.3.  Web Frameworks .............................................30
+   8.  IANA Considerations ..........................................31
+   8.1.  Header Field Registration ..................................31
+   9.  Security Considerations ......................................31
+   10.  Conventions .................................................31
+   11. Copyright Notice .............................................32
+   12. References ...................................................32
+   12.1. Normative References .......................................32
+   12.2. Informative References .....................................33
+   13. Acknowledgements .............................................34
+   14. Authors' Addresses ...........................................35
 
-1.  Introduction
 
+1.  Introduction
+
 1.1.  HTTP applications need state Synchronization, not just Transfer
 
    HTTP [RFC9110] transfers a static version of state within a single
@@ -149,35 +154,21 @@ Table of Contents
    non-standard Javascript frameworks to synchronize changes to state.
 
 
-1.2.  The General Challenge of State Synchronization
+1.2.  Braid-HTTP is four extensions to HTTP
 
-   Part of the issue is the complexity inherent to the general state
-   synchronization problem.  Whereas it can be algorithmically simple to
-   implement a single update for a single use-case, it becomes much more
-   difficult to implement support for multiple simultaneous writers,
-   over arbitrary network topologies and conditions, while achieving
-   robust conflict resolution, performance, and consistency guarantees.
-   Fortunately, recent advances in OT, CRDT, and Version Control
-   algorithms have solved many of these problems; but each algorithm
-   today presents different tradeoffs in robustness and performance,
-   over a different network protocol.
-
-   On the other hand, reserarch by this document's authors has
-   demonstrated that all OT, CRDT and Version Control algorithms
-   actually have equivalent informational needs, and that their network
-   messages can be translated and made interoperable.  Thus, it is
-   possible to design a general protocol that supports any OT, CRDT, or
-   Version Control algorithm, and it is possible to translate the
-   network messages of any algorithm into and out of a single general
-   protocol.  The primary difference that remains between
-   synchronization algorithms is their way of merging conflicts -- their
-   Merge-Type -- which we specify as a header in the protocol.
+   State Synchronization implementations come in many forms.  At its
+   simplest, an implementation might transfer state from Alice to Bob,
+   at one time.  Yet, as they grow more advanced, implementations can
+   develop support for pushed updates, with delivery guarantees, and/or
+   support multiple writers, for multiple types of edits, with automatic
+   conflict resolution, offline modes, and various merge semantics on
+   different content types, and/or function over different network
+   topologies and conditions.  Different systems have different needs,
+   and today implement different variations of features, with different
+   network protocols.
 
-
-1.3.  Braid extends HTTP for State Synchronization
-
-   Braid-HTTP expresses this general model of synchronization through
-   four extensions to HTTP:
+   Braid-HTTP can support any combination of the above features, by
+   extending HTTP with four simple extensions to existing features:
 
      1. Versioning (Section 2)
 
@@ -197,18 +188,15 @@ Table of Contents
 
      4. Merge Types [MERGE-TYPES]
 
-        If multiple clients and servers simultaneously edit the same
+        If multiple clients and servers simultaneously mutate the same
         resource, they can guarantee a consistent resulting state by
         implementing the same Merge Type.
 
    Each extension provides standalone value, and can be used separately.
-   For instance, a /current-temperature URL can implement Subscriptions
-   (Section 4) to push a stream of updates for the current temperature,
-   without needing any complex OT/CRDT machinery.
-
-   However, if an implementation combines these extensions together, it
-   can generalize HTTP into a full synchronization protocol, and ReST
-   into a synchronization architecture:
+   (See Section 6.)  However, if an implementation combines these
+   extensions together, it can generalize HTTP into a full
+   synchronization protocol, and ReST into a synchronization
+   architecture:
 
          HTTP:         HyperText  *Transfer* Protocol
          becomes:      HyperState *Synchronization* Protocol
@@ -217,11 +205,21 @@ Table of Contents
          becomes:      Representational State *Synchronization*
 
    This allows an arbitrary set of clients and servers to make arbitrary
-   edits to arbitrary resources, under arbitrary network delays and
-   partitions, and merge all edits consistently, receiving updates as
-   soon as they reconnect.  This enables caches to support dynamic
+   mutations to arbitrary resources, under arbitrary network delays and
+   partitions, and merge all mutations consistently, receiving updates
+   as soon as they reconnect.  This enables caches to support dynamic
    content, web applications to feature an offline mode, and textareas
    to support collaborative editing.
+
+   Four simple extensions (below) transform HTTP into a general-purpose
+   State Synchronization protocol -— keeping simple cases simple, while
+   also enabling the most advanced distributed synchronization (OT and
+   CRDT) algorithms.  These support multiple writers, making
+   simultaneous edits, over arbitrary network conditions (offline or
+   online), while guaranteeing consistency with peer-to-peer
+   merge-semantics.  HTTP becomes a general-purpose Distributed State
+   Abstraction: a protocol that guarantees your local cache of state is
+   always editable, and always up-to-date.
 
    The extensions are explained in the following sections, in turn.
 
@@ -240,32 +238,40 @@ Table of Contents
 
            Version: "dkn7ov2vwg"
 
-   Parallel edits can merge into a single version with multiple IDs:
-
-           Version: "dkn7ov2vwg", "v2vwgdkn7o"
-
    Every version also has a set of parents, denoting the version(s)
-   immediately before the version, that it derives from.  The full graph
-   of parents forms a Directed Acyclic Graph (DAG), representing the
-   partial order of all versions.  A version A is known to have occurred
-   before a version B if and only if A is an ancestor of B in the
-   partial order.
-
-   Parents are specified with a header in a PUT request or GET response:
+   immediately before the version, that it derives from.  Any version
+   can be recreated by first merging its parents, and then applying the
+   its update onto that merger.  Parents are specified with a Parents
+   header in a PUT/PATCH/POST request or GET response:
 
            Parents: "ajtva12kid", "cmdpvkpll2"
+
+   The full graph of parents forms a Directed Acyclic Graph (DAG),
+   representing the partial order of all versions.  A version A is known
+   to have occurred before a version B if and only if A is an ancestor
+   of B in the partial order.  Braid time is a DAG, rather than a line.
 
    For any two versions A and B that are specified in a Version or
    Parents header, A cannot be a descendent of B or vice versa.  The
    ordering of versions in the list carries no meaning.
 
+   A Version header is also allowed to contain multiple IDs, to describe
+   the version of a merger:
+
+           Version: "dkn7ov2vwg", "v2vwgdkn7o"
+
+   However, any single mutation SHOULD create only a single version ID,
+   and mergers themselves need not be announced over the network except
+   implicitly in the Parents of subsequent mutations.
+
    If a client or server does not specify a Version for a resource it
    transfers, the recipient MAY generate and assign it new version IDs.
    If a client or server does not specify a Parents header when
    transferring a new version, the recipient MAY presume that the most
-   recent versions it has seen are the parents of the new version.
+   recent versions it has (the frontier of time) are the parents of the
+   new version.  It MAY also ignore or reject the update.
 
-
+
 2.1.  Comparison with ETag
 
    The Version header is similar to an ETag, but has two differences:
@@ -274,21 +280,21 @@ Table of Contents
       version with a GZip Content-Encoding, it will have a different
       ETag, but the same Version.
 
-   2. A Version marks a unique point in time -- not unique content.  If
-      a resource is changed from version A to B, and then to C, such
-      that the contents at A are the same as the contents at C, then it
-      is possible versions A and C to have the same ETag, even though
-      they have different Versions.  This can break a CRDT or OT merge
-      algorithm.
+   2. A Version marks a unique point in causal graph time -- not unique
+      content.  If a resource is changed from version A to B, and then
+      to C, such that the contents at A are the same as the contents at
+      C, then it is possible for versions A and C to have the same ETag,
+      even though they have different Versions.  This can break a CRDT
+      or OT merge algorithm.
 
    Versions can be used in a variety of requests, as we explain next.
 
-
+
 2.2.  PUT a new version
 
    When a PUT request changes the state of a resource, it can specify
-   the new version of the resource, the parent version IDs that existed
-   when it was created, and the way multiple simultaneous changes should
+   the new version of the resource, the parent version IDs that it was
+   directly built upon, and the way multiple simultaneous changes should
    be merged (the "Merge-Type"):
 
 
@@ -314,14 +320,14 @@ Table of Contents
    headers are optional.  If Version is omitted, the recipient may
    assign new version IDs.  If Parents is omitted, the recipient may
    assume that its current version is the version's parents.
-
-   We call the set of data that updates a resource from one version to
-   another an "update".  An update consists of a set of headers and a
-   body.  In this example, the update includes a snapshot of the entire
-   new value of the resource.  However, one can also specify the update
-   as a set of patches.
-
 
+   As will be explained in Section 3, we call the set of data that
+   updates a resource from one version to another an "update".  An
+   update consists of a set of headers and a body.  In this example, the
+   update includes a snapshot of the entire new value of the resource.
+   However, one can also specify the update as a set of patches.
+
+
 2.3.  GET a specific version
 
    A server can allow clients to request historical versions of a
@@ -425,7 +431,8 @@ Table of Contents
 
    A server MAY refactor or rebase the version history that it provides
    to a client, so long as it does not affect the resulting state, or
-   the result of the patch-type's merges.
+   the result of merges using the history.  (Rules for specifying
+   constraints on such rebases are out of scope for this draft.)
 
    A server does not need to honor historical version requests for all
    documents, for all history. If a server no longer has the historical
@@ -478,8 +485,8 @@ Table of Contents
 
 3.1.  PUT an update as a patch
 
-   A single Range-Patch can be constructed as a Partial PUT [RFC9110] --
-   a PUT with a Content-Range header:
+   A single Range Patch (see [RANGE-PATCH]) can be constructed as a
+   Partial PUT [RFC9110] -- a PUT with a Content-Range header:
 
 
       Request:
@@ -678,9 +685,14 @@ Table of Contents
 
 4.  Subscriptions for GET
 
-   If a GET request includes the Subscribe header, the server can return
-   a stream of updates; one for each new version.  Each update can
-   express the new content either as a snapshot, or a set of patches.
+   If a GET request includes the Subscribe header, the server can
+   "subscribe" the client to the resource, which means it promises to
+   keep it up-to-date with the updates necessary to describe new
+   versions as it learns about them.
+
+   The server will first send the current version, and then stream the
+   updates for future versions.  Each update can express the new content
+   either as a snapshot, or a set of patches, as in Section 3.
 
 
       Request:
@@ -755,6 +767,11 @@ Table of Contents
    which can interpret the initial response headers and body as the
    headers and body for the first update, directly.
 
+   It is RECOMMENDED that updates do not change the Merge-Type for a
+   resource, because there is no defined semantics for merging updates
+   of different Merge-Types.  If a client observes a change in
+   Merge-Type from a server, it is suggested to reload the resource.
+
 
 4.1.  Creating a Subscription
 
@@ -778,8 +795,8 @@ Table of Contents
    its subscribed clients up-to-date by sending changes until the
    connection is closed.  Once closed, a subscription can be resumed by
    the client issuing a subsequent GET request on the same document.
-
 
+
 4.2.  Sending multiple updates per GET
 
    To send multiple updates, a server concatenates multiple updates into
@@ -922,7 +939,226 @@ Table of Contents
 
 6.  Example Use Cases
 
-6.1.  Dynamic Resources: Animating a PNG
+   The first three Braid extensions (Versions, Patches, and
+   Subscriptions) are useful independently -- without Merge-Types, and
+   with or without each other.
+
+   The first section 6.1. gives examples of independent uses.  Then
+   6.2. puts them together into more advanced combinations.
+
+
+6.1.  Basic Examples
+
+   First, we give examples of Subscriptions, Versions, and Patches used
+   individually.
+
+
+6.1.1.  Subscribing to the current temperature
+
+   Subscriptions are useful independently of versioning, patches, or
+   merging.  Suppose that a web server hosts the current temperature:
+
+
+     Request:
+
+       GET /temperature
+
+     Response:
+
+       HTTP/1.1 200 OK
+       Content-Length: 4
+
+       70 F
+
+
+   Braid Subscriptions enable a client can stay up-to-date as the
+   temperature changes:
+
+
+     Request:
+
+       GET /temperature
+       Subscribe: true
+
+     Response:
+
+       HTTP/1.1 209 Subscription
+       Subscribe: true
+
+       Content-Length: 4
+
+       70 F
+
+       Content-Length: 4
+
+       72 F
+
+       Content-Length: 4
+
+       73 F
+
+       Content-Length: 4
+
+       71 F
+
+
+6.1.2.  Versioning of source code
+
+   Source code is often hosted at web URIs for specific versions, such as:
+
+       https://code.jquery.com/jquery-3.7.1.js
+
+   However, doing so sacrifices having a universal name for the
+   resource, as each version gets its own URL.  there is no standard way
+   to know which URLs are the same resource.
+
+   Braid versions can instead be specified with the Version: header:
+
+
+     Request:
+
+       GET /jquery.js
+       Version: "3.7.1"
+
+
+   This provides a standard way for clients to access versions of a
+   resource programmatically.  One advantage of this approach is that
+   the same URI can be used by the programmers to edit the code, via
+   full-featured version control (over Braid), as is used to import the
+   code as library into other code.
+
+
+6.1.3.  Patches can append to server logs
+
+   Patches are useful for a variety of stand-alone use-cases.  For
+   instance, imagine a server in a datacenter that holds system logs.  A
+   client might want to append a notification to the log, and could do
+   so with a simple Range-Patch like so:
+
+
+     Request:
+
+       PUT /logs
+       Content-Range: lines -
+       Content-Length: 53
+       Content-Type: text/plain
+
+       Notification: process 7726 OOM error on host "buster"
+
+
+   This range-patch uses the "lines" unit (specified in [RANGE-PATCH])
+   at the special position "-" which represents the new line at the end
+   of the file.
+
+
+6.2.  Combination examples
+
+6.2.1.  Resumeable uploads
+
+   Braid semantics are expressive enough to implement resumeable
+   uploads.  This provides an alternative approach to the work in
+   [draft-ietf-httpbis-resumable-upload].
+
+
+6.2.1.1.  Version-Type: bytestream
+
+   The uploading resource can be considered an append-only bytestream.
+   We can declare this with a header:
+
+           Version-Type: bytestream
+
+   "Bytestream" versions look like:
+
+           Version: "x82ha-344"
+
+   Which refers to "the resource after appending 344 bytes by agent
+   `x82ha`".
+
+   This creates a direct correspondence to time and space -- at each
+   timestep, the size of the document is one byte longer.
+
+
+6.2.1.2.  Protocol for resuming uploads
+
+   A client starts an upload by simply specifying this special
+   Version-Type, along with the version it will reach when it's
+   complete, via the Current-Version header:
+
+         Request:
+
+           PUT /something
+           Current-Version: "abwejf-900"
+           Version-Type: bytestream
+           Content-Length: 900
+
+           <binary data of length 900>
+
+   Now if the upload succeeds, the server will give a 200 OK as usual:
+
+         Response:
+
+           200 OK
+
+   However, if the upload fails mid-stream, the client will want to
+   re-initiate the upload.  It first asks the header how much has been
+   received by issueing a HEAD request, and seeing what version of the
+   bytestream the the server is at:
+
+         Request:
+
+           HEAD /something
+           Parents: "abwejf-0"
+
+   (A) If the server has received everything, it will report a 200 OK at
+       the final version:
+
+         Response:
+
+           200 OK
+           Parents: "abwejf-0"
+           Version: "abwejf-900"
+
+   (B) If server has only received a part, it will respond with a
+       version partway through the bytestream:
+
+         Response:
+
+           206 Partial Content
+           Parents: "abwejf-0"
+           Version: "abwejf-400"
+
+   (C) If the server has received nothing, it will not have any versions
+       of the bytestream starting with the version "abwejf-0" initiated
+       by the client:
+
+         Response:
+
+           416 Range Not Satisfiable
+
+   The client now responds accordingly:
+
+     - In case (A), the client is done.
+     - In case (B), the client resumes the upload as follows:
+
+         Request:
+
+           PUT /something
+           Current-Version: "abwejf-900"
+           Parents: "abwejf-400"
+           Content-Range: bytes 400-900/900
+           Content-Length: 500
+
+           <binary data from 400-900>
+
+     - In case (C), the client restarts the upload from scratch.
+
+   This simple protocol allows the functionality of resumeable uploads
+   to be implemented on top of existing synchronization semantics and
+   libraries.  A server that implements Braid-HTTP along with the
+   "bytestream" version-type can support resumeable uploads for free.
+
+
+6.2.2.  Dynamic Resources: Animating a PNG
 
    Braid allows resources to become inherently dynamic -- able to change
    over time.  You can use this to make a resource animate.
@@ -933,10 +1169,12 @@ Table of Contents
 
 
      Request:
+
        GET /animated-braid.png
        Subscribe
 
      Response:
+
        HTTP/1.1 209 Subscribe
        Subscribe
        Content-Type: image/png         | Update
@@ -954,11 +1192,11 @@ Table of Contents
                                        |
        Content-Length: 62638           | | Patch
        Content-Range: bytes 348-887    | |
-                                       | | 
+                                       | |
        <binary data>                   | |
 
 
-6.2.  Dynamic Proxies and Caches
+6.2.3.  Dynamic proxies and caches
 
    Since updates aren't pushed, today's web often uses timeouts to
    trigger a cache becoming stale.  Unfortunately, sometimes the timeout
@@ -970,14 +1208,15 @@ Table of Contents
    A cache supporting the Braid extensions, however, will automatically
    update whenever a change occurs.  If a client starts a GET
    Subscription with a proxy, the proxy will then start and maintain a
-   GET Subscription with the origin server.  The origin server will
-   promise to send the proxy updates over its GET Subscription, and the
-   proxy will then relay these changes to all connected clients.  If a
-   set of clients and servers all support Braid, they will never need to
-   force-reload caches for any data amongst them.
+   GET Subscription with the origin server for that resource.  The
+   origin server will promise to send the proxy updates over its GET
+   Subscription, and the proxy will then relay these changes to all
+   connected clients.  If a set of clients and servers all support
+   Braid, they will never need to force-reload caches for any data
+   amongst them.
 
 
-6.3.  A Serverless Chat Example
+6.2.4.  Serverless chat example
 
    A Braid web application can operate offline.  A user can use the app
    from an airplane, and their edits can synchronize when they regain
@@ -1005,106 +1244,8 @@ Table of Contents
    Each peer can then choose a set of those peers with whom to establish
    a WebRTC connection.  It will then exchange Braid messages with those
    peers over that connection.
-
 
-6.4.  Resumeable Uploads
 
-   Braid semantics are expressive enough to implement resumeable
-   uploads.  This provides an alternative approach to the work in
-   [draft-ietf-httpbis-resumable-upload].
-
-
-6.4.1.  Version-Type: bytestream
-
-   The uploading resource can be considered an append-only bytestream.
-   We can declare this with a header:
-
-           Version-Type: bytestream
-
-   "Bytestream" versions look like:
-
-           Version: "x82ha-344"
-
-   Which refers to "the resource after appending 344 bytes by agent
-   `x82ha`".
-
-   This creates a direct correspondence to time and space -- at each
-   timestep, the size of the document is one byte longer.
-
-
-6.4.2.  The protocol for resuming uploads
-
-   A client starts an upload by simply specifying this special
-   Version-Type, along with the version it will reach when it's
-   complete, via the Current-Version header:
-
-         Request:
-           PUT /something
-           Current-Version: "abwejf-900"
-           Version-Type: bytestream
-           Content-Length: 900
-
-           <binary data of length 900>
-
-   Now if the upload succeeds, the server will give a 200 OK as usual:
-
-         Response:
-           200 OK
-
-   However, if the upload fails mid-stream, the client will want to
-   re-initiate the upload.  It first asks the header how much has been
-   received by issueing a HEAD request, and seeing what version of the
-   bytestream the the server is at:
-
-         Request:
-           HEAD /something
-           Parents: "abwejf-0"
-
-   (A) If the server has received everything, it will report a 200 OK at
-       the final version:
-
-         Response:
-           200 OK
-           Parents: "abwejf-0"
-           Version: "abwejf-900"
-
-   (B) If server has only received a part, it will respond with a
-       version partway through the bytestream:
-
-         Response:
-           206 Partial Content
-           Parents: "abwejf-0"
-           Version: "abwejf-400"
-
-   (C) If the server has received nothing, it will not have any versions
-       of the bytestream starting with the version "abwejf-0" initiated
-       by the client:
-
-         Response:
-           416 Range Not Satisfiable
-
-   The client now responds accordingly:
-
-     - In case (A), the client is done.
-     - In case (B), the client resumes the upload as follows:
-
-         Request:
-           PUT /something
-           Current-Version: "abwejf-900"
-           Parents: "abwejf-400"
-           Content-Range: bytes 400-900/900
-           Content-Length: 500
-
-           <binary data from 400-900>
-
-     - In case (C), the client restarts the upload from scratch.
-
-   This simple protocol allows the functionality of resumeable uploads
-   to be implemented on top of existing synchronization semantics and
-   libraries.  A server that implements Braid-HTTP along with the
-   "bytestream" version-type can support resumeable uploads for free.
-
-
 7.  Related Work
 
 7.1.  Existing IETF Standards
@@ -1191,24 +1332,24 @@ Table of Contents
 
 8.1.  Header Field Registration
 
-   HTTP header fields are registered within the "Message Headers"
-   registry maintained at
-   <http://www.iana.org/assignments/message-headers/>.
+   HTTP header fields are registered within the "Hypertext Transfer
+   Protocol (HTTP) Field Name" registry maintained at
+   <https://www.iana.org/assignments/http-fields>.
 
    This document defines the following HTTP header fields, so their
    associated registry entries have been updated according to the
    permanent registrations below (see [BCP90]):
 
-   +---------------------+----------+--------------+-------------+
-   | Header Field Name   | Protocol | Status       | Reference   |
-   +---------------------+----------+--------------+-------------+
-   | Version             | http     | experimental | Section 2   |
-   | Parents             | http     | experimental | Section 2   |
-   | Merge-Type          | http     | experimental | Section 2.2 |
-   | Patches             | http     | experimental | Section 3.3 |
-   | Subscribe           | http     | experimental | Section 4   |
-   | Current-Version     | http     | experimental | Section 4.4 |
-   +---------------------+----------+--------------+-------------+
+   +---------------------+--------------+-------------+
+   | Header Field Name   | Status       | Reference   |
+   +---------------------+--------------+-------------+
+   | Version             | experimental | Section 2   |
+   | Parents             | experimental | Section 2   |
+   | Merge-Type          | experimental | Section 2.2 |
+   | Patches             | experimental | Section 3.3 |
+   | Subscribe           | experimental | Section 4   |
+   | Current-Version     | experimental | Section 4.4 |
+   +---------------------+--------------+-------------+
 
    The change controller is: "IETF (iesg@ietf.org) - Internet
    Engineering Task Force".

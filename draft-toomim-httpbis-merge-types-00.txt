@@ -139,8 +139,8 @@ Table of Contents
    consistency.
 
    To compute the result, a Merge Type has access to the entire version
-   history that preceded each of the parents, but it cannot depend on
-   information outside of that version history.
+   history that preceded each of the parents, but the function cannot
+   depend on state outside that version history or its specification.
 
    A Merge Type might only work on a particular Content-Type. For
    instance, a "counter" Merge Type only works on numbers.  A Merge Type
@@ -196,6 +196,8 @@ Table of Contents
    o  Security considerations
 
    o  Interoperability considerations
+
+   o  Obsolete/Non-obsolete status
 
    o  Published specification
 
@@ -282,6 +284,7 @@ Table of Contents
        This is the double-spend problem.  A system using Merge Types
        SHOULD be aware of how its Merge Types interact with its
        Validators.
+
 
 6.  Conventions
 
