@@ -194,8 +194,8 @@ Table of Contents
         implementing the same Merge Type.
 
    The first three extensions are improvements to existing HTTP
-   features, which are valuable in HTTP on their own, aside from from
-   state synchronization.  (For examples, see Section 6.)  However, by
+   features, which are valuable in HTTP on their own, aside from state
+   synchronization.  (For examples, see Section 6.)  However, by
    composing these extensions together, HTTP can genrealize into a full
    synchronization protocol, and ReST into a synchronization
    architecture:
