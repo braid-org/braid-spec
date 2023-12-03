@@ -1214,8 +1214,8 @@ Table of Contents
    A Braid web application can operate offline.  A user can use the app
    from an airplane, and their edits can synchronize when they regain
    internet connections.  Additionally, the Braid protocol can be
-   expressed over peer-to-peer transports (e.g. WebRTC) to support a a a
-   a peer-to-peer synchronization without a server.  For example, a chat
+   expressed over peer-to-peer transports (e.g. WebRTC) to support
+   peer-to-peer synchronization without a server.  For example, a chat
    application might be served and synchronized on Braid-HTTP, while
    also establishing redundant peer-to-peer connections on WebRTC, and
    translating all Braid-HTTP messages over the WebRTC connections, and
