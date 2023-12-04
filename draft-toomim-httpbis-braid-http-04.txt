@@ -243,10 +243,6 @@ Table of Contents
    to have occurred before a version B if and only if A is an ancestor
    of B in the partial order.  Braid time is a DAG, rather than a line.
 
-   For any two versions A and B that are specified in a Version or
-   Parents header, A cannot be a descendent of B or vice versa.  The
-   ordering of versions in the list carries no meaning.
-
    A Version header is also allowed to contain multiple IDs, to describe
    the version of a merger:
 
@@ -254,8 +250,12 @@ Table of Contents
 
    However, any single mutation SHOULD create only a single version ID,
    and mergers themselves need not be announced over the network when
-   created.  They only need to be referenced after the fact, in some
-   situations.
+   created.  Version headers with multiple IDs are only needed in a few
+   cases, such as when requesting or providing a snapshot of a merger.
+
+   For any two version IDs A and B that are specified in a Version or
+   Parents header, A cannot be a descendent of B or vice versa.  The
+   ordering of version IDs within the header carries no meaning.
 
    If a client or server does not specify a Version for a resource it
    transfers, the recipient MAY generate and assign it new version IDs.
@@ -1093,7 +1093,7 @@ Table of Contents
            200 OK
 
    However, if the upload fails mid-stream, the client will want to
-   re-initiate the upload.  It first asks the header how much has been
+   re-initiate the upload.  It first asks the server how much has been
    received by issueing a HEAD request, and seeing what version of the
    bytestream the the server is at:
 
@@ -1145,8 +1145,8 @@ Table of Contents
 
      - In case (C), the client restarts the upload from scratch.
 
-   This simple protocol allows the functionality of resumeable uploads
-   to be implemented on top of existing synchronization semantics and
+   This protocol allows the functionality of resumeable uploads to be
+   implemented on top of general synchronization semantics and
    libraries.  A server that implements Braid-HTTP along with the
    "bytestream" version-type can support resumeable uploads for free.
 
