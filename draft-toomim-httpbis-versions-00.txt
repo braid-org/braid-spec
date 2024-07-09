@@ -1,0 +1,1046 @@
+Internet-Draft                                                 M. Toomim
+Expires: Feb 10, 2024                                  Invisible College
+Intended status: Proposed Standard                           Jul 8, 2024
+
+
+                        HTTP Resource Versioning
+                    draft-toomim-httpbis-versions-00
+
+Abstract
+
+   HTTP resources change over time.  Each change to a resource creates a
+   new "version" of its state.  HTTP systems often need a way to
+   identify, read, write, navigate, and/or merge these versions, in
+   order to implement cache consistency, create history archives, settle
+   race conditions, request incremental updates to resources, interpret
+   incremental updates to versions, or implement distributed
+   collaborative editing algorithms.
+
+   This document analyzes existing methods of versioning in HTTP,
+   highlights limitations, and sketches a more general versioning
+   approach that can enable new use-cases for HTTP.
+
+
+Status of this Memo
+
+   This Internet-Draft is submitted in full conformance with the
+   provisions of BCP 78 and BCP 79.
+
+   Internet-Drafts are working documents of the Internet Engineering
+   Task Force (IETF), its areas, and its working groups.  Note that
+   other groups may also distribute working documents as
+   Internet-Drafts.  The list of current Internet-Drafts is at
+   http://datatracker.ietf.org/drafts/current/.
+
+   Internet-Drafts are draft documents valid for a maximum of six months
+   and may be updated, replaced, or obsoleted by other documents at any
+   time.  It is inappropriate to use Internet-Drafts as reference
+   material or to cite them other than as "work in progress."
+
+   The list of current Internet-Drafts can be accessed at
+   https://www.ietf.org/1id-abstracts.html
+
+   The list of Internet-Draft Shadow Directories can be accessed at
+   https://www.ietf.org/shadow.html
+
+
+Table of Contents
+
+   1.  Introduction ..................................................4
+   1.1.  Existing Versioning in HTTP .................................6
+   1.1.1.  Versioning with `Last-Modified` ...........................6
+   1.1.2.  Versioning with `ETag` ....................................7
+   1.1.3.  Versioning encoded within URLs ............................8
+   1.2.  Limitations of Existing Approaches ..........................8
+   1.3.  Design Goals for a New HTTP Versioning System ...............9
+   1.4.  Overview of Proposed Solution ...............................9
+   2.  HTTP Resource Versioning .....................................10
+   2.1.  Version History ............................................10
+   2.2.  Version Identifiers ........................................10
+   2.3.  Version and Parents Headers ................................11
+   2.4.  Using Versioning with HTTP Methods .........................12
+   2.4.1.  GET the current version ..................................12
+   2.4.2.  GET a specific version ...................................13
+   2.4.3.  PUT a new version ........................................13
+   2.4.4.  GET a range of historical versions .......................14
+   2.5.  Rules for Version and Parents headers ......................16
+   2.6.  The `Current-Version` header ...............................16
+   3.  Example Applications of Resource Versioning ..................17
+   3.1  Incremental RSS subscription ................................17
+   3.2.  Hosting git via HTTP .......................................18
+   3.3.  Resumeable uploads .........................................21
+   3.3.1.  Version-Type: bytestream .................................21
+   3.3.2.  Resumable Upload Protocol ................................22
+   3.4.  Distributed collaborative editing ..........................24
+   4.  Version-Type Header ..........................................26
+   5.  Version-Type Examples ........................................26
+   6.  Acknowledgements .............................................27
+   7.  Conventions ..................................................27
+   8.  Copyright Notice .............................................28
+   9.  Security Considerations ......................................28
+   10. Authors' Addresses ...........................................29
+   11. References ...................................................30
+   11.1.  Normative References ......................................31
+   11.2.  Informative References ....................................31
+
+
+1.  Introduction
+
+   From the perspective of a single computer, the version history of a
+   HTTP resource that is changing on that computer can be viewed in a
+   line of time:
+
+
+                  o  <-- oldest version
+                  |
+                  o
+                  |
+                  o
+                  |
+                  o  <-- newest version
+
+
+   We call this a "linear" history.
+
+   However, if multiple computers change a resource over a network
+   "simultaneously" (ie. before their changes propagate to one another),
+   then the version history forks into a DAG, or "partial order":
+
+
+                  o  <-- oldest version
+                 / \
+                o   o
+                 \ /
+                  o
+                  |
+                  o  <-- newest version
+
+
+   HTTP systems often need a way to identify, read, write, navigate,
+   and/or merge versions of history in order to (1) implement better
+   cache consistency, (2) create history archives, (3) settle race
+   conditions, (4) request incremental updates to resources, (5)
+   interpret incremental updates to versions, or (6) implement
+   distributed collaborative editing algorithms.
+
+   Furthermore, advanced distributed systems often devise special
+   formats for partially-ordered timestamps that allow inferences for
+   improved performance, such as lamport clocks, vector clocks, version
+   vectors, hash histories, and append-only-log indices.
+   Implementations can rely on information embedded in these timestamps
+   to compress history metadata, optimize partial-order computations, or
+   infer the value of state.
+
+   A general mechanism for versioning HTTP resources could enable a
+   number of new use-cases:
+
+     - RSS clients could request incremental updates when polling,
+       instead of re-downloading redundant unchanged feed items after
+       each change to any item
+
+     - Servers could accept incoming patches based on old or parallel
+       versions of history, and even rebase those patches for other
+       clients, at other points in history
+
+     - Collaborative editing could be built directly into HTTP
+       resources, providing the abilities of Google Docs at any URL
+
+     - Git repositories could be hosted directly over HTTP; rather than
+       embedding versioning information within opaque blobs that use
+       HTTP just as a transport
+
+     - Caches and archives could hold and serve multiple versions of a
+       resource, enabling audits and distributed backups
+
+     - Distributed databases could standardize network APIs to HTTP,
+       while retaining distributed consistency guarantees
+
+   This document analyzes existing approaches to versioning of resources
+   in HTTP, and sketches an approach to a more general and powerful
+   approach that addresses use-cases like these.
+
+   (Note that this document does NOT speak to the versioning of HTTP
+   APIs -- only HTTP resources, which are used within APIs.)
+
+
+1.1.  Existing Versioning in HTTP
+
+   Current approaches to versioning in HTTP address disparate use-cases,
+   but have limitations and trade-offs.  The Last-Modified and ETag
+   headers were invented for cache consistency, but do not provide an
+   ordering of version history through time, nor do they handle forks
+   and merges in distributed time.  On the other hand, a number of
+   forking/merging versioning systems have been proposed (WebDAV, Link
+   Relations) that create new resources to represent versions of
+   existing resources, but this approach has been more complex, and has
+   not seen much adoption in practice.  No HTTP versioning system today
+   allows for articulating custom distributed timestamp formats such as
+   vector clocks.
+
+
+1.1.1.  Versioning with `Last-Modified`
+
+   The Last-Modified header specifies a clock date that caches and
+   clients can use to know when a change has occurred:
+
+      Last-Modified: Sat, 6 Jul 2024 07:28:00 GMT
+
+   This header is useful for caching and conditional requests (using the
+   If-Modified-Since header). However, it has several limitations:
+
+   1. It is limited to the precision of the wallclock.  If a resource
+      changes within the same second, the Last-Modified date won't
+      change, and caches can become inconsistent.
+
+   2. It is susceptible to clock skew in distributed systems,
+      potentially leading to inconsistencies across different servers.
+
+   3. It doesn't work well for dynamically generated content, where the
+      modification time might not be meaningful or easily determined.
+
+
+1.1.2.  Versioning with `ETag`
+
+   The ETag header allows more precision. It specifies a version with a
+   string that uniquely identifies a cacheable representation:
+
+      ETag: "2u34fa7yorz0"
+
+   ETags can be strong or weak, with weak ETags prefixed by W/:
+
+      ETag: W/"2u34fa7yorz0"
+
+   ETags are used in conditional requests with If-None-Match and
+   If-Match headers and can be used for optimistic concurrency
+   control. However:
+
+   1. While helping with cache validation, ETags are not accurate
+      markers of time.  There is no way to order versions by ETag, or
+      know which version came before another.
+   
+   2. ETags are unique to content, not timestamps.  It's possible for
+      the same ETag to recur over time if the resource changes back and
+      forth between a common state.
+
+   3. ETags are sensitive to Content-Encoding. If a single version of a
+      resource is transmitted with different Content-Encodings (e.g.,
+      gzip), it will be sent with different ETags.  Thus, one can have
+      multiple ETags for the same version in history, as well as a
+      single ETag for multiple versions of history.
+
+
+1.1.3.  Versioning encoded within URLs
+
+   In practice, application programmers tend to encode versions within
+   URLs:
+
+      https://unpkg.com/braid-text@0.0.18/index.js
+
+   This approach is common in API versioning (e.g., /api/v1/resource).
+   However, it has several drawbacks:
+
+   1. It loses the semantics of a "resource changing over time."
+      Instead, it creates multiple version resources for every single
+      logical resource.
+
+   2. It necessitates additional standards for version history on top of
+      URLs (e.g., Memento, WebDAV, Link Relations for Versioning
+      [RFC5829]).
+
+   3. Given a URL, we still need a standard way to extract the version
+      itself, get the previous and next version(s), and understand the
+      format of the version(s) (e.g., major.minor.patch).
+
+   4. This approach can lead to URI proliferation, potentially impacting
+      caching strategies and SEO.
+
+   5. It may complicate content negotiation and RESTful design
+      principles.
+
+   The choice to embed versions into URLs can be useful, but carries
+   with it additional tradeoffs.  A versioning system does not need to
+   depend on allocating a URL for each version; but could be compatible
+   with doing so.
+
+
+1.2.  Limitations of Existing Approaches
+
+   Current HTTP versioning mechanisms serve specific use cases, but have
+   limitations collectively and individually.  Last-Modified and ETags
+   do not represent the order of history.  URL approaches to history add
+   complexity to RESTful design.  No approach yet enables custom
+   timestamp formats.
+
+   As a result, programmers today must implement multiple approaches to
+   versioning in their applications -- each with subtly different logic
+   -- and cannot implement common infrastructure for distributed
+   versioning, archiving, and collaborative editing that works across
+   HTTP systems.
+
+
+1.3.  Design Goals for a New HTTP Versioning System
+
+   We sketch an HTTP resource versioning system with the following
+   design goals:
+
+   1. Unified: A single, flexible way to identify versions across
+      diverse versioning needs, from simple caching to complex
+      distributed editing.
+
+   2. Support for non-linear history: allow branching and merging
+      through a partial order (DAG) of versions.
+
+   3. Extensible Version Identification: Allow for custom version ID
+      formats to support various timestamp schemes.
+
+   4. Optimizable for High-Performance: Supports optimizations of
+      advanced distributed systems.
+
+   5. Independent of additional URLs: Does not require allocation of new
+      URLs to represent versions; but is compatible with systems doing
+      so.
+
+
+1.4.  Overview of Proposed Solution
+
+   To meet these design goals, we propose the following:
+
+   1. Version and Parents Headers: New headers to specify the current
+      version of a resource and its parent versions, enabling
+      representation of both linear and non-linear version histories.
+
+   2. Version as Sets of Strings: Versions are represented as sets of
+      unique string identifiers, allowing for custom versioning schemes
+      and distributed timestamps.
+
+   3. Extensible Version-Type Header: Allows specification of different
+      timestamp formats in custom versioning schemes (e.g., git-style
+      hashes, bytestreams and append-only logs, vector clocks) to allow
+      additional computational inferences for various use cases.
+
+   4. Versioned Resource Operations: Extends standard HTTP methods (GET,
+      PUT, PATCH) with versioning semantics, allowing version-aware
+      interactions with resources.
+
+   This system provides a flexible foundation that can be adapted to
+   various versioning needs, from simple content distribution to complex
+   collaborative editing scenarios, while maintaining compatibility with
+   existing HTTP infrastructure.
+
+   We start by specifying how to add versioning to HTTP requests and
+   responses.
+
+
+2.  HTTP Resource Versioning
+
+   This section defines the core concepts and mechanisms for HTTP
+   Resource Versioning.
+
+
+2.1.  Version History
+
+   Each HTTP resource maintains a version history, representing its
+   state changes over time.  This history forms a partially ordered set,
+   where some versions have a clear sequential relationship, while
+   others may occur in parallel.
+
+
+2.2.  Version Identifiers
+
+   A version is uniquely identified by a set of one or more string
+   identifiers ("version IDs") formatted according to the Structured
+   Headers specification [RFC8941].  Each version ID represents a
+   distinct change to the resource at a specific point in time.  A set
+   of IDs together specifies the merger of those changes, along with all
+   changed preceding them in the partial order of history.
+
+
+2.3.  Version and Parents Headers
+
+   To communicate version information, this specification introduces two
+   new HTTP headers: Version and Parents.  The Version header specifies
+   the current version of a resource in a request or response:
+
+           Version: "dkn7ov2vwg"
+
+   These headers may be used in PUT, PATCH, or POST requests, as well as
+   in GET responses, to convey the version history of a resource.
+
+   Every version also has a set of parents, denoting the version(s)
+   immediately before the version, that it derives from.  Any version
+   can be recreated by first merging its parents, and then applying the
+   its update onto that merger.  Parents are specified with a Parents
+   header in a PUT/PATCH/POST request or GET response:
+
+           Parents: "ajtva12kid", "cmdpvkpll2"
+
+   The full graph of parents forms a Directed Acyclic Graph (DAG),
+   representing the partial order of all versions.  A version A is known
+   to have occurred before a version B if and only if A is an ancestor
+   of B in the partial order.  Braid time is a DAG, rather than a line.
+
+   A Version header is also allowed to contain multiple IDs, to describe
+   the version of a merger:
+
+           Version: "dkn7ov2vwg", "v2vwgdkn7o"
+
+   However, any single mutation SHOULD create only a single version ID,
+   and mergers themselves need not be announced over the network when
+   created.  Version headers with multiple IDs are only needed in a few
+   cases, such as when requesting or providing a snapshot of a merger.
+
+   For any two version IDs A and B that are specified in a Version or
+   Parents header, A cannot be a descendent of B or vice versa.  The
+   ordering of version IDs within the header carries no meaning.
+
+   If a client or server does not specify a Version for a resource it
+   transfers, the recipient MAY generate and assign it new version IDs.
+   If a client or server does not specify a Parents header when
+   transferring a new version, the recipient MAY presume that the most
+   recent versions it has (the frontier of time) are the parents of the
+   new version.  It MAY also ignore or reject the update.
+
+
+2.4.  Using Versioning with HTTP Methods
+
+2.4.1.  GET the current version
+
+   If the Version: header is not specified, a GET request returns the
+   current version of the state as usual:
+
+      Request:
+
+         GET /chat
+
+      Response:
+
+         HTTP/1.1 200 OK
+         Version: "ej4lhb9z78"
+         Parents: "oakwn5b8qh", "uc9zwhw7mf"
+         Content-Type: application/json
+         Content-Length: 64
+
+         [{"text": "Hi, everyone!",
+           "author": {"link": "/user/tommy"}}]
+
+
+   The server MAY include a Version and/or Parents header in the
+   response, to indicate the current version and its parents.
+
+   Clients can use a HEAD request to elicit versioning history without
+   downloading the body:
+
+
+      Request:
+
+         HEAD /chat
+
+      Response:
+
+         HTTP/1.1 200 OK
+         Version: "ej4lhb9z78"
+         Parents: "oakwn5b8qh", "uc9zwhw7mf"
+         Content-Type: application/json
+
+
+2.4.2.  GET a specific version
+
+   A server can allow clients to request historical versions of a
+   resource in GET requests by responding to the Version and Parents
+   headers.  A client can specify a specific version that it wants with
+   the Version header:
+
+
+      Request:
+
+         GET /chat
+         Version: "ej4lhb9z78"
+
+      Response:
+
+         HTTP/1.1 200 OK
+         Version: "ej4lhb9z78"
+         Parents: "oakwn5b8qh", "uc9zwhw7mf"
+         Content-Type: application/json
+         Content-Length: 64
+
+         [{"text": "Hi, everyone!",
+           "author": {"link": "/user/tommy"}}]
+
+
+2.4.3.  PUT a new version
+
+   When a PUT request changes the state of a resource, it can specify
+   the new version of the resource, and the parent version that it was
+   based on:
+
+
+      Request:
+
+         PUT /chat
+         Version: "ej4lhb9z78"
+         Parents: "oakwn5b8qh", "uc9zwhw7mf"
+         Content-Type: application/json
+         Content-Length: 64
+
+         [{"text": "Hi, everyone!",
+           "author": {"link": "/user/tommy"}}]
+                  
+
+      Response:
+
+         HTTP/1.1 200 OK
+
+
+   The Version and Parents headers are optional.  If Version is omitted,
+   the recipient may assign new version IDs.  If Parents is omitted, the
+   recipient may assume that its current version is the version's
+   parents.
+
+
+2.4.4.  GET a range of historical versions
+
+   A client can request a range of history by including a Parents and a
+   Version header together.  The Parents marks the beginning of the
+   range (the oldest versions) and the Version marks the end of the
+   range (the newest versions) that it requests.
+
+
+      Request:
+
+         GET /chat
+         Version: "3"
+         Parents: "1a", "1b"
+
+      Response:
+
+         HTTP/1.1 104 Multiresponse
+         Current-Version: "3"
+
+         HTTP/1.1 200 OK
+         Version: "2"
+         Parents: "1a", "1b"
+         Content-Type: application/json
+         Content-Length: 64
+
+         [{"text": "Hi, everyone!",
+           "author": {"link": "/user/tommy"}}]
+
+         HTTP/1.1 200 OK
+         Version: "3"
+         Parents: "2"
+         Content-Type: application/json
+         Merge-Type: sync9
+         Content-Length: 117
+
+         [{"text": "Hi, everyone!",
+           "author": {"link": "/user/tommy"}}
+          {"text": "Yo!",
+           "author": {"link": "/user/yobot"}]
+   
+
+   Note that this example uses a new "Multiresponse" code, which is
+   currently being drafted.  See [Braid-HTTP] Section 3.
+
+
+2.5.  Rules for Version and Parents headers
+
+   If a GET request contains a Version header:
+
+     - If the Parents header is absent, the server SHOULD return a
+       single response, containing the requested version of the resource
+       in its body, with the Version response header set to the same
+       version.
+
+     - If the server does not support historical versions, it MAY ignore
+       the Version header and respond as usual, but MUST NOT include the
+       Version header in its response.
+
+   If a GET request contains a Parents header:
+
+     - The server SHOULD send the set of versions updating the Parents
+       to the specified Version.  If no Version is specified, then it
+       should update the client to the server's current version.
+
+     - If the server does not support historical versions, then it MAY
+       ignore the Parents header, but MUST NOT include the Parents
+       header in its response.
+
+   A server does not need to honor historical version requests for all
+   documents, for all history. If a server no longer has the historical
+   context needed to honor a request, it may respond with a TBD error
+   code.
+
+
+2.6.  The `Current-Version` header
+
+   While sending historical versions, a server or client can specify its
+   current latest version with the Current-Version header.  The other
+   party may desire this information to know when it has caught up with
+   the latest version.  This is also used in the resumeable uploads
+   example below.
+
+
+3.  Example Applications of Resource Versioning
+
+3.1  Incremental RSS subscription
+
+   Today's RSS readers poll a server for updates by sending repeated
+   GETs, which requires the server to re-send the entire feed back to
+   the client if only a single item has changed.  This is inefficient.
+
+   It is more efficient for a server to incrementally send the client
+   only what changed since the client's last request.
+
+   To do this, the client will need to tell the server which version it
+   had last.  It can do so with the "Parents" header:
+
+
+      Request:
+
+         GET /feed.rss
+         Accept: application/rss+xml
+         Parents: "4"
+
+
+   The server responds with a "Version" and "Parents" header, and
+   includes a "RSS Patch" in the body, that can be merged with the RSS
+   at the parent version "4":
+
+
+      Response:
+
+         HTTP/1.1 200 OK
+         Content-Type: application/rss+xml+patch
+         Version: "5"
+         Parents: "4"
+
+         <?xml version="1.0" encoding="UTF-8" ?>
+         <rss version="2.0">
+         <channel>
+          <title>My RSS Feed</title>
+          <item>
+           <title>This is a new entry</title>
+           <description>
+             Fresh off the press!  I typed something new!
+           </description>
+
+           <link>http://www.example.com/blog/post/1</link>
+          </item>
+         </channel>
+         </rss>
+
+
+   Any patch format could be used.  See [updates] or [range-patch].
+   
+
+3.2.  Hosting git via HTTP
+
+   We can host a git repository directly through HTTP, where each file
+   corresponds to a resource, and all have a version history.
+
+   Git versions are normally specified as a hash.  The server can
+   express this with a "Version-Type: git" header:
+
+   
+      Request:
+
+         GET /repo/readme.md
+
+      Response:
+
+         HTTP/1.1 200 OK
+         Content-Type: text/markdown
+         Version-Type: git
+         Version: "9531a9702af0d90dd489050ed8e25f87912a9252"
+         Parents: "3a4c361f8e0349fe4b25c1ff46ebec1cec66e60f"
+
+         ...
+
+
+   Git also allows specifying a version with a short string, like
+   "HEAD", which works for any tag or branch.  We can request the latest
+   "development" branch version with:
+
+
+      Request:
+
+         GET /repo/readme.md
+         Version: "development"
+
+      Response:
+
+         HTTP/1.1 200 OK
+         Content-Type: text/markdown
+         Version-Type: git
+         Version: "9e26e8837a4f6a4445e74eed744fe8af85efd0c2"
+         Parents: "1d5f89f8843b33b91d62bf95877e46b23fd86741"
+
+         ...
+
+
+   One can also request the files from release tagged "1.3.5" using:
+
+
+      Request:
+
+         GET /repo/readme.md
+         Version: "1.3.5"
+
+
+   One can clone a repo by asking for all versions from the root to
+   HEAD:
+
+
+      Request:
+
+         GET /repo/readme.md
+         Version: "HEAD"
+         Parents: "ROOT"
+
+      Response:
+
+         HTTP/1.1 104 Multiresponse
+
+         HTTP/1.1 200 OK
+         Content-Type: text/markdown
+         Version-Type: git
+         Version: "9e26e8837a4f6a4445e74eed744fe8af85efd0c2"
+         Parents: "1d5f89f8843b33b91d62bf95877e46b23fd86741"
+         Content-Length: 190
+
+         ...
+
+         HTTP/1.1 200 OK
+         Content-Type: text/markdown
+         Version-Type: git
+         Version: "1d5f89f8843b33b91d62bf95877e46b23fd86741"
+         Parents: "1cf6ab4ed836d4d7308ac93edbc6fd18a69ef88f"
+         Content-Length: 192
+
+         ...
+
+
+   In fact, git itself already supports two HTTP protocols: a "dumb" and
+   a "smart" protocol.  The dumb protocol uses plain HTTP, but doesn't
+   support incremental updates -- each pull re-downloads the entire pack
+   file.  The smart protocol allows the client to specify the version it
+   has, and the version it wants:
+
+
+      0054want 31f1c37dfa1bf983e4d67e06fac28e8e6f
+      00093bd7884 HEAD@{1}
+      0032have e68fe437718c37155c7e3e5f4a3ff17c4f476940
+      0000
+
+
+   We can express this with HTTP Versioning as:
+
+
+      Request:
+
+         GET /repo/readme.md
+         Version: "31f1c37dfa1bf983e4d67e06fac28e8e6f"
+         Parents: "e68fe437718c37155c7e3e5f4a3ff17c4f476940"
+
+
+   This expresses aspects of the "smart" git protocol over plain HTTP.
+
+
+3.3.  Resumeable uploads
+
+   Resource Versioning semantics enable efficient implementation of
+   resumable uploads, providing an alternative perspective to
+   [draft-ietf-httpbis-resumable-upload].
+
+
+3.3.1.  Version-Type: bytestream
+
+   For uploads, we can consider the resource as an append-only
+   bytestream, declared with a header:
+
+      Version-Type: bytestream
+
+   Bytestream versions are represented as:
+
+      Version: "<agent>-<byte_count>"
+
+   For example, "x82ha-344" indicates "the resource state after agent
+   `x82ha` appended 344 bytes".
+
+   This approach creates a direct correspondence between time and
+   space: each version increment represents one additional byte in the
+   stream.
+
+
+3.3.2.  Resumable Upload Protocol
+
+   To initiate an upload, the client specifies the Version-Type and the
+   expected final version using the Current-Version header:
+
+      Request:
+
+         PUT /something
+         Current-Version: "abwejf-900"
+         Version-Type: bytestream
+         Content-Length: 900
+
+         <binary data of length 900>
+
+   For a successful upload, the server responds as usual:
+
+      Response:
+
+         200 OK
+
+   If the upload is interrupted, the client can query the server's
+   current state:
+
+      Request:
+
+         HEAD /something
+         Parents: "abwejf-0"
+
+   The server's response determines the client's next action:
+
+   A. Upload complete:
+
+      Response:
+
+         200 OK
+         Parents: "abwejf-0"
+         Version: "abwejf-900"
+
+   B. Partial upload:
+
+      Response:
+
+         206 Partial Content
+         Parents: "abwejf-0"
+         Version: "abwejf-400"
+
+   C. No upload progress:
+
+      Response:
+
+         416 Range Not Satisfiable
+
+   Based on the response, the client proceeds as follows:
+
+   - Case A: Upload is complete, no further action needed.
+   - Case B: Resume the upload from the last received byte:
+
+      Request:
+
+         PUT /something
+         Current-Version: "abwejf-900"
+         Parents: "abwejf-400"
+         Content-Range: bytes 400-900/900
+         Content-Length: 500
+
+         <binary data from 400-900>
+
+   - Case C: Restart the upload from the beginning.
+
+   This protocol leverages general version semantics, allowing servers
+   implementing HTTP Resource Versioning with the "bytestream"
+   Version-Type to inherently support resumable uploads.
+
+
+3.4.  Distributed collaborative editing
+
+   This versioning system can also support full CRDT and OT
+   collaborative editing features (when used with other extensions such
+   as [Braid-HTTP]), allowing every URL to gain the functionality of
+   Google Docs.
+
+   The [Braid-Text] project implements a very efficient style of this.
+   When you first load a resource, a server provides it as a single
+   version:
+
+
+      Request:
+
+         GET https://braid.org/test
+         Accept: text/plain
+         Subscribe: true
+
+      Response:
+
+         HTTP/1.1 104 Multiresponse
+
+         HTTP/1.1 200 OK
+         Version: "2agvvzgccrq-5"
+         Version-Type: rle
+         Merge-Type: simpleton
+         Content-Length: 12
+
+         Hello world!
+
+
+   Updates are expressed as a stream of patches:
+
+
+      Response (continued):
+
+         Version: "4590r8uwm63-18"
+         Parents: "2agvvzgccrq-5"
+         Patches: 1
+
+         Content-Length: 1
+         Content-Range: text [12:12]
+
+         :
+
+         Version: "4590r8uwm63-19"
+         Parents: "4590r8uwm63-18"
+         Patches: 1
+
+         Content-Length: 1
+         Content-Range: text [13:13]
+
+         )
+
+
+   This versioning system supports multiple [Merge-Types], and they can
+   even co-exist simultaneously for the same resource.  For instance,
+   braid-text supports two merge-types simultaneously:
+
+     - The "simpleton" merge-type requires the server to rebase all
+       edits for the client
+
+     - The "dt" merge-type uses a fully peer-to-peer merge algorithm
+       called Diamond-Types
+
+   Clients can connect with either merge-type, and can even change
+   merge-type on-the-fly -- the version history itself can be re-used.
+
+
+4.  Version-Type Header
+
+   A server or client can optionally add a Version-Type header to
+   specify how version IDs are formatted and can be interpreted.  This
+   allows a variety of optimizations.
+
+   For instance, "Version-Type: git" can convey that version IDs will
+   all be hashes, branches, or tags, as we saw before.  A peer can then
+   verify that the entire repository at that version hashes to the value
+   of the version's ID.
+   
+   Alternatively, "Version-Type: dt" says to use the type of version IDs
+   in Diamond-Types, which are lamport timestamps of the form:
+   
+      Version: "<agent>-<char_count>"
+
+   This allows Diamond-Types to compress history metadata using
+   run-length encoding, because any run of consecutive inserted
+   characters will have a known pattern of increasing char_count version
+   IDs.  This allows a set of 50 inserted characters to be stored as 50
+   bytes plus one version ID, rather than 50 bytes plus 50 version IDs,
+   each of which takes up multiple bytes.
+
+   Implementors could also specify "Version-Type: vector-clock", where a
+   version ID will be of the form:
+
+      Version: "{agentid1: counter1, agentid2: counter2, ...}"
+
+   A vector clock stores the current local version known from each agent
+   at the time of a change.  This can be used to compute partial order
+   between any two version IDs directly, without needing to look at the
+   graph of parent relationships.  To know the order between two vector
+   clocks A and B, one needs only to compare each agent's counter
+   between A and B.  If A dominates across all agents, it is newer.  If
+   B dominates, then it is newer.  Otherwise, the ordering between the
+   two vector clocks is not known, and we can say that they happened in
+   parallel.
+
+
+4.  Version-Type Examples
+
+   [xxx fill this in]
+
+    - Version-Type: bytestream and arraystream
+    - Reconnecting to feed of posts as arraystream
+    - Compressing Runs
+    - New Cache-Control: version-immutable proposal
+
+
+6.  Acknowledgements
+
+   This is derived from prior draft [Braid-HTTP] with authors:
+
+     - Michael Toomim
+     - Greg Little
+     - Raphael Walker
+     - Bryn Bellomy
+     - Joseph Gentle
+
+   And incorporates additional ideas from:
+
+     - Rahul Gupta
+     - Duane Johnson
+     - Mitar Milutinovic
+     - Paul Kuchenko
+
+
+7.  Conventions
+
+   The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
+   "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this
+   document are to be interpreted as described in [RFC2119].
+
+
+8.  Copyright Notice
+
+   Copyright (c) 2023 IETF Trust and the persons identified as the
+   document authors.  All rights reserved.
+
+   This document is subject to BCP 78 and the IETF Trust's Legal
+   Provisions Relating to IETF Documents
+   (http://trustee.ietf.org/license-info) in effect on the date of
+   publication of this document.  Please review these documents
+   carefully, as they describe your rights and restrictions with respect
+   to this document.  Code Components extracted from this document must
+   include Simplified BSD License text as described in Section 4.e of
+   the Trust Legal Provisions and are provided without warranty as
+   described in the Simplified BSD License.
+
+9. Security Considerations
+
+   XXX Todo
+
+
+
+10.  Authors' Addresses
+
+   For more information, the authors of this document are best contacted
+   via Internet mail:
+
+   Michael Toomim
+   Invisible College, Berkeley
+   2053 Berkeley Way
+   Berkeley, CA 94704
+
+   EMail: toomim@gmail.com
+   Web:   https://invisible.college/@toomim
+
+
+
+
+11.  References
+
+12.1.  Normative References
+
+   [RFC5789]  "PATCH Method for HTTP", RFC 5789.
+
+   [RFC9110]  "HTTP Semantics", RFC 9110.
+
+11.2.  Informative References
+
+   [XHR]      Van Kestern, A., Aubourg, J., Song, J., and R. M.
+              Steen, H.  "XMLHttpRequest", September 2019.
+              <https://xhr.spec.whatwg.org/>
+
+   [SSE]      Hickson, I.  "Server-Sent Events", W3C Recommendation,
+              February 2015.
+              <https://www.w3.org/TR/2015/REC-eventsource-20150203/>
