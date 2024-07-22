@@ -968,15 +968,15 @@ Table of Contents
    temperature changes:
 
 
-     Request:
+Request:
 
-       GET /temperature
-       Subscribe: true
+  GET /temperature
+  Subscribe: true
 
-     Response:
+Response:
 
-       HTTP/1.1 209 Subscription
-       Subscribe: true
+  HTTP/1.1 209 Subscription
+  Subscribe: true
 
        Content-Length: 4
 
@@ -1239,9 +1239,43 @@ Table of Contents
    peers over that connection.
 
 
+TODO:
+ - Add distributed dropbox example
+ - Add OS update distribution example
+
+
+
+
 7.  Related Work
 
-7.1.  Existing IETF Standards
+7.1.  SSE
+
+   (1) doesn't support binary data, (2) assumes versioning is linear
+   (which doesn't work in a distributed system), (3) doesn't provide any
+   way to add new headers to each response, (4) doesn't specify
+   semantics of updating a resource.
+
+   SSE is a way to tunnel a specific, limited, use-case of centralized,
+   text-only, server-to-client-only event streaming over a HTTP
+   response, without bothering to specify anything about how those
+   events might change actual HTTP resource state.
+
+7.2.  Transfer-Encoding: chunked
+
+   Some people have suggested using chunked boundaries as a way to
+   encode multiple responses to a subscription.  However, chunk
+   boundaries cannot be relied upon to remain intact; they can be
+   changed by intermediaries.  The chunks are only an encoding of the
+   transfer.  They are not supposed to contain any semantic information.
+   It is also disallowed in http/2, and will disappear over any HTTP/2
+   hop.
+
+7.3.  WebSocket
+
+   Doesn't provide semantics of state change.  Users have to roll their
+   own.
+
+7.4.  Other IETF Protocols
 
    A number of IETF specifications already standardize aspects of
    synchronization for specific domains.  IMAP [RFC9051] provides
@@ -1252,7 +1286,7 @@ Table of Contents
    synchronization, supporting mail, calendars, and contacts.
 
 
-7.2.  IETF Work in Progress
+7.5.  IETF Work in Progress
 
    We wish to integrate this work with the excellent related efforts
    already underway:
@@ -1273,7 +1307,7 @@ Table of Contents
      avoid Partial PUTs on legacy servers.
 
 
-7.3.  Web Frameworks
+7.6.  Web Frameworks
 
    Web applications typically synchronize the state of a client and
    server with layers of models, views, and controllers in web

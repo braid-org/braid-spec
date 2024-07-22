@@ -76,12 +76,13 @@ Table of Contents
    5.  Version-Type Examples ........................................26
    6.  Acknowledgements .............................................27
    7.  Conventions ..................................................27
-   8.  Copyright Notice .............................................28
-   9.  Security Considerations ......................................28
-   10. Authors' Addresses ...........................................29
-   11. References ...................................................30
-   11.1.  Normative References ......................................31
-   11.2.  Informative References ....................................31
+   8.  IANA Considerations ..........................................28
+   9.  Copyright Notice .............................................28
+   10. Security Considerations ......................................28
+   11. Authors' Addresses ...........................................29
+   12. References ...................................................30
+   12.1.  Normative References ......................................31
+   12.2.  Informative References ....................................31
 
 
 1.  Introduction
@@ -347,47 +348,44 @@ Table of Contents
 
 2.2.  Version Identifiers
 
-   A version is uniquely identified by a set of one or more string
-   identifiers ("version IDs") formatted according to the Structured
-   Headers specification [RFC8941].  Each version ID represents a
-   distinct change to the resource at a specific point in time.  A set
-   of IDs together specifies the merger of those changes, along with all
-   changed preceding them in the partial order of history.
+   A version is uniquely identified by a set of one or more opaque
+   string identifiers ("version IDs").  These IDs are formatted according to the
+   Structured Headers specification [RFC8941].  Each version ID
+   represents a distinct change to the resource at a specific point in
+   time.  A set of IDs together specifies the merger of those changes,
+   along with all changed preceding them in the version history DAG.
 
 
 2.3.  Version and Parents Headers
 
-   To communicate version information, this specification introduces two
-   new HTTP headers: Version and Parents.  The Version header specifies
-   the current version of a resource in a request or response:
+   This specification introduces two new HTTP headers: Version and
+   Parents.  These headers communicate version information in requests and responses.
+
+   The Version header specifies the current version of a resource:
 
            Version: "dkn7ov2vwg"
 
-   These headers may be used in PUT, PATCH, or POST requests, as well as
-   in GET responses, to convey the version history of a resource.
-
-   Every version also has a set of parents, denoting the version(s)
-   immediately before the version, that it derives from.  Any version
-   can be recreated by first merging its parents, and then applying the
-   its update onto that merger.  Parents are specified with a Parents
-   header in a PUT/PATCH/POST request or GET response:
+   The Parents header specifies the immediate predecessor version(s):
 
            Parents: "ajtva12kid", "cmdpvkpll2"
 
-   The full graph of parents forms a Directed Acyclic Graph (DAG),
-   representing the partial order of all versions.  A version A is known
-   to have occurred before a version B if and only if A is an ancestor
-   of B in the partial order.  Braid time is a DAG, rather than a line.
+   These headers may be used in PUT, PATCH, or POST requests and GET
+   responses to convey the version history of a resource.
 
-   A Version header is also allowed to contain multiple IDs, to describe
-   the version of a merger:
+   Any version can be reconstructed by first merging its parents, then
+   applying its specific changes.  The full graph of parent
+   relationships forms the version history DAG.  Version A is considered
+   to precede version B if and only if A is an ancestor of B in this
+   DAG.
+
+   A Version header is allowed to contain multiple IDs to describe a
+   merger:
 
            Version: "dkn7ov2vwg", "v2vwgdkn7o"
 
-   However, any single mutation SHOULD create only a single version ID,
-   and mergers themselves need not be announced over the network when
-   created.  Version headers with multiple IDs are only needed in a few
-   cases, such as when requesting or providing a snapshot of a merger.
+   This is useful when referring to a snapshot of a particular merger.
+   However, this is rarely needed.  In normal usage, implementers SHOULD
+   create only a single version ID for individual mutations.
 
    For any two version IDs A and B that are specified in a Version or
    Parents header, A cannot be a descendent of B or vice versa.  The
@@ -583,17 +581,13 @@ Table of Contents
 
 3.  Example Applications of Resource Versioning
 
-3.1  Incremental RSS subscription
+3.1  Efficient RSS Feed Updates
 
-   Today's RSS readers poll a server for updates by sending repeated
-   GETs, which requires the server to re-send the entire feed back to
-   the client if only a single item has changed.  This is inefficient.
+   Traditional RSS readers inefficiently poll servers, often downloading
+   entire feeds when only minor changes have occurred.  HTTP Resource
+   Versioning enables more efficient incremental updates.
 
-   It is more efficient for a server to incrementally send the client
-   only what changed since the client's last request.
-
-   To do this, the client will need to tell the server which version it
-   had last.  It can do so with the "Parents" header:
+   A client can specify its last known version using the Parents header:
 
 
       Request:
@@ -603,9 +597,7 @@ Table of Contents
          Parents: "4"
 
 
-   The server responds with a "Version" and "Parents" header, and
-   includes a "RSS Patch" in the body, that can be merged with the RSS
-   at the parent version "4":
+   The server can then respond with only the changes since that version:
 
 
       Response:
@@ -621,17 +613,15 @@ Table of Contents
           <title>My RSS Feed</title>
           <item>
            <title>This is a new entry</title>
-           <description>
-             Fresh off the press!  I typed something new!
-           </description>
-
+           <description>Incremental update example</description>
            <link>http://www.example.com/blog/post/1</link>
           </item>
          </channel>
          </rss>
 
-
-   Any patch format could be used.  See [updates] or [range-patch].
+   This approach significantly reduces bandwidth usage and processing
+   time for both client and server.  The specific patch format used can
+   vary; see [updates] or [range-patch] for examples.
    
 
 3.2.  Hosting git via HTTP
@@ -918,44 +908,56 @@ Table of Contents
 
 4.  Version-Type Header
 
-   A server or client can optionally add a Version-Type header to
-   specify how version IDs are formatted and can be interpreted.  This
-   allows a variety of optimizations.
+   The optional Version-Type header specifies the format and
+   interpretation of version IDs.  This allows for various optimizations
+   and specialized versioning schemes.
 
-   For instance, "Version-Type: git" can convey that version IDs will
-   all be hashes, branches, or tags, as we saw before.  A peer can then
-   verify that the entire repository at that version hashes to the value
-   of the version's ID.
-   
-   Alternatively, "Version-Type: dt" says to use the type of version IDs
-   in Diamond-Types, which are lamport timestamps of the form:
-   
+   For example:
+
+      Version-Type: git
+
+   This indicates that version IDs will be git-style hashes, branches,
+   or tags.  Peers can verify that the entire repository at a given
+   version hashes to the specified ID.
+
+   Another example:
+
+      Version-Type: dt
+
+   or
+
+      Version-Type: rle
+
+   This specifies the use of Diamond-Types or "run-length-encoded"
+   version IDs, which are Lamport timestamps of the form:
+
       Version: "<agent>-<char_count>"
 
-   This allows Diamond-Types to compress history metadata using
-   run-length encoding, because any run of consecutive inserted
-   characters will have a known pattern of increasing char_count version
-   IDs.  This allows a set of 50 inserted characters to be stored as 50
-   bytes plus one version ID, rather than 50 bytes plus 50 version IDs,
-   each of which takes up multiple bytes.
+   Diamond-Types (and other algorithms) use this format to compress
+   history metadata through run-length encoding of consecutive
+   insertions.  This allows a set of 50 inserted characters to be stored
+   as 50 bytes plus one version ID, rather than 50 bytes plus 50 version
+   IDs (each of which takes up multiple bytes).
 
-   Implementors could also specify "Version-Type: vector-clock", where a
-   version ID will be of the form:
+   Implementers may define custom Version-Types to suit specific needs:
+
+      Version-Type: vector-clock
+
+   A vector clock version ID might take the form:
 
       Version: "{agentid1: counter1, agentid2: counter2, ...}"
 
-   A vector clock stores the current local version known from each agent
-   at the time of a change.  This can be used to compute partial order
-   between any two version IDs directly, without needing to look at the
-   graph of parent relationships.  To know the order between two vector
-   clocks A and B, one needs only to compare each agent's counter
-   between A and B.  If A dominates across all agents, it is newer.  If
-   B dominates, then it is newer.  Otherwise, the ordering between the
-   two vector clocks is not known, and we can say that they happened in
-   parallel.
+   Vector clocks enable direct computation of partial order between any
+   two version IDs without examining the full version history graph.
+
+   (To know the order between two vector clocks A and B, one needs only
+   to compare each agent's counter between A and B.  If A dominates
+   across all agents, it is newer.  If B dominates, then it is newer.
+   Otherwise, the ordering between the two vector clocks is not known,
+   and we can say that they happened in parallel.)
 
 
-4.  Version-Type Examples
+5.  Version-Type Examples
 
    [xxx fill this in]
 
@@ -990,7 +992,34 @@ Table of Contents
    document are to be interpreted as described in [RFC2119].
 
 
-8.  Copyright Notice
+8. IANA Considerations
+
+   This document defines the following new HTTP headers, which should be
+   added to the "Permanent Message Header Field Names" registry at
+   <https://www.iana.org/assignments/message-headers>:
+
+      Header Field Name: Version
+      Protocol: http
+      Status: standard
+      Reference: This document
+
+      Header Field Name: Parents
+      Protocol: http
+      Status: standard
+      Reference: This document
+
+      Header Field Name: Version-Type
+      Protocol: http
+      Status: standard
+      Reference: This document
+
+      Header Field Name: Current-Version
+      Protocol: http
+      Status: standard
+      Reference: This document
+
+
+9.  Copyright Notice
 
    Copyright (c) 2023 IETF Trust and the persons identified as the
    document authors.  All rights reserved.
@@ -1005,13 +1034,13 @@ Table of Contents
    the Trust Legal Provisions and are provided without warranty as
    described in the Simplified BSD License.
 
-9. Security Considerations
+10. Security Considerations
 
    XXX Todo
 
 
 
-10.  Authors' Addresses
+11.  Authors' Addresses
 
    For more information, the authors of this document are best contacted
    via Internet mail:
@@ -1027,7 +1056,7 @@ Table of Contents
 
 
 
-11.  References
+12.  References
 
 12.1.  Normative References
 
