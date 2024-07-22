@@ -74,15 +74,16 @@ Table of Contents
    3.4.  Distributed collaborative editing ..........................24
    4.  Version-Type Header ..........................................26
    5.  Version-Type Examples ........................................26
-   6.  Acknowledgements .............................................27
-   7.  Conventions ..................................................27
-   8.  IANA Considerations ..........................................28
-   9.  Copyright Notice .............................................28
-   10. Security Considerations ......................................28
-   11. Authors' Addresses ...........................................29
-   12. References ...................................................30
-   12.1.  Normative References ......................................31
-   12.2.  Informative References ....................................31
+   5.1.  Improved Header Compression for Version-Type: rle ..........27
+   6.  Acknowledgements .............................................30
+   7.  Conventions ..................................................30
+   8.  IANA Considerations ..........................................31
+   9.  Copyright Notice .............................................31
+   10. Security Considerations ......................................31
+   11. Authors' Addresses ...........................................32
+   12. References ...................................................33
+   12.1.  Normative References ......................................34
+   12.2.  Informative References ....................................34
 
 
 1.  Introduction
@@ -908,33 +909,31 @@ Table of Contents
 
 4.  Version-Type Header
 
-   The optional Version-Type header specifies the format and
-   interpretation of version IDs.  This allows for various optimizations
-   and specialized versioning schemes.
+   The optional Version-Type header specifies constraints on the format
+   and interpretation of version IDs.  This allows for various
+   optimizations and specialized versioning schemes.
 
    For example:
 
       Version-Type: git
 
-   This indicates that version IDs will be git-style hashes, branches,
-   or tags.  Peers can verify that the entire repository at a given
-   version hashes to the specified ID.
+   This could indicate that version IDs will be git-style hashes,
+   branches, or tags.  Peers could verify that the entire repository at
+   a given version hashes to the specified ID.
 
    Another example:
 
       Version-Type: dt
-
    or
-
       Version-Type: rle
 
-   This specifies the use of Diamond-Types or "run-length-encoded"
+   This could specify the use of Diamond-Types or "run-length-encoded"
    version IDs, which are Lamport timestamps of the form:
 
       Version: "<agent>-<char_count>"
 
-   Diamond-Types (and other algorithms) use this format to compress
-   history metadata through run-length encoding of consecutive
+   Diamond-Types, Automerge, and other algorithms use this format to
+   compress history metadata through run-length encoding of consecutive
    insertions.  This allows a set of 50 inserted characters to be stored
    as 50 bytes plus one version ID, rather than 50 bytes plus 50 version
    IDs (each of which takes up multiple bytes).
@@ -964,7 +963,125 @@ Table of Contents
     - Version-Type: bytestream and arraystream
     - Reconnecting to feed of posts as arraystream
     - Compressing Runs
+    - Header Compression using Version-Type
     - New Cache-Control: version-immutable proposal
+
+
+5.1.  Improved Header Compression for Version-Type: rle
+
+   A header compression scheme can leverage the Version-Type pattern to
+   significantly compress messages. For example, consider the following
+   scenario where 4 characters are inserted into a collaborative editor,
+   requiring 479 bytes when uncompressed:
+
+      PUT /some.txt
+      Version: "3f84786c-57"
+      Parents: "3f84786c-56"
+      Content-Length: 1
+      Content-Range: text 471:471
+
+      a
+
+      PUT /some.txt
+      Version: "3f84786c-58"
+      Parents: "3f84786c-57"
+      Content-Length: 1
+      Content-Range: text 472:472
+
+      s
+
+      PUT /some.txt
+      Version: "3f84786c-59"
+      Parents: "3f84786c-58"
+      Content-Length: 1
+      Content-Range: text 473:473
+
+      d
+
+      PUT /some.txt
+      Version: "3f84786c-60"
+      Parents: "3f84786c-59"
+      Content-Length: 1
+      Content-Range: text 474:474
+
+      f
+
+   HPACK and QPACK can compress these headers using Huffman Encoding,
+   by identifying repeated strings and assigning them codes:
+
+      U = "PUT /some.txt"
+      W = "Version: \"3f84786c-{ }\""
+      X = "Parents: \"3f84786c-{ }\""
+      Y = "Content-Length: 1"
+      Z = "Content-Range: text { }"
+
+   This compression reduces the messages to:
+
+      U
+      W{57}
+      X{56}
+      Y
+      Z{471:471}
+
+      a
+
+      U
+      W{58}
+      X{57}
+      Y
+      Z{472:472}
+
+      s
+
+      U
+      W{59}
+      X{58}
+      Y
+      Z{473:473}
+
+      d
+
+      U
+      W{60}
+      X{59}
+      Y
+      Z{474:474}
+
+      f
+
+   This initial compression reduces the 479 bytes to approximately 123
+   bytes.
+
+   Further compression is possible by recognizing that the numeric
+   parameters in each header increment by 1 from the previous header.
+   This pattern allows us to compress the entire run of inserts using a
+   new compression function, RUN(a, b, c):
+
+      RUN(a, b, insertions) =
+         for i, char in insertions
+            X(a+i, a+i-1, `${b+i}:${b+i}`)
+
+            char
+
+   Where the parameters are:
+
+      a: Initial version number
+      b: Initial content range
+      insertions: String of characters to be inserted
+
+   We could then compress the 479 bytes down to 20 bytes as:
+
+      RUN(57, 474, 'asdf')
+
+   For even more compact representation, sacrificing human-readability,
+   this can be encoded in 12 bytes:
+
+      R57,474,asdf
+
+   Further compression is possible by using variable-length integer
+   encoding (such as LEB128 or Protocol Buffers' varint) for the numeric
+   values. This approach could potentially reduce the encoding to as few
+   as 7 bytes for these 4 insertions.
 
 
 6.  Acknowledgements
