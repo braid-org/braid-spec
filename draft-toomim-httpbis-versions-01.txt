@@ -1082,7 +1082,8 @@ Table of Contents
    Further compression is possible by using variable-length integer
    encoding (such as LEB128 or Protocol Buffers' varint) for the numeric
    values. This approach could potentially reduce the encoding to 7
-   bytes for these 4 insertions.
+   bytes for these 4 insertions, or just 0.0146% of the uncompressed
+   data.
 
 
 6.  Acknowledgements
