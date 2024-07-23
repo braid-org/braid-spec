@@ -75,15 +75,16 @@ Table of Contents
    4.  Version-Type Header ..........................................26
    5.  Version-Type Examples ........................................26
    5.1.  Improved Header Compression for Version-Type: rle ..........27
-   6.  Acknowledgements .............................................30
-   7.  Conventions ..................................................30
-   8.  IANA Considerations ..........................................31
-   9.  Copyright Notice .............................................31
-   10. Security Considerations ......................................31
-   11. Authors' Addresses ...........................................32
-   12. References ...................................................33
-   12.1.  Normative References ......................................34
-   12.2.  Informative References ....................................34
+   5.2.  Run-Length Compression without Header Compression ..........30
+   6.  Acknowledgements .............................................31
+   7.  Conventions ..................................................31
+   8.  IANA Considerations ..........................................32
+   9.  Copyright Notice .............................................32
+   10. Security Considerations ......................................32
+   11. Authors' Addresses ...........................................33
+   12. References ...................................................34
+   12.1.  Normative References ......................................35
+   12.2.  Informative References ....................................35
 
 
 1.  Introduction
