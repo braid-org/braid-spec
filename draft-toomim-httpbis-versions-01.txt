@@ -963,7 +963,7 @@ Table of Contents
     - Header Compression using Version-Type
     - New Cache-Control: version-immutable proposal
 
-
+ 
 5.1.  Improved Header Compression for Version-Type: rle
 
    A header compression scheme can leverage Version-Type patterns to
@@ -1057,10 +1057,16 @@ Table of Contents
    using a new compression function, RUN(a, b, c):
 
       RUN(a, b, insertions) =
-         for i, char in insertions
-            X(a+i, a+i-1, `${b+i}:${b+i}`)
+        for i, char in insertions
+          return `
+            U
+            W{a+i}
+            X{a+i-1}
+            Y
+            Z{b+i:b+i}
 
             char
+          `
 
    Where the parameters are:
 
