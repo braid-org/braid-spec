@@ -1086,6 +1086,45 @@ Table of Contents
    data.
 
 
+5.2.  Run-Length Compression without Header Compression
+
+   In practice, run-length compression can also be applied without
+   relying on header compression. By specifying Version-Type: rle, any
+   peer can receive a series of N insertions as a single update and
+   infer that the string in the update was composed of N separate
+   insertions. For instance, the previous example of four PUT requests
+   can be compressed into a single update without any header
+   compression:
+
+      PUT /some.txt
+      Version: "3f84786c-60"
+      Parents: "3f84786c-56"
+      Version-Type: rle
+      Content-Length: 4
+      Content-Range: text 471:474
+
+      asdf
+
+   This single request expresses the change from version 3f84786c-56 to
+   3f84786c-60, implicitly including the three intermediate versions
+   (3f84786c-57, 3f84786c-58, and 3f84786c-59). Any client or server
+   that understands "Version-Type: rle" can infer these intermediate
+   versions when necessary by slicing the content "asdf" to the
+   appropriate length for each version.
+
+   For example:
+
+      - Version 3f84786c-57 would contain "a"
+      - Version 3f84786c-58 would contain "as"
+      - Version 3f84786c-59 would contain "asd"
+      - Version 3f84786c-60 would contain the full "asdf"
+
+   This approach significantly reduces the number of HTTP requests and
+   amount of data required for a series of small, consecutive inserts,
+   while still allowing for precise version control and the ability to
+   reconstruct any intermediate state.
+
+
 6.  Acknowledgements
 
    This is derived from prior draft [Braid-HTTP] with authors:
