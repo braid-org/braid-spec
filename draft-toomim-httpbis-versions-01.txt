@@ -1071,7 +1071,7 @@ Table of Contents
       b: Initial content range
       insertions: String of characters to be inserted
 
-   We could then compress the 479 bytes down to 20 bytes as:
+   We could then compress the 479 bytes down to a single 20-byte message:
 
       RUN(57, 474, 'asdf')
 
