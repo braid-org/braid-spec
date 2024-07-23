@@ -1082,7 +1082,7 @@ Table of Contents
 
    Further compression is possible by using variable-length integer
    encoding (such as LEB128 or Protocol Buffers' varint) for the numeric
-   values. This approach could potentially reduce the encoding to 7
+   values.  This approach could potentially reduce the encoding to 7
    bytes for these 4 insertions, or just 0.0146% of the uncompressed 479
    bytes.
 
@@ -1090,10 +1090,10 @@ Table of Contents
 5.2.  Run-Length Compression without Header Compression
 
    In practice, run-length compression can also be applied without
-   relying on header compression. By specifying Version-Type: rle, any
+   relying on header compression.  By specifying Version-Type: rle, any
    peer can receive a series of N insertions as a single update and
    infer that the string in the update was composed of N separate
-   insertions. For instance, the previous example of four PUT requests
+   insertions.  For instance, the previous example of four PUT requests
    can be compressed into a single update without any header
    compression:
 
@@ -1108,7 +1108,7 @@ Table of Contents
 
    This single request expresses the change from version 3f84786c-56 to
    3f84786c-60, implicitly including the three intermediate versions
-   (3f84786c-57, 3f84786c-58, and 3f84786c-59). Any client or server
+   (3f84786c-57, 3f84786c-58, and 3f84786c-59).  Any client or server
    that understands "Version-Type: rle" can infer these intermediate
    versions when necessary by slicing the content "asdf" to the
    appropriate length for each version.
