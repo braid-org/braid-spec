@@ -969,10 +969,10 @@ Table of Contents
 
 5.1.  Improved Header Compression for Version-Type: rle
 
-   A header compression scheme can leverage Version-Type patterns
-   pattern to significantly compress messages.  For example, consider
-   the following scenario where 4 characters are inserted into a
-   collaborative editor, requiring 479 bytes when uncompressed:
+   A header compression scheme can leverage Version-Type pattern to
+   significantly compress messages.  For example, consider the following
+   scenario where 4 characters are inserted into a collaborative editor,
+   requiring 479 bytes when uncompressed:
 
       PUT /some.txt
       Version: "3f84786c-57"
