@@ -877,8 +877,6 @@ Table of Contents
 
          Version: "4590r8uwm63-18"
          Parents: "2agvvzgccrq-5"
-         Patches: 1
-
          Content-Length: 1
          Content-Range: text [12:12]
 
@@ -886,8 +884,6 @@ Table of Contents
 
          Version: "4590r8uwm63-19"
          Parents: "4590r8uwm63-18"
-         Patches: 1
-
          Content-Length: 1
          Content-Range: text [13:13]
 
