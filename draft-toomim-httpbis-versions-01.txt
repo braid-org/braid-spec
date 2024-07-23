@@ -1005,6 +1005,7 @@ Table of Contents
       Content-Range: text 474:474
 
       f
+
 
    HPACK and QPACK can compress these headers using Huffman Encoding,
    by identifying repeated strings and assigning them codes:
@@ -1051,7 +1052,7 @@ Table of Contents
 
    This initial compression reduces the 479 bytes to approximately 123
    bytes.
-
+ 
    Further compression is possible by recognizing that the numeric
    parameters in each header increment by 1 from the previous header.
    This allows us to take advantage of run-length encoding; specified as
