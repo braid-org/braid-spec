@@ -1007,8 +1007,8 @@ Table of Contents
       f
 
 
-   HPACK and QPACK can compress these headers using Huffman Encoding,
-   by identifying repeated strings and assigning them codes:
+   Huffman Encoding (e.g. in HTTP's HPACK and QPACK) can compress these
+   headers by identifying repeated strings and assigning them codes:
 
       U = "PUT /some.txt"
       W = "Version: \"3f84786c-{ }\""
