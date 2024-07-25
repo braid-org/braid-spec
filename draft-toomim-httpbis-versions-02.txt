@@ -803,7 +803,6 @@ Table of Contents
       Response:
 
          200 OK
-         Parents: "abwejf-0"
          Version: "abwejf-900"
 
    B. Partial upload:
@@ -811,7 +810,6 @@ Table of Contents
       Response:
 
          206 Partial Content
-         Parents: "abwejf-0"
          Version: "abwejf-400"
 
    C. No upload progress:
