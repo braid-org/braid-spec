@@ -4,7 +4,7 @@ Intended status: Proposed Standard                           Jul 8, 2024
 
 
                         HTTP Resource Versioning
-                    draft-toomim-httpbis-versions-00
+                    draft-toomim-httpbis-versions-01
 
 Abstract
 
@@ -225,11 +225,12 @@ Table of Contents
       the same ETag to recur over time if the resource changes back and
       forth between a common state.
 
-   3. ETags are sensitive to Content-Encoding. If a single version of a
-      resource is transmitted with different Content-Encodings (e.g.,
-      gzip), it will be sent with different ETags.  Thus, one can have
-      multiple ETags for the same version in history, as well as a
-      single ETag for multiple versions of history.
+   3. Strong ETags are sensitive to Content-Encoding. If a single
+      version of a resource is transmitted with different
+      Content-Encodings (e.g., gzip), it will be sent with different
+      strong ETags.  Thus, one can have multiple ETags for the same
+      version in history, as well as a single ETag for multiple versions
+      of history.
 
 
 1.1.3.  Versioning encoded within URLs
@@ -957,10 +958,7 @@ Table of Contents
 
    [xxx fill this in]
 
-    - Version-Type: bytestream and arraystream
-    - Reconnecting to feed of posts as arraystream
-    - Compressing Runs
-    - Header Compression using Version-Type
+    - Reconnecting to feed of posts as Version-Type: arraystream
     - New Cache-Control: version-immutable proposal
 
  
@@ -1086,7 +1084,7 @@ Table of Contents
    Further compression is possible by using variable-length integer
    encoding (such as LEB128 or Protocol Buffers' varint) for the numeric
    values.  This approach could potentially reduce the encoding to 7
-   bytes for these 4 insertions, or just 0.0146% of the uncompressed 479
+   bytes for these 4 insertions, or just 1.46% of the uncompressed 479
    bytes.
 
 
