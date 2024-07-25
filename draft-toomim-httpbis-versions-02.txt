@@ -358,6 +358,8 @@ Table of Contents
    time.  A set of IDs together specifies the merger of those changes,
    along with all changed preceding them in the version history DAG.
 
+   Merge semantics are specified in [Merge-Types].
+
 
 2.3.  Version and Parents Headers
 
@@ -375,11 +377,11 @@ Table of Contents
    These headers may be used in PUT, PATCH, or POST requests and GET
    responses to convey the version history of a resource.
 
-   Any version can be reconstructed by first merging its parents, then
-   applying its specific changes.  The full graph of parent
-   relationships forms the version history DAG.  Version A is considered
-   to precede version B if and only if A is an ancestor of B in this
-   DAG.
+   Any version can be reconstructed by first merging its parents
+   (according to [Merge-Types]), then applying its specific changes.
+   The full graph of parent relationships forms the version history DAG.
+   Version A is considered to precede version B if and only if A is an
+   ancestor of B in this DAG.
 
    A Version header is allowed to contain multiple IDs to describe a
    merger:
