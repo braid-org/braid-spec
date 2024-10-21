@@ -12,6 +12,13 @@ Braid adds to HTTP:
 3. *Subscriptions* to updates over time
 4. *Merge-Types* that specify OT or CRDT behavior
 
+### Versions — [`draft-toomim-httpbis-versions-02.txt`](https://raw.githubusercontent.com/braid-org/braid-spec/master/draft-toomim-httpbis-versions-02.txt)
+
+Versions identify time for distributed state.  We extend existing HTTP methods
+(GET, HEAD, PUT, PATCH, POST, DELETE) with version semantics, so that they can
+read, write, and refer to multiple versions a resource as it changes over
+time.
+
 ### Range Patch — [`draft-toomim-httpbis-range-patch-01.txt`](https://raw.githubusercontent.com/braid-org/braid-spec/master/draft-toomim-httpbis-range-patch-01.txt)
 
 A uniform approach for expressing changes to state over HTTP.  Generalizes
