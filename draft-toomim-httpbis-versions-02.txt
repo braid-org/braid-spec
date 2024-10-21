@@ -1,6 +1,6 @@
 Internet-Draft                                                 M. Toomim
-Expires: Feb 29, 2024                                  Invisible College
-Intended status: Proposed Standard                          Jul 25, 2024
+Expires: Apr 20, 2024                                  Invisible College
+Intended status: Proposed Standard                          Oct 21, 2024
 
 
                         HTTP Resource Versioning
@@ -18,7 +18,8 @@ Abstract
 
    This document analyzes existing methods of versioning in HTTP,
    highlights limitations, and sketches a more general versioning
-   approach that can enable new use-cases for HTTP.
+   approach that can enable new use-cases for HTTP.  An upgrade path for
+   legacy intermediaries is provided.
 
 
 Status of this Memo
@@ -30,7 +31,7 @@ Status of this Memo
    Task Force (IETF), its areas, and its working groups.  Note that
    other groups may also distribute working documents as
    Internet-Drafts.  The list of current Internet-Drafts is at
-   http://datatracker.ietf.org/drafts/current/.
+   https://datatracker.ietf.org/drafts/current/.
 
    Internet-Drafts are draft documents valid for a maximum of six months
    and may be updated, replaced, or obsoleted by other documents at any
@@ -64,27 +65,30 @@ Table of Contents
    2.4.3.  PUT a new version ........................................13
    2.4.4.  GET a range of historical versions .......................14
    2.5.  Rules for Version and Parents headers ......................16
-   2.6.  The `Current-Version` header ...............................16
-   3.  Example Applications of Resource Versioning ..................17
-   3.1  Incremental RSS subscription ................................17
-   3.2.  Hosting git via HTTP .......................................18
-   3.3.  Resumeable uploads .........................................21
-   3.3.1.  Version-Type: bytestream .................................21
-   3.3.2.  Resumable Upload Protocol ................................22
-   3.4.  Distributed collaborative editing ..........................24
-   4.  Version-Type Header ..........................................26
-   5.  Version-Type Examples ........................................26
-   5.1.  Improved Header Compression for Version-Type: rle ..........27
-   5.2.  Run-Length Compression without Header Compression ..........30
-   6.  Acknowledgements .............................................31
-   7.  Conventions ..................................................31
-   8.  IANA Considerations ..........................................32
-   9.  Copyright Notice .............................................32
-   10. Security Considerations ......................................32
-   11. Authors' Addresses ...........................................33
+   2.6.  Status 309: Version Unknown Here ...........................16
+   2.7.  The Current-Version header .................................16
+   3.  Version-Type Header ..........................................17
+   4.  Versioning through Intermediaries ............................18
+   4.1.  Detecting Legacy Intermediaries ............................19
+   4.2.  Responding to history requests .............................20
+   5.  Example Uses .................................................20
+   5.1.  Incremental RSS subscription ...............................20
+   5.2.  Hosting git via HTTP .......................................21
+   5.3.  Resumeable uploads .........................................23
+   5.3.1.  Version-Type: bytestream .................................23
+   5.3.2.  Resumable Upload Protocol ................................24
+   5.4.  Distributed collaborative editing ..........................26
+   5.5.  Improved Header Compression for Version-Type: rle ..........28
+   5.6.  Run-Length Compression without Header Compression ..........31
+   6.  Acknowledgements .............................................32
+   7.  Conventions ..................................................32
+   8.  IANA Considerations ..........................................33
+   9.  Copyright Notice .............................................33
+   10. Security Considerations ......................................33
+   11. Authors' Addresses ...........................................34
    12. References ...................................................34
-   12.1.  Normative References ......................................35
-   12.2.  Informative References ....................................35
+   12.1.  Normative References ......................................34
+   12.2.  Informative References ....................................34
 
 
 1.  Introduction
@@ -349,22 +353,37 @@ Table of Contents
    others may occur in parallel.
 
 
-2.2.  Version Identifiers
+2.2.  Version and Event Identifiers
 
-   A version is uniquely identified by a set of one or more opaque
-   string identifiers ("version IDs").  These IDs are formatted according to the
-   Structured Headers specification [RFC8941].  Each version ID
-   represents a distinct change to the resource at a specific point in
-   time.  A set of IDs together specifies the merger of those changes,
-   along with all changed preceding them in the version history DAG.
+   A "Version" is uniquely identified as a set of mutation "Event IDs",
+   which are formatted as a list of strings in the Structured Headers
+   format [RFC8941].  For example:
+   
+      "ajtva12kid", "cmdpvkpll2"
 
-   Merge semantics are specified in [Merge-Types].
+   Each event ID is unique, and represents a distinct change to the
+   resource at a specific point in time.  When a resource has been
+   mutated by any given set of event IDs, the state of its
+   representations can be uniquely determined by the View() function
+   specified in its Merge-Type [Merge-Types].  Therefore, a Version of
+   the resource uniquely identifies the state of its representation as
+   it changes over time.
+
+   The ordering of event IDs carries no meaning.  Event IDs SHOULD be
+   sorted lexicographically whenever received or sent, with exactly one
+   space after "," separators, to canonicalize the set's serialization
+   as unique string, e.g. as a unique cache key.
+
+   The formatting and interpretation of a resource's version and event
+   IDs are constrained according to its Version-Type, as defined in
+   Section 4.
 
 
 2.3.  Version and Parents Headers
 
    This specification introduces two new HTTP headers: Version and
-   Parents.  These headers communicate version information in requests and responses.
+   Parents.  These headers communicate version information in requests
+   and responses.
 
    The Version header specifies the current version of a resource:
 
@@ -383,21 +402,17 @@ Table of Contents
    Version A is considered to precede version B if and only if A is an
    ancestor of B in this DAG.
 
-   A Version header is allowed to contain multiple IDs to describe a
-   merger:
+   The version immediately after a mutation will contain just that
+   mutation's event ID.  However, the version obtained by merging N
+   parallel mutations will contain N event IDs:
 
            Version: "dkn7ov2vwg", "v2vwgdkn7o"
 
-   This is useful when referring to a snapshot of a particular merger.
-   However, this is rarely needed.  In normal usage, implementers SHOULD
-   create only a single version ID for individual mutations.
-
-   For any two version IDs A and B that are specified in a Version or
-   Parents header, A cannot be a descendent of B or vice versa.  The
-   ordering of version IDs within the header carries no meaning.
+   For any two event IDs A and B that are specified in a Version or
+   Parents header, A cannot be a descendent of B or vice versa.
 
    If a client or server does not specify a Version for a resource it
-   transfers, the recipient MAY generate and assign it new version IDs.
+   transfers, the recipient MAY generate and assign it new event IDs.
    If a client or server does not specify a Parents header when
    transferring a new version, the recipient MAY presume that the most
    recent versions it has (the frontier of time) are the parents of the
@@ -405,6 +420,20 @@ Table of Contents
 
 
 2.4.  Using Versioning with HTTP Methods
+
+   The Version and Parents can exist in these methods:
+
+     - GET
+     - HEAD
+     - PUT
+     - PATCH
+     - POST
+     - DELETE
+
+   For each of these methods, if a Version or Parents header exists in
+   the request, it should also exist in the response, and if not, the
+   server may nonetheless specify it in its response.
+
 
 2.4.1.  GET the current version
 
@@ -496,7 +525,7 @@ Table of Contents
 
 
    The Version and Parents headers are optional.  If Version is omitted,
-   the recipient may assign new version IDs.  If Parents is omitted, the
+   the recipient may assign new event IDs.  If Parents is omitted, the
    recipient may assume that its current version is the version's
    parents.
 
@@ -517,7 +546,7 @@ Table of Contents
 
       Response:
 
-         HTTP/1.1 104 Multiresponse
+         HTTP/1.1 209 Multiresponse
          Current-Version: "3"
 
          HTTP/1.1 200 OK
@@ -543,7 +572,8 @@ Table of Contents
    
 
    Note that this example uses a new "Multiresponse" code, which is
-   currently being drafted.  See [Braid-HTTP] Section 3.
+   currently being drafted [Multiresponse].  See [Braid-HTTP] Section 3
+   for an earlier draft of the semantics.
 
 
 2.5.  Rules for Version and Parents headers
@@ -575,7 +605,22 @@ Table of Contents
    code.
 
 
-2.6.  The `Current-Version` header
+2.6.  Status 309: Version Unknown Here
+
+   Since mutation history can grow large, any peer might drop any
+   portion of its resources history at any time, and clients cannot rely
+   on any particular portion of history existing on a server or
+   intermediary when it makes requests.
+
+   If a server's response to a request depends on knowledge of a
+   particular version or span of history that it does not possess, the
+   server SHOULD respond with a status code of "309 Version Unknown
+   Here".  This implies that the client should "redirect" its request to
+   a different peer or archival storage, outside the scope of this
+   specification.
+
+
+2.7.  The Current-Version header
 
    While sending historical versions, a server or client can specify its
    current latest version with the Current-Version header.  The other
@@ -584,9 +629,144 @@ Table of Contents
    example below.
 
 
-3.  Example Applications of Resource Versioning
+3.  Version-Type Header
 
-3.1  Efficient RSS Feed Updates
+   The optional Version-Type header specifies constraints on the format
+   and interpretation of event IDs.  This allows for various
+   optimizations and specialized versioning schemes.
+
+   For example:
+
+      Version-Type: git
+
+   This could indicate that event IDs will be git-style hashes,
+   branches, or tags.  Peers could verify that the entire repository at
+   a given version hashes to the specified ID.
+
+   Another example:
+
+      Version-Type: dt
+   or
+      Version-Type: rle
+
+   This could specify the use of Diamond-Types or "run-length-encoded"
+   event IDs, which are Lamport timestamps of the form:
+
+      Version: "<agent>-<char_count>"
+
+   Diamond-Types, Automerge, and other algorithms use this format to
+   compress history metadata through run-length encoding of consecutive
+   insertions.  This allows a set of 50 inserted characters to be stored
+   as 50 bytes plus one event ID, rather than 50 bytes plus 50 event
+   IDs (each of which takes up multiple bytes).
+
+   Implementers may define custom Version-Types to suit specific needs:
+
+      Version-Type: vector-clock
+
+   A vector clock event ID might take the form:
+
+      Version: "{agentid1: counter1, agentid2: counter2, ...}"
+
+   Vector clocks enable direct computation of partial order between any
+   two event IDs without examining the full version history graph.
+
+   (To know the order between two vector clocks A and B, one needs only
+   to compare each agent's counter between A and B.  If A dominates
+   across all agents, it is newer.  If B dominates, then it is newer.
+   Otherwise, the ordering between the two vector clocks is not known,
+   and we can say that they happened in parallel.)
+
+
+4.  Versioning through Intermediaries
+
+   Intermediaries can take advantage of versioning to uniquely
+   reference, store, and serve multiple states/updates across a
+   resource's history.  To distinguish versions, intermediaries must add
+   the "Version" and "Parents" headers to their cache keys -- equivalent
+   to the Vary header:
+
+      Vary: version, parents
+
+   Intermediaries SHOULD behave as if the Version and Parents headers
+   have been added to the Vary header in every response passing through
+   them.  To support legacy versioning-unaware intermediaries, the
+   origin server is RECOMMENDED to explicitly add or extend Vary with
+   "version, parents" in all its responses, unless they are certain that
+   no legacy intermediaries will process the response.
+
+
+4.1.  Detecting Legacy Intermediaries
+
+   In the case, that a legacy intermediary *does* process a versioned
+   response without the Vary header, it can be detected by the client by
+   noticing that the Version and Parents headers used in its request are
+   not the same as those it receives in response.  Here is an example:
+
+      Presume we start with two versions:
+
+         PUT /foo
+         Version: "1"
+
+         Hi
+
+         PUT /foo
+         Version: "2"
+
+         Hi everyone!
+
+      Now, if someone GETs the old version:
+
+         GET /foo
+         Version: "1"
+
+      Then a versioning-aware origin server can return it:
+
+         HTTP/1.1 200 OK
+         Version: "1"
+
+         Hi everyone!
+
+      A versioning-unaware intermediary might cache this response,
+      without understanding that it depends on the version.
+
+      This causes problems for a client requesting the *newest* version:
+
+         GET /foo
+         Version: "2"
+
+      The versioning-unaware cache will return the most recent response
+      it has seen -- unaware that it is not the version requested:
+
+         HTTP/1.1 200 OK
+         Version: "1"
+
+         Hi everyone!
+
+   To detect this, the client SHOULD check that the Version and Parents
+   headers in the response contain a superset of the Event IDs specified
+   in the request.  (A missing Version or Parents header is considered
+   to be an empty set for the version or parents of this superset
+   calculation.)  The client can throw a warning to the programmer when
+   encountering a response that does not contain the request's Event
+   IDs, so that he knows to add Vary to the server's responses.
+
+
+4.2.  Responding to history requests
+
+   [xxx todo: In the future, an intermediary could conceivably chain the
+   cached responses of multiple GET responses together into a bigger
+   history object.  We can specify the situations in which that is safe
+   to do here.]
+
+
+5.  Example Uses
+
+   [xxx to do]
+    - Reconnecting to feed of posts as Version-Type: arraystream
+    - New Cache-Control: version-immutable proposal
+
+5.1.  Incremental RSS Subscription
 
    Traditional RSS readers inefficiently poll servers, often downloading
    entire feeds when only minor changes have occurred.  HTTP Resource
@@ -629,7 +809,7 @@ Table of Contents
    vary; see [updates] or [range-patch] for examples.
    
 
-3.2.  Hosting git via HTTP
+5.2.  Hosting git via HTTP
 
    We can host a git repository directly through HTTP, where each file
    corresponds to a resource, and all have a version history.
@@ -695,7 +875,7 @@ Table of Contents
 
       Response:
 
-         HTTP/1.1 104 Multiresponse
+         HTTP/1.1 209 Multiresponse
 
          HTTP/1.1 200 OK
          Content-Type: text/markdown
@@ -741,15 +921,15 @@ Table of Contents
 
    This expresses aspects of the "smart" git protocol over plain HTTP.
 
-
-3.3.  Resumeable uploads
+
+5.3.  Resumeable uploads
 
    Resource Versioning semantics enable efficient implementation of
    resumable uploads, providing an alternative perspective to
-   [draft-ietf-httpbis-resumable-upload].
+   [Resumeable Upload].
 
 
-3.3.1.  Version-Type: bytestream
+5.3.1.  Version-Type: bytestream
 
    For uploads, we can consider the resource as an append-only
    bytestream, declared with a header:
@@ -768,7 +948,7 @@ Table of Contents
    stream.
 
 
-3.3.2.  Resumable Upload Protocol
+5.3.2.  Resumable Upload Protocol
 
    To initiate an upload, the client specifies the Version-Type and the
    expected final version using the Current-Version header:
@@ -842,7 +1022,7 @@ Table of Contents
    Version-Type to inherently support resumable uploads.
 
 
-3.4.  Distributed collaborative editing
+5.4.  Distributed collaborative editing
 
    This versioning system can also support full CRDT and OT
    collaborative editing features (when used with other extensions such
@@ -862,7 +1042,7 @@ Table of Contents
 
       Response:
 
-         HTTP/1.1 104 Multiresponse
+         HTTP/1.1 209 Multiresponse
 
          HTTP/1.1 200 OK
          Version: "2agvvzgccrq-5"
@@ -908,65 +1088,8 @@ Table of Contents
    Clients can connect with either merge-type, and can even change
    merge-type on-the-fly -- the version history itself can be re-used.
 
-
-4.  Version-Type Header
-
-   The optional Version-Type header specifies constraints on the format
-   and interpretation of version IDs.  This allows for various
-   optimizations and specialized versioning schemes.
-
-   For example:
-
-      Version-Type: git
-
-   This could indicate that version IDs will be git-style hashes,
-   branches, or tags.  Peers could verify that the entire repository at
-   a given version hashes to the specified ID.
-
-   Another example:
-
-      Version-Type: dt
-   or
-      Version-Type: rle
-
-   This could specify the use of Diamond-Types or "run-length-encoded"
-   version IDs, which are Lamport timestamps of the form:
-
-      Version: "<agent>-<char_count>"
-
-   Diamond-Types, Automerge, and other algorithms use this format to
-   compress history metadata through run-length encoding of consecutive
-   insertions.  This allows a set of 50 inserted characters to be stored
-   as 50 bytes plus one version ID, rather than 50 bytes plus 50 version
-   IDs (each of which takes up multiple bytes).
-
-   Implementers may define custom Version-Types to suit specific needs:
-
-      Version-Type: vector-clock
-
-   A vector clock version ID might take the form:
-
-      Version: "{agentid1: counter1, agentid2: counter2, ...}"
-
-   Vector clocks enable direct computation of partial order between any
-   two version IDs without examining the full version history graph.
-
-   (To know the order between two vector clocks A and B, one needs only
-   to compare each agent's counter between A and B.  If A dominates
-   across all agents, it is newer.  If B dominates, then it is newer.
-   Otherwise, the ordering between the two vector clocks is not known,
-   and we can say that they happened in parallel.)
-
-
-5.  Version-Type Examples
-
-   [xxx fill this in]
-
-    - Reconnecting to feed of posts as Version-Type: arraystream
-    - New Cache-Control: version-immutable proposal
-
  
-5.1.  Improved Header Compression for Version-Type: rle
+5.5.  Improved Header Compression for Version-Type: rle
 
    A header compression scheme can leverage Version-Type patterns to
    significantly compress messages.  For example, consider the following
@@ -1092,7 +1215,7 @@ Table of Contents
    bytes.
 
 
-5.2.  Run-Length Compression without Header Compression
+5.6.  Run-Length Compression without Header Compression
 
    In practice, run-length compression can also be applied without
    relying on header compression.  By specifying Version-Type: rle, any
@@ -1203,7 +1326,6 @@ Table of Contents
    XXX Todo
 
 
-
 11.  Authors' Addresses
 
    For more information, the authors of this document are best contacted
@@ -1218,17 +1340,28 @@ Table of Contents
    Web:   https://invisible.college/@toomim
 
 
-
-
 12.  References
 
 12.1.  Normative References
 
-   [RFC5789]  "PATCH Method for HTTP", RFC 5789.
+   [RFC5789]           "PATCH Method for HTTP", RFC 5789.
 
-   [RFC9110]  "HTTP Semantics", RFC 9110.
+   [RFC9110]           "HTTP Semantics", RFC 9110.
 
-11.2.  Informative References
+   [Braid-HTTP]        draft-toomim-httpbis-braid-http-04
+
+   [Merge-Types]       draft-toomim-httpbis-merge-types-00
+
+   [Updates]           draft-toomim-httpbis-updates-[TBD]
+
+   [Multiresponse]     draft-toomim-httpbis-multiresponse-[TBD]
+
+   [Range-Patch]       draft-toomim-httpbis-range-patch-00
+
+   [Resumeable Upload] draft-ietf-httpbis-resumable-upload
+
+
+12.2.  Informative References
 
    [XHR]      Van Kestern, A., Aubourg, J., Song, J., and R. M.
               Steen, H.  "XMLHttpRequest", September 2019.
