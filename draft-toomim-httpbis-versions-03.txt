@@ -4,7 +4,7 @@ Intended status: Proposed Standard                          Oct 21, 2024
 
 
                         HTTP Resource Versioning
-                    draft-toomim-httpbis-versions-02
+                    draft-toomim-httpbis-versions-03
 
 Abstract
 
@@ -433,6 +433,9 @@ Table of Contents
    For each of these methods, if a Version or Parents header exists in
    the request, it should also exist in the response, and if not, the
    server may nonetheless specify it in its response.
+
+   We now detail the ways in which these headers modify requests and
+   responses for these methods.  [Todo: make an overview map]
 
 
 2.4.1.  GET the current version
