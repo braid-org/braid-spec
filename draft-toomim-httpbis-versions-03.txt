@@ -619,8 +619,8 @@ Table of Contents
    particular version or span of history that it does not possess, the
    server SHOULD respond with a status code of "309 Version Unknown
    Here".  This implies that the client should "redirect" its request to
-   a different peer or archival storage, outside the scope of this
-   specification.
+   a different peer or archival storage -- defined outside the scope of
+   this specification.
 
 
 2.7.  The Current-Version header
@@ -702,9 +702,10 @@ Table of Contents
 4.1.  Detecting Legacy Intermediaries
 
    In the case, that a legacy intermediary *does* process a versioned
-   response without the Vary header, it can be detected by the client by
-   noticing that the Version and Parents headers used in its request are
-   not the same as those it receives in response.  Here is an example:
+   response without the Vary header, it can be detected by the client
+   noticing that the Version and Parents Event IDs in a client request
+   are not present in the request's response.  Here is an example:
+
 
       Presume we start with two versions:
 
@@ -746,6 +747,7 @@ Table of Contents
 
          Hi everyone!
 
+
    To detect this, the client SHOULD check that the Version and Parents
    headers in the response contain a superset of the Event IDs specified
    in the request.  (A missing Version or Parents header is considered
@@ -768,6 +770,7 @@ Table of Contents
    [xxx to do]
     - Reconnecting to feed of posts as Version-Type: arraystream
     - New Cache-Control: version-immutable proposal
+
 
 5.1.  Incremental RSS Subscription
 
@@ -806,6 +809,7 @@ Table of Contents
           </item>
          </channel>
          </rss>
+
 
    This approach significantly reduces bandwidth usage and processing
    time for both client and server.  The specific patch format used can
