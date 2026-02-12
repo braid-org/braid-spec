@@ -14,7 +14,8 @@ Abstract
 
    Links allow JSON objects to compose across websites, supporting
    transclusion.  Optional metadata on links can be used to specify a
-   specific version or sub-slice of data to link to.
+   specific version or sub-slice of data to link to, or to cache a
+   pre-fetched result.
 
 
 
