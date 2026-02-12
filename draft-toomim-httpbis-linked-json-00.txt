@@ -2,7 +2,7 @@ Internet-Draft                                                 M. Toomim
 Expires: Mar 8, 2020                                   Invisible College
 Intended status: Proposed Standard                            B. Bellomy
                                                        Invisible College
-                                                             Aug 2, 2020
+                                                            Feb 12, 2026
 
                                  Linked JSON
                      draft-toomim-httpbis-linked-json-00
@@ -110,11 +110,25 @@ Table of Contents
        }
      }
 
-   The metadata in [RFC8288] could also be expressed.
+   A "body" field can be used to include a cache of the resource, to
+   save the client a round-trip when fetching it:
 
-   Or a GraphQL [GRAPHQL] query:
+     {
+       "link: "/post/1234",
+       "body": {
+         "title": "Hello world!",
+         "body": "This is my first post!,
+         "author": "Michael Toomim"
+        }
+      }
 
-     { "link": "/foo", "range": "(bar:9)[3,4]" }
+   Metadata fields can also express Link Relation Types, as defined in
+   [RFC8288], or GraphQL [GRAPHQL] queries:
+
+     { "link": "/post/234", "range": "{title, body, comments[0:5]}" }
+
+   The meaning of particular fields can be standardized by registering
+   with IANA, as specified in section 5.
 
 
 2.  Related Work
@@ -141,7 +155,7 @@ Table of Contents
    and easier to implement for the specific purpose of linking JSON.
 
    (Todo: compare with HAL, Siren, JSON:API, and Collection+JSON as
-   described at https://github.com/badgateway/ketting)
+   described at https://github.com/badgateway/ketting.  Also IPLD.)
 
 3.  Resolution
 
@@ -160,6 +174,84 @@ Table of Contents
 5.  IANA Considerations
 
    XXX fill this in.
+
+5.1.  Linked JSON Field Registry
+
+   The "Linked JSON Field Registry" defines the namespace for the
+   version type names and refers to their corresponding specifications.
+   The registry will be created and maintained at
+   <http://www.iana.org/assignments/linked-json-fields>.
+
+5.1.1.  Procedure
+
+   Registration of a Linked JSON Field MUST include the following
+   fields:
+
+     - Type name
+     - Required parameters
+     - Optional parameters
+     - Description
+     - Security considerations
+     - Interoperability considerations
+     - Obsolete/Non-obsolete status
+     - Published specification
+     - Person & email address to contact for further information
+
+   Values to be added to this namespace require IETF Review (see
+   [RFC5226], Section 4.1).
+
+5.1.2.  Linked JSON Field Registrations
+
+   [todo: fill this in]
+
+   - version: the version that you are linking to.  issued in the GET
+     request.
+
+   - range: the range linking to.  also issued in GET request.
+
+   - body: a cache of the expected response to the GET request.
+     - [todo: specify how to set Accept: header to get right
+       content-type of response]
+
+5.1.3.  Comments on Linked JSON Field Registrations
+
+   Comments on registered Linked JSON Fields may be submitted by members
+   of the community to the IANA at iana@iana.org.  These comments will
+   be reviewed by the Linked JSON Fields reviewer and then passed on to
+   the "owner" of the Linked JSON Field if possible.  Submitters of
+   comments may request that their comment be attached to the Linked
+   JSON Field registration itself; if the IANA, in consultation with the
+   Version Types reviewer, approves, the comment will be made accessible
+   in conjunction with the type registration.
+
+5.1.4.  Change Procedures
+
+   Once a Linked JSON Field has been published by the IANA, the owner
+   may request a change to its definition.  The same procedure that
+   would be appropriate for the original registration request is used to
+   process a change request.
+
+   Linked JSON Field registrations may not be deleted; Linked JSON
+   Fields that are no longer believed appropriate for use can be
+   declared OBSOLETE; such Linked JSON Fields will be clearly marked in
+   the list published by the IANA.
+
+   Significant changes to a Linked JSON Field's definition should be
+   requested only when there are serious omissions or errors in the
+   published specification.  When review is required, a change request
+   may be denied if it renders entities that were valid under the
+   previous definition invalid under the new definition.
+
+   The owner of a Linked JSON Field may pass responsibility to another
+   person or agency by informing the IANA; this can be done without
+   discussion or review.
+
+   The IESG may reassign responsibility for a Linked JSON Field.  The
+   most common case of this will be to enable changes to be made to
+   types where the author of the registration has died, moved out of
+   contact, or is otherwise unable to make changes that are important to
+   the community.
+
 
 6.  Security Considerations
 
