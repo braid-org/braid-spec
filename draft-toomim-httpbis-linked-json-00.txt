@@ -169,8 +169,8 @@ Table of Contents
 
 4.  Media Type
 
-   Linked JSON resources MAY use the media type
-   "application/linked-json".
+   Linked JSON resources use the media type
+   "application/linked+json".
 
 5.  IANA Considerations
 
