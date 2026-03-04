@@ -261,15 +261,15 @@ Table of Contents
 
 2.2.1.  Formatting of Version IDs in versioning headers
 
-   The Version and Parents headers are formatted as a list of strings in
-   the Structured Headers format [RFC8941].  Each string is called an
-   Event ID.
+   The Version and Parents headers are formatted as a list of strings
+   and/or display strings in the Structured Headers format [RFC8941,
+   RFC9651].  Each string is called an Event ID.
 
-           Version: <version>
-           Parents: <version>
+           Version:           <version>
+           Parents:           <version>
 
-           <version>: <event-id>, <event-id>, ...
-           <event-id>: <string>
+           <version>:         <event-id>, <event-id>, ...
+           <event-id>:        <string> | <display-string>
 
    The ordering of IDs within a Version or Parents header carries no
    meaning.  Event IDs SHOULD be sorted lexicographically whenever
@@ -279,6 +279,10 @@ Table of Contents
 
    The formatting of Event IDs is constrained according to the
    resource's Version-Type, as defined in Section 4.
+
+   Note that structured header strings "..." can only contain printable
+   ASCII.  If an Event ID contains unicode beyond printable ASCII, it
+   should be formatted as a display string %"..." instead.
 
 
 2.2.2.  Definition of Events and Versions
