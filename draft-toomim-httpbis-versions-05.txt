@@ -187,9 +187,9 @@ Table of Contents
    Version and Range:
 
 
-      GET /foo
-      Version: "v1.2.3"
-      Range: bytes 500-1000
+           GET /foo
+           Version: "v1.2.3"
+           Range: bytes 500-1000
 
 
    In this model, the term "Version" is synonymous with "Timestamp" -- a
@@ -536,15 +536,15 @@ Table of Contents
    request header(s) with versions it could not satisfy.  For example,
    if a client does:
 
-      GET /foo
-      Version: "alice-44"
-      Parents: "bob-32"
+           GET /foo
+           Version: "alice-44"
+           Parents: "bob-32"
 
    ...but the server does not have the versions 'alice-44', it should
    respond with:
 
-      432 Version Not Found
-      Version: "alice-44"
+           432 Version Not Found
+           Version: "alice-44"
 
    Peers can drop history at any time.  Clients cannot rely on any
    particular portion of history existing on a server or intermediary
@@ -568,7 +568,7 @@ Table of Contents
 
    For example:
 
-      Version-Type: git
+           Version-Type: git
 
    This could indicate that event IDs will be git-style hashes,
    branches, or tags.  Peers could verify that the entire repository at
@@ -576,7 +576,7 @@ Table of Contents
 
    Another example:
 
-      Version-Type: peer-counter; text-runs
+           Version-Type: peer-counter; text-runs
 
    Diamond-Types, Automerge, and other algorithms use this format to
    compress history metadata through run-length encoding of consecutive
@@ -586,11 +586,11 @@ Table of Contents
 
    Implementers may define custom Version-Types to suit specific needs:
 
-      Version-Type: version-vector
+           Version-Type: version-vector
 
    A Version Vector Version ID might take the form:
 
-      Version: "{peerid1: counter1, peerid2: counter2, ...}"
+           Version: "{peerid1: counter1, peerid2: counter2, ...}"
 
    Version Vectors enable direct computation of partial order between
    any two event IDs without examining the full version history graph.
@@ -735,11 +735,11 @@ Table of Contents
    The ETag header allows more precision. It specifies a version with a
    string that uniquely identifies a cacheable representation:
 
-      ETag: "2u34fa7yorz0"
+           ETag: "2u34fa7yorz0"
 
    ETags can be strong or weak, with weak ETags prefixed by W/:
 
-      ETag: W/"2u34fa7yorz0"
+           ETag: W/"2u34fa7yorz0"
 
    ETags are used in conditional requests with If-None-Match and
    If-Match headers and can be used for optimistic concurrency
@@ -1278,81 +1278,81 @@ Table of Contents
    scenario where 4 characters are inserted into a collaborative editor,
    requiring 479 bytes when uncompressed:
 
-      PUT /some.txt
-      Version: "3f84786c-57"
-      Parents: "3f84786c-56"
-      Content-Length: 1
-      Content-Range: text 471:471
+           PUT /some.txt
+           Version: "3f84786c-57"
+           Parents: "3f84786c-56"
+           Content-Length: 1
+           Content-Range: text 471:471
 
-      a
+           a
 
-      PUT /some.txt
-      Version: "3f84786c-58"
-      Parents: "3f84786c-57"
-      Content-Length: 1
-      Content-Range: text 472:472
+           PUT /some.txt
+           Version: "3f84786c-58"
+           Parents: "3f84786c-57"
+           Content-Length: 1
+           Content-Range: text 472:472
 
-      s
+           s
 
-      PUT /some.txt
-      Version: "3f84786c-59"
-      Parents: "3f84786c-58"
-      Content-Length: 1
-      Content-Range: text 473:473
+           PUT /some.txt
+           Version: "3f84786c-59"
+           Parents: "3f84786c-58"
+           Content-Length: 1
+           Content-Range: text 473:473
 
-      d
+           d
 
-      PUT /some.txt
-      Version: "3f84786c-60"
-      Parents: "3f84786c-59"
-      Content-Length: 1
-      Content-Range: text 474:474
+           PUT /some.txt
+           Version: "3f84786c-60"
+           Parents: "3f84786c-59"
+           Content-Length: 1
+           Content-Range: text 474:474
 
-      f
+           f
 
 
    Huffman Encoding (e.g. in HTTP's HPACK and QPACK) can compress these
    headers by identifying repeated strings and assigning them codes:
 
-      U = "PUT /some.txt"
-      W = "Version: \"3f84786c-{ }\""
-      X = "Parents: \"3f84786c-{ }\""
-      Y = "Content-Length: 1"
-      Z = "Content-Range: text { }"
+           U = "PUT /some.txt"
+           W = "Version: \"3f84786c-{ }\""
+           X = "Parents: \"3f84786c-{ }\""
+           Y = "Content-Length: 1"
+           Z = "Content-Range: text { }"
 
    This compression reduces the messages to:
 
-      U
-      W{57}
-      X{56}
-      Y
-      Z{471:471}
+           U
+           W{57}
+           X{56}
+           Y
+           Z{471:471}
 
-      a
+           a
 
-      U
-      W{58}
-      X{57}
-      Y
-      Z{472:472}
+           U
+           W{58}
+           X{57}
+           Y
+           Z{472:472}
 
-      s
+           s
 
-      U
-      W{59}
-      X{58}
-      Y
-      Z{473:473}
+           U
+           W{59}
+           X{58}
+           Y
+           Z{473:473}
 
-      d
+           d
 
-      U
-      W{60}
-      X{59}
-      Y
-      Z{474:474}
+           U
+           W{60}
+           X{59}
+           Y
+           Z{474:474}
 
-      f
+           f
 
    This initial compression reduces the 479 bytes to approximately 123
    bytes.
@@ -1363,17 +1363,17 @@ Table of Contents
    "Version-Type: peer-counter; text-runs".  We can thus compress the
    entire run of inserts using a new compression function, RUN(a, b, c):
 
-      RUN(a, b, insertions) =
-        for i, char in insertions
-          return `
-            U
-            W{a+i}
-            X{a+i-1}
-            Y
-            Z{b+i:b+i}
+           RUN(a, b, insertions) =
+             for i, char in insertions
+               return `
+                 U
+                 W{a+i}
+                 X{a+i-1}
+                 Y
+                 Z{b+i:b+i}
 
-            char
-          `
+                 char
+               `
 
    Where the parameters are:
 
@@ -1383,12 +1383,12 @@ Table of Contents
 
    We could then compress the 479 bytes down to a single 20-byte message:
 
-      RUN(57, 474, 'asdf')
+           RUN(57, 474, 'asdf')
 
    For even more compact representation, sacrificing human-readability,
    this can be encoded in 12 bytes:
 
-      R57,474,asdf
+           R57,474,asdf
 
    Further compression is possible by using variable-length integer
    encoding (such as LEB128 or Protocol Buffers' varint) for the numeric
@@ -1402,7 +1402,7 @@ Table of Contents
    In practice, run-length compression can also be applied without
    relying on header compression.  By specifying:
 
-      Version-Type: peer-counter; text-runs
+           Version-Type: peer-counter; text-runs
 
    ...any peer can receive a series of N insertions as a single update
    and infer that the string in the update was composed of N separate
@@ -1410,14 +1410,14 @@ Table of Contents
    can be compressed into a single update without any header
    compression:
 
-      PUT /some.txt
-      Version: "3f84786c-60"
-      Parents: "3f84786c-56"
-      Version-Type: peer-counter; text-runs
-      Content-Length: 4
-      Content-Range: text 471:474
+           PUT /some.txt
+           Version: "3f84786c-60"
+           Parents: "3f84786c-56"
+           Version-Type: peer-counter; text-runs
+           Content-Length: 4
+           Content-Range: text 471:474
 
-      asdf
+           asdf
 
    This single request expresses the change from version 3f84786c-56 to
    3f84786c-60, implicitly including the three intermediate versions
