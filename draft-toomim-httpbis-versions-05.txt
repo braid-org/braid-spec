@@ -208,7 +208,7 @@ Table of Contents
    Note that this model differs in terminology from some other
    mechanisms, such as WebDAV Versioning, which use the term Version for
    what we call a "Version of a Representation."
-
+
    A resource's "Version History" is the partial order (or DAG) of
    Versions of its state.  This history has one fork and one merge:
 
@@ -677,6 +677,7 @@ Table of Contents
    encountering a response that does not contain the request's Event
    IDs, so that he knows to add Vary to the server's responses.
 
+
 3.  Analysis of existing versioning approaches in HTTP
 
    Existing approaches to versioning in HTTP address disparate
@@ -798,7 +799,7 @@ Table of Contents
    3. It can lead to URI proliferation, complicating a web application's
       URI space, and potentially impacting caching strategies and SEO.
 
-
+
 3.2.2.  Standardizing versions as external resources
 
    A number of approaches enable ways to organize and navigate a set of
@@ -861,8 +862,8 @@ Table of Contents
          Any peer must be able to identify the version resulting from
          the merger of two parallel versions A and B, without relying on
          a central authority to assign a new version identifier AB.
-
 
+
 3.4.2.  Included within existing HTTP requests and responses
 
    The versions should be included within existing HTTP requests and
@@ -911,8 +912,8 @@ Table of Contents
           that are independent of any particular resource, so that
           multiple resources can be versioned and referred to at the
           same points in time.
-
 
+
 3.5.  Feature table of existing approaches
 
    We compose a table of existing approaches, and the features they do
@@ -1125,7 +1126,7 @@ Table of Contents
 
    This expresses aspects of the "smart" git protocol over plain HTTP.
 
-
+
 4.3.  Resumable uploads protocol
 
    Resource Versioning semantics enable efficient implementation of
@@ -1503,6 +1504,7 @@ Table of Contents
       Description: Version Not Found
       Reference: This document
 
+
 7.2.  Version Type Registry
 
    The "Version Type Registry" defines the namespace for the version type
@@ -1510,6 +1512,7 @@ Table of Contents
    will be created and maintained at
    <http://www.iana.org/assignments/version-types>.
 
+
 7.2.1.  Procedure
 
    Registration of a Version Type MUST include the following fields:
@@ -1611,7 +1614,7 @@ Table of Contents
    no longer believed appropriate for use can be declared OBSOLETE; such
    Version Types will be clearly marked in the list published by the
    IANA.
-
+
    Significant changes to a Version Type's definition should be
    requested only when there are serious omissions or errors in the
    published specification.  When review is required, a change request
@@ -1628,6 +1631,7 @@ Table of Contents
    or is otherwise unable to make changes that are important to the
    community.
 
+
 8.  Copyright Notice
 
    Copyright (c) 2026 IETF Trust and the persons identified as the
