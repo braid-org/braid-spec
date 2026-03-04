@@ -65,7 +65,7 @@ Table of Contents
    2.7.  Version-Type header .......................................12
    2.8.  Versioning through intermediaries .........................13
    2.8.1.  Detecting legacy intermediaries .........................14
-   3.  Analysis of other versioning approaches in HTTP .............14
+   3.  Analysis of existing versioning approaches in HTTP ..........14
    3.1.  Approaches with versions in headers .......................14
    3.1.1.  Last-Modified ...........................................14
    3.1.2.  ETag ....................................................15
@@ -677,7 +677,7 @@ Table of Contents
    encountering a response that does not contain the request's Event
    IDs, so that he knows to add Vary to the server's responses.
 
-3.  Analysis of other versioning approaches in HTTP
+3.  Analysis of existing versioning approaches in HTTP
 
    Existing approaches to versioning in HTTP address disparate
    use-cases, but have limitations and trade-offs.  The Last-Modified
