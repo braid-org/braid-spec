@@ -48,58 +48,60 @@ Status of this Memo
 Table of Contents
 
    1.  Introduction .................................................4
-   1.1.  Model of time ..............................................5
-   1.2.  Existing Versioning approaches in HTTP .....................6
-   1.2.1.  Versioning with `Last-Modified` ..........................6
-   1.2.2.  Versioning with `ETag` ...................................7
-   1.2.3.  Versioning encoded within URIs ...........................8
-   1.3.  Requirements for general versioning ........................9
-   1.3.1.  Distributed Time .........................................9
-   1.3.2.  Integrated into HTTP requests and responses .............10
-   1.3.3.  Generalizable Timestamps ................................10
-   1.3.4.  Feature table of existing approaches ....................11
-   1.4.  Overview of Proposed Solution .............................12
-   2.  HTTP Resource Versioning ....................................13
-   2.1.  Version and Parents Headers ...............................13
-   2.1.1.  Formatting of Version IDs in Versioning Headers .........14
-   2.1.2.  Definition of Events and Versions .......................14
-   2.2.  Semantics of Versions and Version History .................14
-   2.3.  Using Versioning with HTTP Methods ........................15
-   2.3.1.  GET the current version .................................15
-   2.3.2.  GET a specific version ..................................16
-   2.3.3.  PUT, POST, or PATCH a new version .......................16
-   2.3.4.  GET a range of historical versions ......................17
-   2.4.  Rules for Version and Parents headers .....................18
-   2.5.  Status 432: Version Not Found .............................19
-   2.6.  The Current-Version header ................................19
-   3.  Version-Type Header .........................................20
-   3.1.  The peer-counter Version-Type .............................21
-   3.1.1.  The "text-runs" modifier ................................21
-   3.1.2.  The "bytestream" modifier ...............................22
-   4.  Versioning through Intermediaries ...........................22
-   4.1.  Detecting Legacy Intermediaries ...........................23
-   5.  Example Uses ................................................24
-   5.1.  Incremental RSS Subscription ..............................24
-   5.2.  Hosting git via HTTP ......................................25
-   5.3.  Resumable uploads protocol ................................27
-   5.4.  Distributed collaborative editing .........................29
-   5.5.  Improved Header Compression with runs .....................31
-   5.6.  Run-Length Compression without Header Compression .........34
-   6.  Acknowledgements ............................................35
-   7.  Conventions .................................................35
-   8.  IANA Considerations .........................................36
-   8.1.  HTTP Header Registrations .................................36
-   8.2.  Version Type Registry .....................................36
-   8.2.1.  Procedure ...............................................36
-   8.2.2.  Version Type Registrations ..............................36
-   8.2.3.  Comments on Version Type Registrations ..................36
-   8.2.4.  Change Procedures .......................................36
-   9.  Copyright Notice ............................................37
-   10.  Security Considerations ....................................37
-   11.  Authors' Addresses .........................................38
-   12.  References .................................................38
-   12.1.  Normative References .....................................38
-   12.2.  Informative References ...................................38
+   2.  HTTP Resource Versioning .....................................5
+   2.1.  Model of time ..............................................5
+   2.2.  Version and Parents headers ................................5
+   2.2.1.  Formatting of Version IDs in versioning headers ..........6
+   2.2.2.  Definition of Events and Versions ........................6
+   2.3.  Using Versioning with HTTP Methods .........................7
+   2.3.1.  GET the current version ..................................7
+   2.3.2.  GET a specific version ...................................8
+   2.3.3.  PUT, POST, or PATCH a new version ........................8
+   2.3.4.  GET a range of historical versions .......................9
+   2.3.5.  Rules for Version and Parents headers ...................10
+   2.3.6.  Interaction with Conditional Request Headers ............10
+   2.5.  Status 432: Version Not Found .............................11
+   2.6.  The Current-Version header ................................11
+   2.7.  Version-Type header .......................................12
+   2.8.  Versioning through intermediaries .........................13
+   2.8.1.  Detecting legacy intermediaries .........................14
+   3.  Analysis of other versioning approaches in HTTP .............14
+   3.1.  Approaches with versions in headers .......................14
+   3.1.1.  Last-Modified ...........................................14
+   3.1.2.  ETag ....................................................15
+   3.2.  Approaches defining versions as new resources .............16
+   3.2.1.  Creating additional "Version Resources" .................16
+   3.2.2.  Standardizing versions as external resources ............16
+   3.4.  Requirements for general versioning .......................17
+   3.4.1.  Distributed Time ........................................17
+   3.4.2.  Included within existing HTTP requests and responses ....18
+   3.4.3.  Generalizable Timestamps ................................18
+   3.5.  Feature table of existing approaches ......................19
+   4.  Informative Use-Cases .......................................20
+   4.1.  Incremental RSS Subscription ..............................20
+   4.2.  Hosting git via HTTP ......................................21
+   4.3.  Resumable uploads protocol ................................23
+   4.4.  Distributed collaborative editing .........................25
+   4.5.  Improved Header Compression with runs .....................27
+   4.6.  Run-Length Compression without Header Compression .........30
+   5.  Acknowledgements ............................................31
+   6.  Conventions .................................................31
+   7.  IANA Considerations .........................................32
+   7.1.  HTTP Header Registrations .................................32
+   7.2.  Version Type Registry .....................................32
+   7.2.1.  Procedure ...............................................32
+   7.2.2.  Version Type Registrations ..............................33
+   7.2.2.1.  The peer-counter Version-Type .........................33
+   7.2.2.1.1.  The "text-runs" modifier ............................33
+   7.2.2.1.2.  The "bytestream" modifier ...........................33
+   7.2.3.  Comments on Version Type Registrations ..................34
+   7.2.4.  Change Procedures .......................................34
+   8.  Copyright Notice ............................................35
+   9.  Security Considerations .....................................36
+   10.  Authors' Addresses .........................................37
+   11.  References .................................................37
+   11.1.  Normative References .....................................37
+   11.2.  Informative References ...................................37
 
 
 1.  Introduction
@@ -140,24 +142,30 @@ Table of Contents
    (2) create history archives, (3) settle race conditions, (4) request
    incremental updates to resources, (5) interpret incremental updates
    to versions, or (6) merge parallel mutations in distributed
-   collaborative editing algorithms.
+   collaborative editing algorithms.  Section 4 demonstrates these
+   use-cases concretely.
 
    Each of these systems needs a way to represent *time*, but different
    systems have different requirements for how time is represented.
    This document enumerates these needs, and proposes a general
-   versioning system that satisfies them all.
+   versioning system to satisfy them.
 
    (Note that this document does NOT speak to the versioning of HTTP
    APIs -- only HTTP resources, which are used within APIs.)
 
 
-1.1.  Model of time
+2.  HTTP Resource Versioning
 
-   This specification adds a dimension of time into the existing model
-   of HTTP resources.  Whereas HTTP Resources already have a dimension
-   of *space*, which can be queried via the Range header, this
-   specification augments Resources with an analogous dimension of
-   *time*, which can be queried via the Version header:
+   This section defines the core concepts and mechanisms for HTTP
+   Resource Versioning.
+
+
+2.1.  Model of time
+
+   This specification adds a dimension of time to HTTP resources.
+   Whereas HTTP Resources already have a dimension of *space* -- queried
+   with the Range header -- this specification provides Resources a
+   dimension of *time* -- queried by the Version header:
 
 
             == Time and Space as dimensions of Resources ==
@@ -185,11 +193,12 @@ Table of Contents
 
 
    In this model, the term "Version" is synonymous with "Timestamp" -- a
-   Version represents a point in distributed time.  A single Version can
-   be specified across multiple resources, to identify their states at
-   the same Version in time.  A Version can also be identified without
-   reference to any single resource, and can be thought of as a "Version
-   of the universe" in which Resources exist.
+   Version represents a point in distributed time.  Thus, a Version, on
+   its own, identifies a version of the Universe of Resources -- the
+   version that existed at that time.  We can use a Version to identify
+   a point of time for a single Resource, or for multiple Resources, to
+   identify their states at the same version in time.  A Version can be
+   specified without reference to a particular resource.
 
    It follows that a "Version of a Resource" specifies the state of the
    Resource at the time of that Version.  The "Version of a
@@ -197,254 +206,27 @@ Table of Contents
    Representation body, or "snapshot."
 
    Note that this model differs in terminology from some other
-   mechanisms, such as WebDAV Versioning, which uses the term Version
-   for what we call a "Version of a Representation."
+   mechanisms, such as WebDAV Versioning, which use the term Version for
+   what we call a "Version of a Representation."
 
-
-1.2.  Existing Versioning approaches in HTTP
+   A resource's "Version History" is the partial order (or DAG) of
+   Versions of its state.  This history has one fork and one merge:
 
-   Existing approaches to versioning in HTTP address disparate
-   use-cases, but have limitations and trade-offs.  The Last-Modified
-   and ETag headers were invented for cache consistency, but do not
-   provide an ordering of version history through time, nor do they
-   handle forks and merges in distributed time.  On the other hand, a
-   number of forking/merging versioning systems have been proposed
-   (WebDAV, Link Relations) that create new resources to represent
-   versions of existing resources, but these rely on central servers to
-   assign version identifiers, and require additional network
-   round-trips to requery these version resources.  No HTTP versioning
-   system today allows for articulating custom distributed timestamp
-   formats such as version vectors.
 
-   We now enumerate the existing approaches.  The next section (1.3)
-   provides an overview of their limitations for a general versioning
-   system.
+                     "1"                   | Time
+                     / \                   |
+                   "2" "3"                 |
+                     \ /                   |
+                   "2","3"  <-- merge      |
+                      |                    |
+                     "4"                   V
 
 
-1.2.1.  Versioning with `Last-Modified`
+   The semantics of a merge is specified by the resource's Merge-Type.
+   (See [Merge-Types].)
 
-   The Last-Modified header specifies a clock date that caches and
-   clients can use to know when a change has occurred:
 
-      Last-Modified: Sat, 6 Jul 2024 07:28:00 GMT
-
-   This header is useful for caching and conditional requests (using the
-   If-Modified-Since header). However, it has several limitations:
-
-   1. It is limited to the precision of the wallclock.  If a resource
-      changes within the same second, the Last-Modified date won't
-      change, and caches can become inconsistent.
-
-   2. It stores linear time; not distributed (partial order) time.  It
-      cannot represent the ambiguity of forked time.
-
-   3. It is susceptible to clock skew in distributed systems,
-      potentially leading to inconsistencies across different servers.
-
-
-1.2.2.  Versioning with `ETag`
-
-   The ETag header allows more precision. It specifies a version with a
-   string that uniquely identifies a cacheable representation:
-
-      ETag: "2u34fa7yorz0"
-
-   ETags can be strong or weak, with weak ETags prefixed by W/:
-
-      ETag: W/"2u34fa7yorz0"
-
-   ETags are used in conditional requests with If-None-Match and
-   If-Match headers and can be used for optimistic concurrency
-   control. However:
-
-   1. While helping with cache validation, ETags are not accurate
-      markers of time.  There is no way to order versions by ETag, or
-      know which version came before another.
-   
-   2. ETags are unique to content, not timestamps.  It's possible for
-      the same ETag to recur over time if the resource changes back and
-      forth between a common state.
-
-   3. Strong ETags are sensitive to Content-Encoding. If a single
-      version of a resource is transmitted with different
-      Content-Encodings (e.g., gzip), it will be sent with different
-      strong ETags.  Thus, one can have multiple ETags for the same
-      version in history, as well as a single ETag for multiple versions
-      of history.
-
-
-1.2.3.  Versioning encoded within URIs
-
-   In practice, application programmers tend to encode versions within
-   URIs:
-
-      https://unpkg.com/braid-text@0.0.18/index.js
-
-   This approach is common in API versioning (e.g., /api/v1/resource).
-   However, it has several drawbacks:
-
-   1. It loses the semantics of a "resource changing over time."
-      Instead, it creates multiple version resources for every single
-      logical resource.
-
-   2. It necessitates additional standards for version history on top of
-      URIs (e.g., Memento, WebDAV, Link Relations for Versioning
-      [RFC5829]).
-
-   3. Given a URI, we still need a standard way to extract the version
-      itself, get the previous and next version(s), and understand the
-      format of the version(s) (e.g., major.minor.patch).
-
-   4. This approach can lead to URI proliferation, potentially impacting
-      caching strategies and SEO.
-
-   5. It may complicate content negotiation and RESTful design
-      principles.
-
-   The choice to embed versions into URIs can be useful, but carries
-   with it additional tradeoffs.  A versioning system does not need to
-   depend on allocating a URI for each version; but could be compatible
-   with doing so.
-
-
-1.3.  Requirements for general versioning
-
-   A general mechanism for versioning HTTP resources could enable a
-   number of new use-cases:
-
-     - RSS clients could request incremental updates when polling,
-       instead of re-downloading redundant unchanged feed items after
-       each change to any item
-
-     - Servers could accept incoming patches based on old or parallel
-       versions of history, and even rebase those patches for other
-       clients, at other points in history
-
-     - Collaborative editing could be built directly into HTTP
-       resources, providing the abilities of Google Docs at any URL
-
-     - Git repositories could be hosted directly over HTTP; rather than
-       embedding versioning information within opaque blobs that use
-       HTTP just as a transport
-
-     - Caches and archives could hold and serve multiple versions of a
-       resource, enabling audits and distributed backups
-
-     - Distributed databases could standardize network APIs to HTTP,
-       while retaining distributed consistency guarantees
-
-   To support these use-cases with a single, general Versioning model it
-   must support a number of abilities.  This section defines those
-   abilities, and enumerates which existing versioning approaches
-   support, and do not support, them.
-
-
-1.3.1.  Distributed Time
-
-   Distributed systems require support for distributed time, including:
-
-     (a) A comparable partial order:
-
-         Any two Versions (timestamps) A and B must be comparable, such
-         that either:
-
-           - A > B:  A came after B
-           - A < B:  A came before B
-           - A <> B: Neither A nor B came before the other
-
-     (b) Immune to clock skew or limited precision:
-
-         The ordering must not depend on the skew or precision of a
-         CPU's wallclock.
-
-     (c) Merges must be specifiable without central authority:
-
-         Any peer must be able to identify the version resulting from
-         the merger of two parallel versions A and B, without relying on
-         a central authority to assign a new version identifier AB.
-
-
-1.3.2.  Integrated into HTTP requests and responses
-
-   For some use-cases and intermediaries, it is not reasonable or
-   possible to require additional requests and responses (with
-   additional network round-trips) to be made, and/or new methods or
-   resources to be defined.
-
-   These use-cases require versioning information to instead be embedded
-   within existing HTTP requests and responses, at all places that they
-   are helpful.  We enumerate these requirements as follows:
-
-      (a) Includes versioning in every existing request and response
-          where state is queried or mutated.
-
-      (b) Does not require additional round-trips.
-
-      (c) Does not require polluting the application's URL namespace.
-
-
-1.3.3.  Generalizable Timestamps
-
-   Some systems have requirements for Version timestamps themselves:
-
-      (a) Extensible timestamp formats:
-
-          Advanced distributed systems often devise special formats for
-          partially-ordered timestamps that allow inferences for
-          improved performance, such as lamport clocks, vector clocks,
-          version vectors, hash histories, hybrid logical clocks, and
-          append-only-log indices.  Implementations can rely on
-          information embedded in these timestamps to compress history
-          metadata, optimize partial-order computations, or infer the
-          value of state.
-
-      (b) Independent of resource:
-
-          Some applications need to assign a single version to multiple
-          resources, so that one can refer to multiple resources at the
-          same point in time.  For instance, a git repository commits
-          multiple files at the same version.
-
-          A general versioning system must provide version identifiers
-          that are independent of any particular resource, so that
-          multiple resources can be versioned and referred to at the
-          same points in time.
-
-
-1.3.4.  Feature table of existing approaches
-
-   We compose a table of existing approaches, and the features they do
-   not yet provide, here:
-
-
-                         | 1a | 1b | 1c | 2a | 2b | 2c | 3a | 3b |
-      ------------------------------------------------------------
-      Last-Modified      | -  | -  | -  | X  | X  | X  | -  | X  |
-      ETags              | -  | -  | -  | X  | X  | X  | -  | -  |
-      Memento            | -  | ~  | -  | -  | -  | ~  | -  | -  |
-      WebDAV Versioning  | X  | X  | -  | -  | -  | -  | -  | -  |
-      Link Relations     | X  | X  | -  | X  | -  | ~  | -  | -  |
-      ------------------------------------------------------------
-
-
-   Because no existing versioning approach satisfies all needs,
-   programmers today must implement multiple approaches to versioning in
-   their applications -- each with subtly different logic -- and cannot
-   implement common infrastructure for distributed versioning,
-   archiving, and collaborative editing that works across HTTP systems.
-
-   This document specifies a general versioning model satisfying all 8
-   requirements above.  We start by specifying how to add versioning to
-   HTTP requests and responses.
-
-
-2.  HTTP Resource Versioning
-
-   This section defines the core concepts and mechanisms for HTTP
-   Resource Versioning.
-
-
-2.1.  Version and Parents Headers
+2.2.  Version and Parents headers
 
    This specification introduces two new HTTP headers: Version and
    Parents.  These headers communicate version information in requests
@@ -477,7 +259,7 @@ Table of Contents
            Version: "dkn7ov2vwg", "v2vwgdkn7o"
 
 
-2.1.1.  Formatting of Version IDs in Versioning Headers
+2.2.1.  Formatting of Version IDs in versioning headers
 
    The Version and Parents headers are formatted as a list of strings in
    the Structured Headers format [RFC8941].  Each string is called an
@@ -499,7 +281,7 @@ Table of Contents
    resource's Version-Type, as defined in Section 4.
 
 
-2.1.2.  Definition of Events and Versions
+2.2.2.  Definition of Events and Versions
 
    An "Event" is a unique ID assigned to a single event in history at a
    peer.  Any peer can define an event, by generating a unique ID.
@@ -536,37 +318,6 @@ Table of Contents
 
            Parents: "foo-123", "bar-abc"
            Version: "{foo-123, bar-abc}"
-
-
-2.2.  Semantics of Versions and Version History
-
-   A resource's Version History is the partial order (or DAG) of
-   Versions to its state.  Each version marks a unique point in
-   distributed time: a point when the resource was in a particular
-   state, and its representations had particular values.
-
-   For example, this Version History has one fork and one merge:
-
-
-                     "1"                    | Time
-                     / \                   |
-                   "2" "3"                 |
-                     \ /                   |
-                   "2","3"  <-- merge      |
-                      |                    |
-                     "4"                   V
-
-
-   The semantics of a merge is specified by the resource's Merge-Type.
-   (See [Merge-Types].)
-
-   Although the Version History exists conceptually, it might not be
-   known in its entirety by any one peer.  Each peer can store and work
-   with different subsets of the version history independently.  Also,
-   each peer can merge mutations in different orders, creating a
-   different sequence of intermediate merged versions, and some
-   intermediate merge versions may never have existed on any peer, even
-   though they are possible to reconstruct from known history.
 
 
 2.3.  Using Versioning with HTTP Methods
@@ -729,7 +480,7 @@ Table of Contents
    for an earlier draft of the semantics.
 
 
-2.4.  Rules for Version and Parents headers
+2.3.5.  Rules for Version and Parents headers
 
    If a GET request contains a Version header:
 
@@ -756,6 +507,26 @@ Table of Contents
    documents, for all history. If a server no longer has the historical
    context needed to honor a request, it responds with error code 432
    Version Not Found.
+
+
+2.3.6.  Interaction with Conditional Request Headers
+
+   The Version and Parents headers operate independently of the
+   conditional request headers (If-Match, If-None-Match,
+   If-Modified-Since, If-Unmodified-Since) defined in RFC 9110 Section
+   13.  Conditional headers evaluate against entity-tags (ETags) or
+   modification dates, while Version and Parents reference version
+   identifiers.
+
+   When both are present, the server SHOULD first resolve the requested
+   version, then evaluate any preconditions.
+
+   The Parents header in mutation requests (PUT, PATCH, POST) serves a
+   related but distinct purpose from If-Match: whereas If-Match causes
+   the request to fail if the resource's current state does not match,
+   Parents specifies the version lineage of the mutation, which the
+   server may use to detect conflicts, perform merges, or construct
+   version history.
 
 
 2.5.  Status 432: Version Not Found
@@ -789,7 +560,7 @@ Table of Contents
    example below.
 
 
-3.  Version-Type Header
+2.7.  Version-Type header
 
    The optional Version-Type header specifies constraints on the format
    and interpretation of event IDs.  This allows for various
@@ -831,58 +602,7 @@ Table of Contents
    and we can say that they happened in parallel.)
 
 
-3.1.  The peer-counter Version-Type
-
-   The "peer-counter" Version-Type specifies that each Event ID is a
-   Lamport timestamp, of the form:
-
-      Version: "<peer>-<counter>"
-
-   Or:
-
-      Version: "<peer>-<counter>"; text-runs
-      Version: "<peer>-<counter>"; bytestream
-
-   It is guaranteed that, for any peer, the counter will always increase
-   in subsequent versions.  Therefore, any two Event IDs from the same
-   peer can be compared in time just by examining their counters.
-
-
-3.1.1.  The "text-runs" modifier
-
-   The modifier "text-runs" further constrains the behavior of the
-   counter to enable run-length encoding.  Specifically, for each
-   inserted set of characters, the counter is constrained to be set to
-   the number of unicode codepoints that have been inserted; and for
-   every deleted set of characters, the counter is constrained to
-   represent the number of unicode codepoints that have been deleted.
-
-   Furthermore, it defines that intermediate versions can be inferred,
-   between any explicitly transmitted version, by assuming that for any
-   insertion, all characters are inserted one-by-one, left-to-right, by
-   unicode codepoint; and for any deletion, all characters are deleted
-   right-to-left, by unicode codepoint.
-
-
-3.1.2.  The "bytestream" modifier
-
-   The "bytestream" modifier specifies that the resource can be
-   considered as an append-only bytestream:
-
-      Version-Type: peer-counter; bytestream
-
-   Each <counter> then specifies that the number of bytes in the
-   resource is equal to <counter> at time <peer>-<counter>.
-
-   For example, "x82ha-344" indicates "the resource state after peer
-   `x82ha` appended 344 bytes".
-
-   This approach creates a direct correspondence between time and
-   space: each version increment represents one additional byte in the
-   stream.
-
-
-4.  Versioning through Intermediaries
+2.8.  Versioning through intermediaries
 
    Intermediaries can take advantage of versioning to uniquely
    reference, store, and serve multiple states/updates across a
@@ -900,7 +620,7 @@ Table of Contents
    legacy intermediaries will process the response.
 
 
-4.1.  Detecting Legacy Intermediaries
+2.8.1.  Detecting legacy intermediaries
 
    In the case that a legacy intermediary *does* process a versioned
    response without the Vary header, it can be detected by the client
@@ -957,10 +677,299 @@ Table of Contents
    encountering a response that does not contain the request's Event
    IDs, so that he knows to add Vary to the server's responses.
 
-
-5.  Example Uses
+3.  Analysis of other versioning approaches in HTTP
 
-5.1.  Incremental RSS Subscription
+   Existing approaches to versioning in HTTP address disparate
+   use-cases, but have limitations and trade-offs.  The Last-Modified
+   and ETag headers were invented for cache consistency, but do not
+   provide an ordering of version history through time, nor do they
+   handle forks and merges in distributed time.  On the other hand, a
+   number of forking/merging versioning systems have been proposed
+   (WebDAV, Link Relations) that define new resources to represent
+   versions of existing resources, but these require additional network
+   round-trips to query and learn about these new version resources.  No
+   HTTP versioning system today allows for articulating custom
+   distributed timestamp formats such as version vectors.
+
+   We now enumerate the existing approaches.  The following section
+   provides an overview of their limitations for a general versioning
+   system.
+
+
+3.1.  Approaches with versions in headers
+
+   The "Last-Modified" and "ETag" headers are by far the most
+   commonly-used versioning system used in HTTP today.  They specify a
+   resource's version directly in request and/or response headers.  This
+   is simple and efficent, as versions are communicated immediately,
+   without extra round trips, and very practically useful for caching
+   and conditional requests.  However, the version format of
+   Last-Modified and ETag do not provide enough information to compute
+   an accurate order of versions, and thus cannot be used to represent
+   distributed time.
+
+
+3.1.1.  Last-Modified
+
+   The Last-Modified header specifies a wallclock timestamp that caches
+   and clients can use to know when a change has occurred:
+
+      Last-Modified: Sat, 6 Jul 2024 07:28:00 GMT
+
+   This header is useful for caching and conditional requests (using the
+   If-Modified-Since header). However, it has several limitations:
+
+   1. It is limited to the precision of the wallclock.  If a resource
+      changes within the same second, the Last-Modified date won't
+      change, and caches can become inconsistent.
+
+   2. It stores linear time; not distributed (partial order) time.  It
+      cannot represent the ambiguity of forked time.
+
+   3. It is susceptible to clock skew in distributed systems,
+      potentially leading to inconsistencies across different servers.
+
+
+3.1.2.  ETag
+
+   The ETag header allows more precision. It specifies a version with a
+   string that uniquely identifies a cacheable representation:
+
+      ETag: "2u34fa7yorz0"
+
+   ETags can be strong or weak, with weak ETags prefixed by W/:
+
+      ETag: W/"2u34fa7yorz0"
+
+   ETags are used in conditional requests with If-None-Match and
+   If-Match headers and can be used for optimistic concurrency
+   control. However:
+
+   1. While helping with cache validation, ETags are not accurate
+      markers of time.  There is no way to order versions by ETag, or
+      know which version came before another.
+   
+   2. ETags are unique to content, not timestamps.  It's possible for
+      the same ETag to recur over time if the resource changes back and
+      forth between a common state.
+
+   3. Strong ETags are sensitive to Content-Encoding. If a single
+      version of a resource is transmitted with different
+      Content-Encodings (e.g., gzip), it will be sent with different
+      strong ETags.
+
+   Thus, one can have multiple ETags for the same version in history, as
+   well as a single ETag for multiple versions of history.
+
+
+3.2.  Approaches defining versions as new resources
+
+   Rather than placing versioning information into headers, a second set
+   of approaches create new "version resources" for each version of an
+   original resource, and then add ways to navigate the "version
+   resources."
+
+   A variety of approaches exist -- from hand-copied "foo-v2.html" URIs,
+   to standards like WebDAV.  However, they all require additional
+   round-trips, with new URIs or new methods, to discover and navigate
+   version information, which reduces performance, adds complexity, and
+   makes it challenging for intermediaries to use versioning information
+   without performing additional network requests themselves.
+
+
+3.2.1.  Creating additional "Version Resources"
+
+   Application programmers often define copies of a resource, at various
+   versions, by encoding a version identifier into its URI:
+
+      https://unpkg.com/braid-text@0.0.18/index.js
+
+   This approach is common, but has several limitations:
+
+   1. It loses the semantics of a "resource changing over time."
+      Instead, it creates multiple version resources for each resource.
+
+   2. It then necessitates standards to, given a URI, extract the
+      current version of the resource, get the previous and next
+      version(s), understand the format of the version(s) (e.g.,
+      major.minor.patch), and to create new versions.  These standards
+      are discussed next.
+
+   3. It can lead to URI proliferation, complicating a web application's
+      URI space, and potentially impacting caching strategies and SEO.
+
+
+3.2.2.  Standardizing versions as external resources
+
+   A number of approaches enable ways to organize and navigate a set of
+   "version resources."  Memento (RFC 7089) provides read-only access to
+   prior states through datetime negotiation, but defines no mechanism
+   for creating new versions.  WebDAV Versioning (RFC 3253) provides a
+   full lifecycle through CHECKOUT/CHECKIN methods, but requires
+   server-assigned version identifiers.  Link Relations for Version
+   Navigation (RFC 5829) defines link relation types for navigating
+   between version resources, but leaves the creation and management of
+   those versions to other protocols.  WebDAV and Link Relations also
+   allow for a partial order of distributed time, whereas Memento is
+   limited to linear wallclock time.
+
+   However, these approaches all require dereferencing additional URIs
+   (and thus additional network round-trips) to discover version
+   information, rather than embedding it inline in the headers of a
+   normal GET or PUT to the resource.  This prevents intermediaries from
+   organizing the version history without doing additional network
+   requests themselves.  Furthermore, although WebDAV supports forking
+   and merging history, the methods it provides to manipulate the
+   history (CHECKIN, CHECKOUT, VERSION-CONTROL, LOCK, UNLOCK) require a
+   centralized server.
+
+
+3.4.  Requirements for general versioning
+
+   This section defines the requirements for a general versioning
+   standard.  It then provides a feature table enumerating which
+   requirements the existing approaches support and do not support.
+
+   These requirements are derived from the use-cases described in
+   Section 4, which together span the range of versioning needs we have
+   identified in HTTP systems -- from cache consistency and incremental
+   updates, to distributed collaborative editing and hosting
+   version-control systems like git.
+
+
+3.4.1.  Distributed Time
+
+   Distributed systems (see examples in section 4) require support for
+   distributed time, including:
+
+     (a) A comparable partial order:
+
+         Any two Versions (timestamps) A and B must be comparable, such
+         that either:
+
+           - A > B:  A came after B
+           - A < B:  A came before B
+           - A <> B: Neither A nor B came before the other
+
+     (b) Immune to clock skew or limited precision:
+
+         The ordering must not depend on the skew or precision of a
+         CPU's wallclock.
+
+     (c) Merges must be specifiable without central authority:
+
+         Any peer must be able to identify the version resulting from
+         the merger of two parallel versions A and B, without relying on
+         a central authority to assign a new version identifier AB.
+
+
+3.4.2.  Included within existing HTTP requests and responses
+
+   The versions should be included within existing HTTP requests and
+   responses, wherever possible, without requiring additional requests
+   and round-trips.  This simplifies implementation, improves
+   performance, and allows intermediaries to understand and accurately
+   cache the version history of state as it flows over the wire, without
+   having to make additional requests themselves.  It also allows
+   applications to add versioning information to their existing
+   resources without impacting the definition of their existing URI
+   space -- an unnecessary burden for many applications.
+
+   We enumerate these requirements as follows:
+
+      (a) Includes versioning in every existing request and response
+          where state is queried or mutated.
+
+      (b) Does not require additional round-trips.
+
+      (c) Does not require polluting the application's URL namespace.
+
+
+3.4.3.  Generalizable Timestamps
+
+   Some systems have requirements for Version timestamps themselves:
+
+      (a) Extensible timestamp formats:
+
+          Advanced distributed systems often devise special formats for
+          partially-ordered timestamps that allow inferences for
+          improved performance, such as lamport clocks, vector clocks,
+          version vectors, hash histories, hybrid logical clocks, and
+          append-only-log indices.  Implementations can rely on
+          information embedded in these timestamps to compress history
+          metadata, optimize partial-order computations, or infer the
+          value of state.
+
+      (b) Independent of resource:
+
+          Some applications need to assign a single version to multiple
+          resources, so that one can refer to multiple resources at the
+          same point in time.  For instance, a git repository (see
+          section 4.2) commits multiple files at the same version.
+
+          A general versioning system must provide version identifiers
+          that are independent of any particular resource, so that
+          multiple resources can be versioned and referred to at the
+          same points in time.
+
+
+3.5.  Feature table of existing approaches
+
+   We compose a table of existing approaches, and the features they do
+   not yet provide, here:
+
+
+                         | 1a | 1b | 1c | 2a | 2b | 2c | 3a | 3b |
+      ------------------------------------------------------------
+      Last-Modified      | -  | -  | -  | X  | X  | X  | -  | X  |
+      ETags              | -  | -  | -  | X  | X  | X  | -  | -  |
+      Memento            | -  | ~  | -  | -  | -  | ~  | -  | -  |
+      WebDAV Versioning  | X  | X  | -  | -  | -  | -  | -  | -  |
+      Link Relations     | X  | X  | -  | X  | -  | ~  | -  | -  |
+      ------------------------------------------------------------
+
+
+   Because no existing versioning approach satisfies all needs,
+   programmers today must implement multiple approaches to versioning in
+   their applications -- each with subtly different logic -- and cannot
+   implement common infrastructure for distributed versioning,
+   archiving, and collaborative editing that works across HTTP systems.
+
+   This document specifies a general versioning model satisfying all 8
+   requirements above.  We start by specifying how to add versioning to
+   HTTP requests and responses.
+
+
+4.  Informative Use-Cases
+
+   A general mechanism for versioning HTTP resources could enable a
+   number of new use-cases:
+
+     - RSS clients could request incremental updates when polling,
+       instead of re-downloading redundant unchanged feed items after
+       each change to any item
+
+     - Servers could accept incoming patches based on old or parallel
+       versions of history, and even rebase those patches for other
+       clients, at other points in history
+
+     - Collaborative editing could be built directly into HTTP
+       resources, providing the abilities of Google Docs at any URL
+
+     - Git repositories could be hosted directly over HTTP; rather than
+       embedding versioning information within opaque blobs that use
+       HTTP just as a transport
+
+     - Caches and archives could hold and serve multiple versions of a
+       resource, enabling audits and distributed backups
+
+     - Distributed databases could standardize network APIs to HTTP,
+       while retaining distributed consistency guarantees
+
+   This section shows how to support some of these use-cases.
+
+
+4.1.  Incremental RSS Subscription
 
    Traditional RSS readers inefficiently poll servers, often downloading
    entire feeds when only minor changes have occurred.  HTTP Resource
@@ -1004,7 +1013,7 @@ Table of Contents
    vary; see [Updates] or [Range-Patch] for examples.
    
 
-5.2.  Hosting git via HTTP
+4.2.  Hosting git via HTTP
 
    We can host a git repository directly through HTTP, where each file
    corresponds to a resource, and all have a version history.
@@ -1117,7 +1126,7 @@ Table of Contents
    This expresses aspects of the "smart" git protocol over plain HTTP.
 
 
-5.3.  Resumable uploads protocol
+4.3.  Resumable uploads protocol
 
    Resource Versioning semantics enable efficient implementation of
    resumable uploads, providing an alternative perspective to
@@ -1195,7 +1204,7 @@ Table of Contents
    Version-Type to inherently support resumable uploads.
 
 
-5.4.  Distributed collaborative editing
+4.4.  Distributed collaborative editing
 
    This versioning system can also support full CRDT and OT
    collaborative editing features (when used with other extensions such
@@ -1262,7 +1271,7 @@ Table of Contents
    merge-type on-the-fly -- the version history itself can be re-used.
 
  
-5.5.  Improved Header Compression with runs
+4.5.  Improved Header Compression with runs
 
    A header compression scheme can leverage Version-Type patterns to
    significantly compress messages.  For example, consider the following
@@ -1388,7 +1397,7 @@ Table of Contents
    bytes.
 
 
-5.6.  Run-Length Compression without Header Compression
+4.6.  Run-Length Compression without Header Compression
 
    In practice, run-length compression can also be applied without
    relying on header compression.  By specifying:
@@ -1430,7 +1439,7 @@ Table of Contents
    reconstruct any intermediate state.
 
 
-6.  Acknowledgements
+5.  Acknowledgements
 
    This is derived from prior draft [Braid-HTTP] with authors:
 
@@ -1448,16 +1457,16 @@ Table of Contents
      - Paul Kuchenko
 
 
-7.  Conventions
+6.  Conventions
 
    The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
    "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this
    document are to be interpreted as described in [RFC2119].
 
 
-8. IANA Considerations
+7. IANA Considerations
 
-8.1.  HTTP Header Registrations
+7.1.  HTTP Header Registrations
 
    This document defines the following new HTTP headers, which should be
    added to the "Permanent Message Header Field Names" registry at
@@ -1494,14 +1503,14 @@ Table of Contents
       Description: Version Not Found
       Reference: This document
 
-8.2.  Version Type Registry
+7.2.  Version Type Registry
 
    The "Version Type Registry" defines the namespace for the version type
    names and refers to their corresponding specifications.  The registry
    will be created and maintained at
    <http://www.iana.org/assignments/version-types>.
 
-8.2.1.  Procedure
+7.2.1.  Procedure
 
    Registration of a Version Type MUST include the following fields:
 
@@ -1525,13 +1534,62 @@ Table of Contents
 
    Values to be added to this namespace require IETF Review (see
    [RFC8126], Section 4.1).
+
 
-8.2.2.  Version Type Registrations
+7.2.2.  Version Type Registrations
 
-   [todo: put initial version-type registrations here]
+7.2.2.1.  The peer-counter Version-Type
+
+   The "peer-counter" Version-Type specifies that each Event ID is a
+   Lamport timestamp, of the form:
+
+      Version: "<peer>-<counter>"
+
+   Or:
+
+      Version: "<peer>-<counter>"; text-runs
+      Version: "<peer>-<counter>"; bytestream
+
+   It is guaranteed that, for any peer, the counter will always increase
+   in subsequent versions.  Therefore, any two Event IDs from the same
+   peer can be compared in time just by examining their counters.
 
 
-8.2.3.  Comments on Version Type Registrations
+7.2.2.1.1.  The "text-runs" modifier
+
+   The modifier "text-runs" further constrains the behavior of the
+   counter to enable run-length encoding.  Specifically, for each
+   inserted set of characters, the counter is constrained to be set to
+   the number of unicode codepoints that have been inserted; and for
+   every deleted set of characters, the counter is constrained to
+   represent the number of unicode codepoints that have been deleted.
+
+   Furthermore, it defines that intermediate versions can be inferred,
+   between any explicitly transmitted version, by assuming that for any
+   insertion, all characters are inserted one-by-one, left-to-right, by
+   unicode codepoint; and for any deletion, all characters are deleted
+   right-to-left, by unicode codepoint.
+
+
+7.2.2.1.2.  The "bytestream" modifier
+
+   The "bytestream" modifier specifies that the resource can be
+   considered as an append-only bytestream:
+
+      Version-Type: peer-counter; bytestream
+
+   Each <counter> then specifies that the number of bytes in the
+   resource is equal to <counter> at time <peer>-<counter>.
+
+   For example, "x82ha-344" indicates "the resource state after peer
+   `x82ha` appended 344 bytes".
+
+   This approach creates a direct correspondence between time and
+   space: each version increment represents one additional byte in the
+   stream.
+
+
+7.2.3.  Comments on Version Type Registrations
 
    Comments on registered Version Types may be submitted by members of
    the community to the IANA at iana@iana.org.  These comments will be
@@ -1542,7 +1600,7 @@ Table of Contents
    Types reviewer, approves, the comment will be made accessible in
    conjunction with the type registration.
 
-8.2.4.  Change Procedures
+7.2.4.  Change Procedures
 
    Once a Version Type has been published by the IANA, the owner may
    request a change to its definition.  The same procedure that would be
@@ -1570,7 +1628,7 @@ Table of Contents
    or is otherwise unable to make changes that are important to the
    community.
 
-9.  Copyright Notice
+8.  Copyright Notice
 
    Copyright (c) 2026 IETF Trust and the persons identified as the
    document authors.  All rights reserved.
@@ -1585,13 +1643,54 @@ Table of Contents
    the Trust Legal Provisions and are provided without warranty as
    described in the Simplified BSD License.
    
+
+9. Security Considerations
 
-10. Security Considerations
+   Version IDs may reveal information about the structure and activity
+   of a resource's editors.  For instance, the "peer-counter"
+   Version-Type encodes a peer identifier and a monotonically
+   increasing counter, from which an observer can infer who is editing
+   and how frequently.  Servers that expose version history SHOULD
+   apply the same access control to versioned requests as they do to
+   current-state requests, and SHOULD consider whether version
+   identifiers themselves leak information that the resource body does
+   not.
 
-   XXX Todo
+   A client requesting a range of version history (via Parents and
+   Version headers together) could probe for the existence of versions
+   it is not authorized to see.  Servers MUST NOT reveal version
+   history to clients that are not authorized to access the resource.
+   A server MAY respond with 403 Forbidden or 404 Not Found rather
+   than 432 Version Not Found if acknowledging the existence of a
+   version would itself constitute an information leak.
+
+   Requesting a large range of version history could require
+   significant server resources to assemble and transmit.  Servers
+   SHOULD impose limits on the size of version history responses and
+   MAY respond with 413 Content Too Large if a request would exceed
+   those limits.  Servers MAY also rate-limit version history requests.
+
+   As described in Section 4, a versioning-unaware intermediary may
+   cache a historical version and serve it in response to a request
+   for a different version.  If the resource is access-controlled,
+   this could result in a client receiving a version of the resource
+   it was not meant to see -- for instance, a version predating the
+   revocation of sensitive content.  Origin servers SHOULD include
+   "Vary: version, parents" in responses, and SHOULD consider adding
+   "Cache-Control: no-store" or "Cache-Control: private" to
+   versioned responses containing sensitive content.
+
+   Since any peer can generate version IDs, a malicious client could
+   craft version IDs that collide with or mimic another peer's IDs.
+   This could corrupt version history or cause a server to
+   misattribute edits.  Systems where version history integrity is
+   important SHOULD validate version IDs against their expected
+   Version-Type format and SHOULD treat version IDs from untrusted
+   clients as opaque, unverified claims rather than trusted
+   identifiers.
 
 
-11.  Authors' Addresses
+10.  Authors' Addresses
 
    For more information, the authors of this document are best contacted
    via Internet mail:
@@ -1605,9 +1704,9 @@ Table of Contents
    Web:   https://invisible.college/@toomim
 
 
-12.  References
+11.  References
 
-12.1.  Normative References
+11.1.  Normative References
 
    [RFC5789]           "PATCH Method for HTTP", RFC 5789.
 
@@ -1626,7 +1725,7 @@ Table of Contents
    [Resumable Upload]  draft-ietf-httpbis-resumable-upload
 
 
-12.2.  Informative References
+11.2.  Informative References
 
    [XHR]      Van Kesteren, A., Aubourg, J., Song, J., and R. M.
               Steen, H.  "XMLHttpRequest", September 2019.
