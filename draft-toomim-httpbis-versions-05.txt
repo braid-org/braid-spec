@@ -50,58 +50,58 @@ Table of Contents
    1.  Introduction .................................................4
    2.  HTTP Resource Versioning .....................................5
    2.1.  Model of time ..............................................5
-   2.2.  Version and Parents headers ................................5
-   2.2.1.  Formatting of Version IDs in versioning headers ..........6
-   2.2.2.  Definition of Events and Versions ........................6
-   2.3.  Using Versioning with HTTP Methods .........................7
-   2.3.1.  GET the current version ..................................7
-   2.3.2.  GET a specific version ...................................8
-   2.3.3.  PUT, POST, or PATCH a new version ........................8
-   2.3.4.  GET a range of historical versions .......................9
-   2.3.5.  Rules for Version and Parents headers ...................10
-   2.3.6.  Interaction with Conditional Request Headers ............10
-   2.5.  Status 432: Version Not Found .............................11
-   2.6.  The Current-Version header ................................11
-   2.7.  Version-Type header .......................................12
-   2.8.  Versioning through intermediaries .........................13
-   2.8.1.  Detecting legacy intermediaries .........................14
-   3.  Analysis of existing versioning approaches in HTTP ..........14
-   3.1.  Approaches with versions in headers .......................14
-   3.1.1.  Last-Modified ...........................................14
-   3.1.2.  ETag ....................................................15
-   3.2.  Approaches defining versions as new resources .............16
-   3.2.1.  Creating additional "Version Resources" .................16
-   3.2.2.  Standardizing versions as external resources ............16
-   3.4.  Requirements for general versioning .......................17
-   3.4.1.  Distributed Time ........................................17
-   3.4.2.  Included within existing HTTP requests and responses ....18
-   3.4.3.  Generalizable Timestamps ................................18
-   3.5.  Feature table of existing approaches ......................19
-   4.  Informative Use-Cases .......................................20
-   4.1.  Incremental RSS Subscription ..............................20
-   4.2.  Hosting git via HTTP ......................................21
-   4.3.  Resumable uploads protocol ................................23
-   4.4.  Distributed collaborative editing .........................25
-   4.5.  Improved Header Compression with runs .....................27
-   4.6.  Run-Length Compression without Header Compression .........30
-   5.  Acknowledgements ............................................31
-   6.  Conventions .................................................31
-   7.  IANA Considerations .........................................32
-   7.1.  HTTP Header Registrations .................................32
-   7.2.  Version Type Registry .....................................32
-   7.2.1.  Procedure ...............................................32
-   7.2.2.  Version Type Registrations ..............................33
-   7.2.2.1.  The peer-counter Version-Type .........................33
-   7.2.2.1.1.  The "text-runs" modifier ............................33
-   7.2.2.1.2.  The "bytestream" modifier ...........................33
-   7.2.3.  Comments on Version Type Registrations ..................34
-   7.2.4.  Change Procedures .......................................34
-   8.  Copyright Notice ............................................35
-   9.  Security Considerations .....................................36
-   10.  Authors' Addresses .........................................37
-   11.  References .................................................37
-   11.1.  Normative References .....................................37
-   11.2.  Informative References ...................................37
+   2.2.  Version and Parents headers ................................6
+   2.2.1.  Formatting of Version IDs in versioning headers ..........7
+   2.2.2.  Definition of Events and Versions ........................7
+   2.3.  Using Versioning with HTTP Methods .........................8
+   2.3.1.  GET the current version ..................................8
+   2.3.2.  GET a specific version ...................................9
+   2.3.3.  PUT, POST, or PATCH a new version ........................9
+   2.3.4.  GET a range of historical versions ......................10
+   2.3.5.  Rules for Version and Parents headers ...................12
+   2.3.6.  Interaction with Conditional Request Headers ............12
+   2.5.  Status 432: Version Not Found .............................13
+   2.6.  The Current-Version header ................................13
+   2.7.  Version-Type header .......................................14
+   2.8.  Versioning through intermediaries .........................15
+   2.8.1.  Detecting legacy intermediaries .........................16
+   3.  Analysis of existing versioning approaches in HTTP ..........17
+   3.1.  Approaches with versions in headers .......................17
+   3.1.1.  Last-Modified ...........................................17
+   3.1.2.  ETag ....................................................18
+   3.2.  Approaches defining versions as new resources .............19
+   3.2.1.  Creating additional "Version Resources" .................19
+   3.2.2.  Standardizing versions as external resources ............20
+   3.4.  Requirements for general versioning .......................21
+   3.4.1.  Distributed Time ........................................21
+   3.4.2.  Included within existing HTTP requests and responses ....22
+   3.4.3.  Generalizable Timestamps ................................22
+   3.5.  Feature table of existing approaches ......................23
+   4.  Informative Use-Cases .......................................24
+   4.1.  Incremental RSS Subscription ..............................24
+   4.2.  Hosting git via HTTP ......................................25
+   4.3.  Resumable uploads protocol ................................28
+   4.4.  Distributed collaborative editing .........................30
+   4.5.  Improved Header Compression with runs .....................32
+   4.6.  Run-Length Compression without Header Compression .........35
+   5.  Acknowledgements ............................................36
+   6.  Conventions .................................................36
+   7.  IANA Considerations .........................................37
+   7.1.  HTTP Header Registrations .................................37
+   7.2.  Version Type Registry .....................................37
+   7.2.1.  Procedure ...............................................38
+   7.2.2.  Version Type Registrations ..............................39
+   7.2.2.1.  The peer-counter Version-Type .........................39
+   7.2.2.1.1.  The "text-runs" modifier ............................39
+   7.2.2.1.2.  The "bytestream" modifier ...........................39
+   7.2.3.  Comments on Version Type Registrations ..................40
+   7.2.4.  Change Procedures .......................................40
+   8.  Copyright Notice ............................................41
+   9.  Security Considerations .....................................42
+   10.  Authors' Addresses .........................................43
+   11.  References .................................................43
+   11.1.  Normative References .....................................43
+   11.2.  Informative References ...................................43
 
 
 1.  Introduction
@@ -482,6 +482,34 @@ Table of Contents
    Note that this example uses a new "Multiresponse" code, which is
    currently being drafted [Multiresponse].  See [Braid-HTTP] Section 3
    for an earlier draft of the semantics.
+
+   If the client just wants the version identifiers for a range of
+   history, it can use a HEAD request:
+
+
+      Request:
+
+         HEAD /chat
+         Parents: "ej4lhb9z78"
+         Version: "oakwn5b8qh"
+
+      Response:
+
+         HTTP/1.1 209 Multiresponse
+
+         HTTP/1.1 200 OK
+         Parents: "ej4lhb9z78"
+         Version: "i8qa3vu1s0k"
+
+         HTTP/1.1 200 OK
+         Parents: "i8qa3vu1s0k"
+         Version: "v1voi252yr"
+
+         HTTP/1.1 200 OK
+         Parents: "i8qa3vu1s0k"
+         Version: "jn4zuwo0wum"
+
+         ...
 
 
 2.3.5.  Rules for Version and Parents headers
