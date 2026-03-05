@@ -262,8 +262,8 @@ Table of Contents
 2.2.1.  Formatting of Version IDs in versioning headers
 
    The Version and Parents headers are formatted as a list of strings
-   and/or display strings in the Structured Headers format [RFC8941,
-   RFC9651].  Each string is called an Event ID.
+   and/or display strings in the Structured Headers format [RFC9651].
+   Each string is called an Event ID.
 
            Version:           <version>
            Parents:           <version>
@@ -517,7 +517,7 @@ Table of Contents
 
    The Version and Parents headers operate independently of the
    conditional request headers (If-Match, If-None-Match,
-   If-Modified-Since, If-Unmodified-Since) defined in RFC 9110 Section
+   If-Modified-Since, If-Unmodified-Since) defined in [RFC9110] Section
    13.  Conditional headers evaluate against entity-tags (ETags) or
    modification dates, while Version and Parents reference version
    identifiers.
@@ -807,12 +807,12 @@ Table of Contents
 3.2.2.  Standardizing versions as external resources
 
    A number of approaches enable ways to organize and navigate a set of
-   "version resources."  Memento (RFC 7089) provides read-only access to
+   "version resources."  Memento [RFC7089] provides read-only access to
    prior states through datetime negotiation, but defines no mechanism
-   for creating new versions.  WebDAV Versioning (RFC 3253) provides a
+   for creating new versions.  WebDAV Versioning [RFC3253] provides a
    full lifecycle through CHECKOUT/CHECKIN methods, but requires
    server-assigned version identifiers.  Link Relations for Version
-   Navigation (RFC 5829) defines link relation types for navigating
+   Navigation [RFC5829] defines link relation types for navigating
    between version resources, but leaves the creation and management of
    those versions to other protocols.  WebDAV and Link Relations also
    allow for a partial order of distributed time, whereas Memento is
@@ -1541,8 +1541,8 @@ Table of Contents
 
    Values to be added to this namespace require IETF Review (see
    [RFC8126], Section 4.1).
-
 
+
 7.2.2.  Version Type Registrations
 
 7.2.2.1.  The peer-counter Version-Type
@@ -1606,6 +1606,7 @@ Table of Contents
    registration itself; if the IANA, in consultation with the Version
    Types reviewer, approves, the comment will be made accessible in
    conjunction with the type registration.
+
 
 7.2.4.  Change Procedures
 
@@ -1716,7 +1717,13 @@ Table of Contents
 
 11.1.  Normative References
 
-   [RFC5789]           "PATCH Method for HTTP", RFC 5789.
+   [RFC2119]           "Key words for use in RFCs to Indicate
+                       Requirement Levels", RFC 2119.
+
+   [RFC8126]           "Guidelines for Writing an IANA Considerations
+                       Section in RFCs", RFC 8126.
+
+   [RFC9651]           "Structured Field Values for HTTP", RFC 9651.
 
    [RFC9110]           "HTTP Semantics", RFC 9110.
 
@@ -1745,3 +1752,11 @@ Table of Contents
 
    [Braid-Text] <https://github.com/braid-org/braid-text>
 
+   [RFC7089]  "HTTP Framework for Time-Based Access to Resource States
+              -- Memento",  RFC 7089.
+
+   [RFC3253]  "Versioning Extensions to WebDAV (Web Distributed Authoring
+              and Versioning)", RFC 3253.
+
+   [RFC5829]  "Link Relation Types for Simple Version Navigation between
+              Web Resources", RFC 5829.
