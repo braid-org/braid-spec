@@ -1645,12 +1645,12 @@ Table of Contents
    We could then compress the 495 bytes down to a single 20-byte
    message:
 
-           RUN(57, 474, 'asdf')
+           RUN(57, 471, 'asdf')
 
    Giving up human readability, we can encode this even more compactly,
    in 12 bytes:
 
-           R57,474,asdf
+           R57,471,asdf
 
    We can compress further by encoding the numbers as variable-length
    integers (such as LEB128 or Protocol Buffers' varint).  That could

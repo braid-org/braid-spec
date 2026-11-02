@@ -19,9 +19,10 @@ Abstract
    Merge Type, then they will reach a consistent state eventually,
    whatever edits they make.
 
-   You can define new Merge Types.  This document defines Merge Types,
-   the structure of the Merge Type system, the Merge-Type header, and
-   IANA registration procedures for Merge Types.
+   This document defines Merge Types, the structure of the Merge Type
+   system, the Merge-Type header, and IANA registration procedures for
+   Merge Types.  Other specifications can define more Merge Types, in
+   the registry that this document creates.
 
    This document is one of the Braid-HTTP extensions, which work alone
    or together; together they make HTTP a state synchronization
@@ -170,21 +171,23 @@ Table of Contents
                 (edit history) -> merged state
 
 
-   A Merge Type must be a deterministic function.  Given the same edit
-   history, it always returns the same merged state.  This guarantees
-   eventual consistency.
+   A Merge Type MUST be a deterministic function.  Given the same edit
+   history, it always returns the same merged state.  So peers that have
+   received the same edits reach the same state.  Along with a guarantee
+   that every edit reaches every peer, this gives strong eventual
+   consistency [CRDT].
 
    The edit history holds every edit that led to the parent versions of
    the merge.  In the example above, to merge "dogs" and "cats" into
    "dogcats", the Merge Type needs to know that each edit replaced
-   "bird".  The function cannot depend on state outside that edit
+   "bird".  The function MUST NOT depend on state outside that edit
    history or its specification.
 
-   A Merge Type might only work on a particular Content-Type.  For
-   instance, a "counter" Merge Type only works on numbers.  A Merge
-   Type's specification SHOULD state any limits on the states that the
-   Merge Type can operate on, and any assumptions that it makes about
-   the data.
+   A Merge Type might only work on some media types, or some kinds of
+   data.  For instance, a "counter" Merge Type only works on numbers.  A
+   Merge Type's specification SHOULD state any limits on the states that
+   the Merge Type can operate on, and any assumptions that it makes
+   about the data.
 
    If the data meets those assumptions, a Merge Type MUST return a
    result when it merges any set of versions.  A Merge Type cannot
@@ -197,8 +200,8 @@ Table of Contents
    state at a version that has two or more parent versions.  A merge
    works from the edit history that led to the parents, and resolves any
    conflicts between their edits.  There are multiple approaches to
-   resolving conflicts, and we define "Merge Type" as an identifier that
-   corresponds to an approach of resolving conflicts.
+   resolving conflicts.  We call each one a "Merge Type", and give each
+   a name that identifies it.
 
 
 3.  Merge Type Naming

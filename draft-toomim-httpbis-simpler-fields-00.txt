@@ -75,7 +75,7 @@ Table of Contents
    4.  Tradeoffs ......................................................7
    5.  Implementation Status ..........................................7
    6.  Security Considerations ........................................7
-   7.  IANA Considerations ............................................7
+   7.  IANA Considerations ............................................8
    8.  References .....................................................8
    8.1.  Normative References .........................................8
    8.2.  Informative References .......................................8
@@ -167,7 +167,7 @@ Table of Contents
    A sender MUST serialize each value as Section 4.1 of [RFC9651]
    specifies: with no space after a ";", exactly one space after a ",",
    and exactly one space between the members of an Inner List.  Then
-   each value has exactly one serialization.
+   each Structured Field value has exactly one serialization.
 
    When a recipient joins field lines, it joins them with a comma and a
    single space, as Section 5.3 of [RFC9110] recommends.  So the joined
@@ -212,10 +212,10 @@ Table of Contents
    Structured Fields parser, which reads every Simpler Field too.
 
    Since a String contains no quotes, commas, semicolons, or
-   parentheses, a client can safely split a field's value at its commas,
-   into the members of its List, and split each member at its
-   semicolons, into its Item or Inner List and its parameters.  Then it
-   finds each String with /"([^"]*)"/, and percent-decodes it.
+   parentheses, a client can safely split a field without Inner Lists at
+   its commas, into the members of its List, and split each member at
+   its semicolons, into its Item and its parameters.  Then it finds each
+   String with /"([^"]*)"/, and percent-decodes it.
 
    For example, this JavaScript reads the Event IDs from one field line
    of the Version field [VERSIONS]:
@@ -232,13 +232,22 @@ Table of Contents
 
    A regular expression can still parse a field after the field is
    extended, because the field's definition gives the general shape of
-   the parameters it does not define (Section 2.4).  For instance, where
-   a field's unknown parameters are Tokens or Strings, a regular
-   expression can skip them with:
+   the parameters it does not define (Section 2.4).  For instance, a
+   regular expression can skip unknown parameters with this pattern,
+   which matches any key, and any value of the fixed types (Section
+   2.3):
 
-           (?:;[a-z][a-z0-9_.-]*(?:=(?:[a-z][a-z0-9-]*|"[^"]*"))?)*
+           (?:;KEY(?:=(?:VALUE))?)*
 
 
+   KEY and VALUE stand for these patterns:
+
+
+           KEY   = [a-z*][a-z0-9_.*-]*
+           VALUE = [A-Za-z*][A-Za-z0-9!#$%&'*+.^_`|~:/-]*
+                   | "[^"]*" | -?[0-9]+(?:\.[0-9]+)? | \?[01]
+
+
 4.  Tradeoffs
 
    A String with special characters is less readable, since it contains
@@ -288,12 +297,12 @@ Table of Contents
    compares Strings, as a cache compares versions, it compares their
    decoded values.
 
-
+
 7.  IANA Considerations
 
    This document has no IANA actions.
 
-
+
 8.  References
 
 
@@ -343,11 +352,12 @@ Table of Contents
               draft-toomim-httpbis-braid-subscriptions-00, work in
               progress, November 2026.
 
+
    [VERSIONS] Toomim, M., "Resource Versioning for HTTP",
               draft-toomim-httpbis-braid-versions-00, work in progress,
               November 2026.
 
-
+
 Authors' Addresses
 
    Michael Toomim
