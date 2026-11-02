@@ -73,7 +73,7 @@ its own, so caches can store them one by one.
 
 ### Simpler Fields: [`draft-toomim-httpbis-simpler-fields-00.txt`](https://raw.githubusercontent.com/braid-org/braid-spec/master/draft-toomim-httpbis-simpler-fields-00.txt)
 
-Simpler Fields keeps every new header field one regular expression away.  It's
+Simpler Fields makes HTTP headers easier to parse.  It's
 a profile of Structured Fields, with special characters in strings
 percent-encoded, so a light client can parse a field with a regular expression,
 and a full Structured Fields parser reads it unchanged.  Every new header field
