@@ -1,0 +1,356 @@
+Internet-Draft                                                 M. Toomim
+Expires: 6 May 2027                                    Invisible College
+Intended status: Proposed Standard                       2 November 2026
+
+
+                        Simpler Fields for HTTP
+                 draft-toomim-httpbis-simpler-fields-00
+
+Abstract
+
+   Structured Field Values for HTTP (RFC 9651) give HTTP fields a common
+   syntax, but a general parser for them is a sizable dependency for a
+   light client that needs to read only one or two fields.  This
+   document defines Simpler Fields, a profile of Structured Fields that
+   a client can parse with a short regular expression.  Its strings are
+   percent-encoded, so they never contain quotes, backslashes, or the
+   field's delimiters; its serialization is canonical; and its types are
+   fixed.  Every Simpler Field value is a valid Structured Field value,
+   so a general parser reads it unchanged.
+
+
+About This Document
+
+   This note is to be removed before publishing as an RFC.
+
+   Discussion of this document takes place on the HTTP Working Group
+   mailing list (ietf-http-wg@w3.org).  The source of this document,
+   and an issue tracker, are at https://github.com/braid-org/braid-spec.
+
+
+Status of this Memo
+
+   This Internet-Draft is submitted in full conformance with the
+   provisions of BCP 78 and BCP 79.
+
+   Internet-Drafts are working documents of the Internet Engineering
+   Task Force (IETF).  Note that other groups may also distribute
+   working documents as Internet-Drafts.  The list of current
+   Internet-Drafts is at https://datatracker.ietf.org/drafts/current/.
+
+   Internet-Drafts are draft documents valid for a maximum of six months
+   and may be updated, replaced, or obsoleted by other documents at any
+   time.  It is inappropriate to use Internet-Drafts as reference
+   material or to cite them other than as "work in progress."
+
+   This Internet-Draft will expire on 6 May 2027.
+
+
+Copyright Notice
+
+   Copyright (c) 2026 IETF Trust and the persons identified as the
+   document authors.  All rights reserved.
+
+   This document is subject to BCP 78 and the IETF Trust's Legal
+   Provisions Relating to IETF Documents
+   (https://trustee.ietf.org/license-info) in effect on the date of
+   publication of this document.  Please review these documents
+   carefully, as they describe your rights and restrictions with respect
+   to this document.  Code Components extracted from this document must
+   include Revised BSD License text as described in Section 4.e of the
+   Trust Legal Provisions and are provided without warranty as described
+   in the Revised BSD License.
+
+
+Table of Contents
+
+   1.  Introduction ...................................................4
+   1.1.  Conventions ..................................................4
+   2.  Rules for Simpler Fields .......................................5
+   2.1.  Strings are percent-encoded ..................................5
+   2.2.  Serialization is canonical ...................................5
+   2.3.  The types are fixed ..........................................5
+   2.4.  Defining a Simpler Field .....................................6
+   3.  Parsing a Simpler Field with a regular expression ..............7
+   4.  Tradeoffs ......................................................7
+   5.  Implementation Status ..........................................8
+   6.  Security Considerations ........................................9
+   7.  IANA Considerations ............................................9
+   8.  References .....................................................9
+   8.1.  Normative References .........................................9
+   8.2.  Informative References ......................................10
+
+
+1.  Introduction
+
+   Structured Field Values [RFC9651] define a common syntax for HTTP
+   fields: Lists, Dictionaries, and Items, with parameters, built from a
+   small set of types.  This lets a new field reuse a well-tested parser
+   instead of defining its own grammar.
+
+   However, a general parser is a sizable dependency.  The
+   structured-headers package for JavaScript [STRUCTURED-HEADERS], for
+   instance, is 10 KB minified.  A light client that needs to read just
+   one field, perhaps in a language without such a library at hand,
+   would rather parse it with a regular expression.  Parsers that small,
+   in many languages, make a protocol easier to implement, and so
+   encourage its adoption.
+
+   What makes Structured Fields hard to parse that way is its strings.
+   A String can contain an escaped quote or backslash, and it can
+   contain the delimiters of the field around it -- commas, semicolons,
+   and parentheses -- so a regular expression cannot tell where a String
+   ends without tracking its escapes.
+
+   This document defines a profile of Structured Fields, called Simpler
+   Fields, that removes these difficulties.  For example, these are all
+   Simpler Fields:
+
+           Version: ("a%2Cb" "c")
+           Parents: ("a3" "b7")
+           Subscribe: webhook;to="https://gateway.example/push/7f3a"
+           Heartbeats: 0.5
+           Origin-Status: down;age=12
+
+   In a Simpler Field, a String never contains a quote, a backslash, a
+   comma, a semicolon, or a parenthesis.  So a regular expression can
+   find every String with /"[^"]*"/, and can split the field at its
+   commas and semicolons without looking inside its Strings.  Each
+   String is percent-encoded, and its recipient decodes it, so the first
+   Event ID above is "a,b".
+
+   Simpler Fields make both kinds of parser possible.  A client that
+   needs one field can parse it with a short regular expression of its
+   own, and an implementation that handles many fields can use a
+   general Structured Fields parser, since every Simpler Field value is
+   also a valid Structured Field value, and add just the decoding step.
+
+   Several fields are defined as Simpler Fields, including Version,
+   Parents, and Current-Version [VERSIONS], Subscribe, Heartbeats, and
+   Origin-Status [SUBSCRIPTIONS], and Responds-To [MULTIRESPONSE].
+
+
+1.1.  Conventions
+
+   The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
+   "SHOULD", "SHOULD NOT", "RECOMMENDED", "NOT RECOMMENDED", "MAY", and
+   "OPTIONAL" in this document are to be interpreted as described in
+   BCP 14 [RFC2119] [RFC8174] when, and only when, they appear in all
+   capitals, as shown here.
+
+
+2.  Rules for Simpler Fields
+
+   A field that is defined as a Simpler Field follows the rules of
+   Structured Fields [RFC9651], and also the rules of this section.
+
+
+2.1.  Strings are percent-encoded
+
+   A sender MUST percent-encode, as in Section 2.1 of [RFC3986], every
+   byte of a String's UTF-8 encoding [RFC3629] that is not printable
+   ASCII, and each of the characters DQUOTE, "\", ",", "(", ")", ";",
+   and "%".  It MAY percent-encode other characters too.
+
+   A recipient percent-decodes the value of every String after parsing
+   the field, whichever parser it uses: the decoding is part of each
+   field's meaning.  A "%" that is not followed by two hexadecimal
+   digits makes the field invalid, and so does a decoded value that is
+   not valid UTF-8.
+
+   Since percent-encoding can carry any Unicode character, Simpler
+   Fields do not use Display Strings.
+
+
+2.2.  Serialization is canonical
+
+   A sender MUST serialize each value as Section 4.1 of [RFC9651] does:
+   with no space after a ";", exactly one space after a ",", and exactly
+   one space between the members of an Inner List.  Then the same value
+   always has the same serialization.
+
+   A recipient that joins field lines joins them with a comma and a
+   single space, as Section 5.3 of [RFC9110] recommends, so the joined
+   value is canonical too.  So a regular expression can match the
+   canonical form exactly, or accept other spacing, such as with " ?",
+   to be lenient.
+
+
+2.3.  The types are fixed
+
+   A Simpler Field uses only these types: Tokens, Strings, Integers,
+   Decimals, and Booleans, and Inner Lists only where the field's
+   definition calls for them.  It does not use Byte Sequences, Dates,
+   or Display Strings.
+
+
+2.4.  Defining a Simpler Field
+
+   A specification that defines a field as a Simpler Field states:
+
+     - its known members and parameters, and their types;
+
+     - the general shape of the members and parameters that it does not
+       define, using only the types above, so that a recipient can
+       parse them; and
+
+     - what a recipient does with a member or parameter that it does
+       not know.
+
+   The last of these matters because ignoring an unknown parameter is
+   not always safe.  When every parameter of a member helps identify
+   something, a recipient that ignored one it did not know would
+   identify the wrong thing, so such a field tells the recipient not to
+   use the member at all.
+
+
+3.  Parsing a Simpler Field with a regular expression
+
+   A client that reads only a few fields can parse each one with a
+   short regular expression of its own, written for that field.  An
+   implementation that reads many fields will do better with a general
+   Structured Fields parser, which reads every Simpler Field too.
+
+   A regular expression for a field can rely on its Strings, since a
+   String never contains a quote, a comma, a semicolon, or a
+   parenthesis.  It can split the field's value at its commas, into the
+   members of its List, and split each member at its semicolons, into
+   its Item or Inner List and its parameters.  It finds each String
+   with /"([^"]*)"/, and percent-decodes it.
+
+   For example, this JavaScript reads the Event IDs from one field line
+   of the Version field [VERSIONS]:
+
+           var event_ids = field_line.match(/"[^"]*"/g)
+                 .map(s => decodeURIComponent(s.slice(1, -1)))
+
+   And this regular expression reads the Origin-Status field
+   [SUBSCRIPTIONS], with its optional age:
+
+           /^(up|down)(?:;age=(\d+))?$/
+
+   A regular expression written this way keeps working as a field is
+   extended, because the field's definition gives the general shape of
+   the parameters it does not define (Section 2.4).  For instance,
+   where a field's unknown parameters are Tokens or Strings, a regular
+   expression can step over them with:
+
+           (?:;[a-z][a-z0-9_.-]*(?:=(?:[a-z][a-z0-9-]*|"[^"]*"))?)*
+
+
+4.  Tradeoffs
+
+   A String with special characters is less readable, since it carries
+   percent escapes.  Most values, such as typical version identifiers,
+   have none.
+
+   Every String takes one decoding step after parsing.
+
+   A general Structured Fields serializer escapes quotes and backslashes
+   with backslashes, which a Simpler Field never contains, so a sender
+   percent-encodes its Strings before passing them to such a
+   serializer.
+
+
+5.  Implementation Status
+
+   This section is to be removed before publishing as an RFC.  It
+   records known implementations at the time of posting, as described
+   in [RFC7942].
+
+   Parsers and serializers for the Version and Parents fields of
+   [VERSIONS], written under these rules, were presented at braid.org
+   meeting 136 [MEETING-136].  Without comments, they take:
+
+           JavaScript    32 lines    1.5 KB
+           Python        25 lines    about 800 bytes
+           Lua           63 lines    2.6 KB
+           Emacs Lisp    59 lines    2.8 KB
+
+
+6.  Security Considerations
+
+   The security considerations of [RFC9651] apply.
+
+   Percent-decoding can produce any bytes, including control
+   characters.  A field's definition says which decoded values are
+   valid, and a recipient checks a decoded value before using it, as it
+   would any String.
+
+   A recipient decodes each String exactly once.  Decoding twice would
+   turn "%2541" into "A", so that two different Strings decode to the
+   same value, which can defeat a check that compares them.
+
+   Since a sender MAY percent-encode more than it needs to, the same
+   value can be serialized as "%41" or as "A".  A recipient that
+   compares Strings, such as a cache comparing versions, compares their
+   decoded values.
+
+
+7.  IANA Considerations
+
+   This document has no IANA actions.
+
+
+8.  References
+
+8.1.  Normative References
+
+   [RFC2119]  Bradner, S., "Key words for use in RFCs to Indicate
+              Requirement Levels", BCP 14, RFC 2119, March 1997.
+
+   [RFC3629]  Yergeau, F., "UTF-8, a transformation format of ISO
+              10646", STD 63, RFC 3629, November 2003.
+
+   [RFC3986]  Berners-Lee, T., Fielding, R., and L. Masinter, "Uniform
+              Resource Identifier (URI): Generic Syntax", STD 66,
+              RFC 3986, January 2005.
+
+   [RFC8174]  Leiba, B., "Ambiguity of Uppercase vs Lowercase in RFC
+              2119 Key Words", BCP 14, RFC 8174, May 2017.
+
+   [RFC9110]  Fielding, R., Ed., Nottingham, M., Ed., and J. Reschke,
+              Ed., "HTTP Semantics", STD 97, RFC 9110, June 2022.
+
+   [RFC9651]  Nottingham, M. and P-H. Kamp, "Structured Field Values
+              for HTTP", RFC 9651, September 2024.
+
+
+8.2.  Informative References
+
+   [MEETING-136]
+              braid.org, "Braid Meeting 136", 2026,
+              <https://braid.org/meeting-136>.
+
+   [MULTIRESPONSE]
+              Toomim, M., "Multiresponses for HTTP",
+              draft-toomim-httpbis-braid-multiresponse-00, work in
+              progress, November 2026.
+
+   [RFC7942]  Sheffer, Y. and A. Farrel, "Improving Awareness of Running
+              Code: The Implementation Status Section", BCP 205,
+              RFC 7942, July 2016.
+
+   [STRUCTURED-HEADERS]
+              "structured-headers", npm package,
+              <https://www.npmjs.com/package/structured-headers>.
+
+   [SUBSCRIPTIONS]
+              Toomim, M., "Subscriptions for HTTP",
+              draft-toomim-httpbis-braid-subscriptions-00, work in
+              progress, November 2026.
+
+   [VERSIONS] Toomim, M., "Resource Versioning for HTTP",
+              draft-toomim-httpbis-braid-versions-00, work in progress,
+              November 2026.
+
+
+Authors' Addresses
+
+   Michael Toomim
+   Invisible College, Berkeley
+   2053 Berkeley Way
+   Berkeley, CA 94704
+
+   EMail: toomim@gmail.com
+   Web:   https://invisible.college/@toomim

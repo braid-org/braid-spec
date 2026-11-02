@@ -1,0 +1,509 @@
+Internet-Draft                                                 M. Toomim
+Expires: 6 May 2027                                    Invisible College
+Intended status: Proposed Standard                       2 November 2026
+
+
+                        Multiresponses for HTTP
+              draft-toomim-httpbis-braid-multiresponse-00
+
+Abstract
+
+   A server responds to each HTTP request with a single response.  This
+   document defines the 209 Multiresponse status code, whose content
+   holds several responses, and the application/http-history media type,
+   a sequence of responses to one resource over time.  Together they let
+   a server send a history of a resource, or a stream of its changes, in
+   one response, which caches can store piece by piece.
+
+   This document is one of the Braid-HTTP extensions, which work alone
+   or together; together they make HTTP a state synchronization
+   protocol.
+
+
+About This Document
+
+   This note is to be removed before publishing as an RFC.
+
+   Discussion of this document takes place on the HTTP Working Group
+   mailing list (ietf-http-wg@w3.org).  The source of this document,
+   and an issue tracker, are at https://github.com/braid-org/braid-spec.
+
+
+Status of this Memo
+
+   This Internet-Draft is submitted in full conformance with the
+   provisions of BCP 78 and BCP 79.
+
+   Internet-Drafts are working documents of the Internet Engineering
+   Task Force (IETF).  Note that other groups may also distribute
+   working documents as Internet-Drafts.  The list of current
+   Internet-Drafts is at https://datatracker.ietf.org/drafts/current/.
+
+   Internet-Drafts are draft documents valid for a maximum of six months
+   and may be updated, replaced, or obsoleted by other documents at any
+   time.  It is inappropriate to use Internet-Drafts as reference
+   material or to cite them other than as "work in progress."
+
+   This Internet-Draft will expire on 6 May 2027.
+
+
+Copyright Notice
+
+   Copyright (c) 2026 IETF Trust and the persons identified as the
+   document authors.  All rights reserved.
+
+   This document is subject to BCP 78 and the IETF Trust's Legal
+   Provisions Relating to IETF Documents
+   (https://trustee.ietf.org/license-info) in effect on the date of
+   publication of this document.  Please review these documents
+   carefully, as they describe your rights and restrictions with respect
+   to this document.  Code Components extracted from this document must
+   include Revised BSD License text as described in Section 4.e of the
+   Trust Legal Provisions and are provided without warranty as described
+   in the Revised BSD License.
+
+
+Table of Contents
+
+   1.  Introduction ...................................................4
+   1.1.  Terminology ..................................................5
+   1.2.  Conventions ..................................................5
+   2.  The 209 Multiresponse Status Code ..............................5
+   2.1.  When a server sends a multiresponse ..........................5
+   2.2.  Responding to the client's own request .......................6
+   2.3.  Caching ......................................................6
+   3.  The application/http-history Media Type ........................7
+   3.1.  Syntax .......................................................7
+   3.2.  Implied requests .............................................8
+   3.3.  Intermediaries ...............................................8
+   4.  The Responds-To Header .........................................8
+   5.  Implementation Status ..........................................9
+   6.  Security Considerations ........................................9
+   7.  IANA Considerations ...........................................10
+   7.1.  Status Code Registration ....................................10
+   7.2.  Media Type Registration .....................................11
+   7.3.  Field Registration ..........................................12
+   8.  References ....................................................12
+   8.1.  Normative References ........................................12
+   8.2.  Informative References ......................................12
+
+
+1.  Introduction
+
+   A server responds to each HTTP request with a single response.  But
+   sometimes a server has several to send.  When a client asks for a
+   range of a resource's history [VERSIONS], the server sends each
+   version in the range, and when a client subscribes to a resource
+   [SUBSCRIPTIONS], the server sends each change as it happens.
+
+   This document lets the server send them all in one response, with a
+   new status code: 209 Multiresponse.  The content of a multiresponse
+   is a sequence of responses, which we call sub-responses.  This
+   document also defines a format for that content, the
+   application/http-history media type, which holds the responses to
+   one resource over time, in order.
+
+   For example, a client can request the history of /chat from version
+   "1" to version "3":
+
+      Request:
+
+         GET /chat
+         Parents: ("1")
+         Version: ("3")
+
+      Response:
+
+         HTTP/1.1 209 Multiresponse
+         Content-Type: application/http-history
+         Cache-Control: no-store
+
+         HTTP/1.1 200 OK                                  | Sub-response
+         Version: ("2")                                   |
+         Parents: ("1")                                   |
+         Content-Type: text/plain                         |
+         Content-Length: 5                                |
+                                                          |
+         Hello                                            |
+
+         HTTP/1.1 200 OK                                  | Sub-response
+         Version: ("3")                                   |
+         Parents: ("2")                                   |
+         Content-Type: text/plain                         |
+         Content-Length: 11                               |
+                                                          |
+         Hello world                                      |
+
+   The client sent one request, and got two responses.  Each of them
+   responds to a request that the client could have sent on its own: the
+   first responds to a GET for /chat from version "1" to version "2",
+   and the second to a GET from "2" to "3".  We call these the
+   sub-responses' "implied requests".  [VERSIONS] says what they are for
+   this range request, and other specifications say what they are for
+   their own uses of multiresponses.
+
+   A cache can store each sub-response as the response to its implied
+   request, and later serve it to a client that sends that request.  But
+   the cache never stores the multiresponse itself.
+
+   We use a new status code, rather than a 200 whose content is a
+   history, so that a cache never mistakes the history for the
+   resource.  Yet a client that doesn't know the 209 treats it as a 200
+   (Section 15 of [RFC9110]), and hands its content to the application.
+   So a library can parse the sub-responses on top of an existing HTTP
+   client, such as a browser's fetch().
+
+
+1.1.  Terminology
+
+   This document uses the following terms:
+
+   Multiresponse:  A response with the 209 status code, whose content
+      holds several responses.
+
+   Sub-response:  One response in a multiresponse.
+
+   Container Request:  The request that the client sent, to which the
+      multiresponse responds.
+
+   Implied Request:  A request that the client could have sent, to which
+      a sub-response responds (Section 3.2).
+
+   It also uses Version and Parents from [VERSIONS], and Simpler Fields
+   from [SIMPLER-FIELDS].
+
+
+1.2.  Conventions
+
+   The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
+   "SHOULD", "SHOULD NOT", "RECOMMENDED", "NOT RECOMMENDED", "MAY", and
+   "OPTIONAL" in this document are to be interpreted as described in
+   BCP 14 [RFC2119] [RFC8174] when, and only when, they appear in all
+   capitals, as shown here.
+
+
+2.  The 209 Multiresponse Status Code
+
+   The 209 (Multiresponse) status code indicates that the response's
+   content holds several responses.  Its Content-Type says how those
+   responses relate to one another, and how they are framed.  This
+   document defines one such type, application/http-history (Section
+   3).
+
+
+2.1.  When a server sends a multiresponse
+
+   A server sends a multiresponse only to a client that can read one.
+   A client that doesn't know the 209 would take its sub-responses for
+   the resource itself.  So a server MUST NOT send a 209 Multiresponse
+   unless the request says that the client can read it: with an Accept
+   header that lists application/http-history, or with a header that
+   another specification defines for this.  A request for a range of
+   history says it [VERSIONS], and so does a subscription
+   [SUBSCRIPTIONS].
+
+2.2.  Responding to the client's own request
+
+   Sometimes a server needs to respond to the client's own request,
+   rather than to an implied request: to say that the subscription has
+   ended, for instance, or that it continues somewhere else.  It sends a
+   sub-response with the header "Responds-To: container-request"
+   (Section 4), which says that this sub-response responds to the
+   client's own request:
+
+         HTTP/1.1 403 Forbidden
+         Responds-To: container-request
+
+   A proxy that relays a multiresponse byte for byte passes these
+   sub-responses on with the rest.  But consider a cache that builds its
+   own multiresponse for its client, out of the responses it gets from
+   upstream.  When the upstream server sends it "Responds-To:
+   container-request", that sub-response responds to the cache's own
+   request to the upstream server, not to its client's request.  So the
+   cache MUST NOT forward it.  It responds to its client's request with
+   sub-responses of its own.
+
+
+2.3.  Caching
+
+   A cache never stores a multiresponse as a whole.  But a cache may
+   store a response with a status code it doesn't know, if the response
+   has explicit freshness information (Section 3 of [RFC9111]).  So
+   every 209 Multiresponse MUST include "Cache-Control: no-store".  A
+   cache can still build a multiresponse of its own, out of responses
+   it has stored.
+
+   A cache MAY store each sub-response as though it had received it in
+   response to its implied request, and then treat it like any other
+   stored response [RFC9111].  To do so, the cache needs to know how to
+   find the implied request, from the specification that defines it.
+
+   A recipient ignores any 1xx sub-response it doesn't know, as it
+   would any unexpected 1xx response (Section 15.2 of [RFC9110]).
+
+3.  The application/http-history Media Type
+
+   The application/http-history media type holds responses to one
+   resource over time, in order, each responding to its implied request.
+
+   Each response builds on the ones before it, so a recipient reads them
+   in order.  When the responses carry versions [VERSIONS], their
+   Parents form a partial order, and the history lists each response
+   after the ones it builds on.  (Each message of the application/http
+   media type, in Section 10.2 of [RFC9112], stands alone instead, as in
+   a batch.)
+
+   The responses can be any responses.  When they are updates as
+   [UPDATES] defines them, every peer that replays the history arrives
+   at the same state.
+
+
+3.1.  Syntax
+
+   The content is a sequence of HTTP/1.1 responses [RFC9112].  A
+   recipient finds where each one ends by two of the rules in Section
+   6.3 of [RFC9112]:
+
+     - A response with a 1xx, 204, or 304 status code, and any response
+       to a HEAD request, ends at the empty line after its header
+       section.
+
+     - Every other response carries a Content-Length header, which gives
+       the length of its content.  No response uses Transfer-Encoding.
+
+   Every sub-response responds to a HEAD request when the client's own
+   request was a HEAD.  Otherwise, the specification that defines the
+   implied requests says which ones do.
+
+   If a response lacks the Content-Length it needs, the recipient can't
+   tell where the next one begins, so it MUST stop reading the
+   multiresponse.
+
+   A recipient skips any bare CRLFs before and between responses.  A
+   sender can send them to keep a quiet connection alive, as a
+   subscription does for its heartbeats [SUBSCRIPTIONS].
+
+   The status line's prefix is flexible: a recipient reads "HTTP/1.1
+   200 OK", "HTTP 200 OK", and "200 OK" alike.
+
+3.2.  Implied requests
+
+   Each response in a history responds to an implied request: a request
+   the client could have sent, to get just that response.  Each use of
+   multiresponses defines its own implied requests, as variations of the
+   client's own request.  For a range of history, [VERSIONS] replaces
+   the request's Parents and Version headers with those of each
+   response, and [SUBSCRIPTIONS] defines them for a subscription.  A
+   response with a Responds-To header (Section 4) responds to the
+   request that the header names, instead.
+
+   An implied request MUST have the same target URI, and the same
+   credentials, as the client's own request.  A sub-response that
+   responds to a request for some other resource names that request with
+   a Responds-To key instead, and the specification of that key says how
+   to keep it safe (Section 6).
+
+
+3.3.  Intermediaries
+
+   By default, an intermediary that forwards a history passes on every
+   response in it, in order.  Other specifications can let it do
+   otherwise, for instance by replacing several responses with one that
+   describes the same state.
+
+
+4.  The Responds-To Header
+
+   A sub-response uses the Responds-To header to say which request it
+   responds to, when that isn't its implied request.  Responds-To is a
+   Simpler Field [SIMPLER-FIELDS].  Its value is a Dictionary with
+   exactly one member, whose key names the kind of request.  This
+   document defines one key:
+
+   container-request:  The sub-response responds to the client's own
+      request.  The key has no value, which a Dictionary reads as true:
+
+           Responds-To: container-request
+
+   Other specifications can define more keys.  When a recipient doesn't
+   know the key, it can't tell which request the sub-response responds
+   to, so it MUST ignore the sub-response.
+
+5.  Implementation Status
+
+   This section is to be removed before publishing as an RFC.  It
+   records known implementations at the time of posting, as described
+   in [RFC7942].
+
+   braid-http-js [BRAID-HTTP-JS], a JavaScript library for clients and
+   servers, sends and parses multiresponses, for subscriptions.
+
+   In September 2026 we tested 209 Multiresponses through Cloudflare's
+   network with the HTTP cache-tests suite [CACHE-TESTS].  Cloudflare
+   passed them through unchanged, streaming each sub-response as it was
+   sent.  It also stored a 209 that carried a max-age directive, as
+   [RFC9111] allows, which is why every 209 carries no-store (Section
+   2.3).
+
+
+6.  Security Considerations
+
+   Every implied request has the same target URI as the client's own
+   request (Section 3.2), so a multiresponse can put responses into a
+   cache only for the resource the client asked for.  A future
+   Responds-To key could name a request for another resource, as a
+   transclusion would.  Its specification will need to say when a cache
+   can trust such a sub-response, for instance only for resources on
+   the same origin.
+
+   An implied request also carries the client's credentials, so a cache
+   follows the rules for storing responses to authenticated requests
+   (Section 3.5 of [RFC9111]) for each sub-response.
+
+   If a recipient misread the length of one response, it would read part
+   of that response's content as the next response, much as in response
+   splitting.  Requiring a Content-Length, and stopping when it's
+   missing (Section 3.1), keeps each response's boundaries clear.
+
+   Assembling and sending a long history costs a server resources, so a
+   server can limit how large a multiresponse it sends, and how often it
+   responds to requests for them.
+
+7.  IANA Considerations
+
+7.1.  Status Code Registration
+
+   This document registers the following status code in the "Hypertext
+   Transfer Protocol (HTTP) Status Code Registry", maintained at
+   <https://www.iana.org/assignments/http-status-codes>, as described
+   in Section 16.2.1 of [RFC9110]:
+
+      Value: 209
+      Description: Multiresponse
+      Reference: Section 2 of this document
+
+7.2.  Media Type Registration
+
+   This document registers the application/http-history media type, in
+   the "Media Types" registry maintained at
+   <https://www.iana.org/assignments/media-types>, following the
+   procedures of [RFC6838], and the registration of application/http in
+   Section 10.2 of [RFC9112]:
+
+      Type name: application
+
+      Subtype name: http-history
+
+      Required parameters: N/A
+
+      Optional parameters: N/A.  The version and msgtype parameters of
+      application/http do not apply, since every message is a response,
+      and the status line's prefix is flexible.
+
+      Encoding considerations: binary, as for application/http.
+
+      Security considerations: see Section 6 of this document.
+
+      Interoperability considerations: an HTTP/1.1 parser reads it,
+      given the framing rules of Section 3.1.
+
+      Published specification: this document.
+
+      Applications that use this media type: subscriptions
+      [SUBSCRIPTIONS], and requests for a range of history [VERSIONS].
+
+      Fragment identifier considerations: N/A
+
+      Additional information: Deprecated alias names: N/A; Magic
+      number(s): N/A; File extension(s): N/A; Macintosh file type
+      code(s): N/A
+
+      Person and email address to contact for further information:
+      Michael Toomim <toomim@gmail.com>
+
+      Intended usage: COMMON
+
+      Restrictions on usage: N/A
+
+      Author: Michael Toomim
+
+      Change controller: IETF
+
+7.3.  Field Registration
+
+   This document registers the following field in the "Hypertext
+   Transfer Protocol (HTTP) Field Name Registry", maintained at
+   <https://www.iana.org/assignments/http-fields>, as described in
+   Section 16.3.1 of [RFC9110]:
+
+      Field Name: Responds-To
+      Status: permanent
+      Structured Type: Dictionary
+      Reference: Section 4 of this document
+
+
+8.  References
+
+8.1.  Normative References
+
+   [RFC2119]  Bradner, S., "Key words for use in RFCs to Indicate
+              Requirement Levels", BCP 14, RFC 2119, March 1997.
+
+   [RFC8174]  Leiba, B., "Ambiguity of Uppercase vs Lowercase in RFC
+              2119 Key Words", BCP 14, RFC 8174, May 2017.
+
+   [RFC9110]  Fielding, R., Ed., Nottingham, M., Ed., and J. Reschke,
+              Ed., "HTTP Semantics", STD 97, RFC 9110, June 2022.
+
+   [RFC9111]  Fielding, R., Ed., Nottingham, M., Ed., and J. Reschke,
+              Ed., "HTTP Caching", STD 98, RFC 9111, June 2022.
+
+   [RFC9112]  Fielding, R., Ed., Nottingham, M., Ed., and J. Reschke,
+              Ed., "HTTP/1.1", STD 99, RFC 9112, June 2022.
+
+   [SIMPLER-FIELDS]
+              Toomim, M., "Simpler Fields for HTTP",
+              draft-toomim-httpbis-simpler-fields-00, work in progress,
+              November 2026.
+
+8.2.  Informative References
+
+   [BRAID-HTTP-JS]
+              braid.org, "braid-http-js", <https://github.com/braid-org/
+              braid-http>.
+
+   [CACHE-TESTS]
+              Nottingham, M., "HTTP Caching Tests",
+              <https://cache-tests.fyi/>.
+
+   [RFC6838]  Freed, N., Klensin, J., and T. Hansen, "Media Type
+              Specifications and Registration Procedures", BCP 13,
+              RFC 6838, January 2013.
+
+   [RFC7942]  Sheffer, Y. and A. Farrel, "Improving Awareness of Running
+              Code: The Implementation Status Section", BCP 205,
+              RFC 7942, July 2016.
+
+   [SUBSCRIPTIONS]
+              Toomim, M., "Subscriptions for HTTP",
+              draft-toomim-httpbis-braid-subscriptions-00, work in
+              progress, November 2026.
+
+   [UPDATES]  Toomim, M., "Replayable Updates for HTTP",
+              draft-toomim-httpbis-braid-updates-00, work in progress,
+              November 2026.
+
+   [VERSIONS] Toomim, M., "Resource Versioning for HTTP",
+              draft-toomim-httpbis-braid-versions-00, work in progress,
+              November 2026.
+
+
+Authors' Addresses
+
+   Michael Toomim
+   Invisible College, Berkeley
+   2053 Berkeley Way
+   Berkeley, CA 94704
+
+   EMail: toomim@gmail.com
+   Web:   https://invisible.college/@toomim
