@@ -9,16 +9,9 @@ limitation of HTTP, and works alone, or together with the others.
 
 ### Braid-HTTP: [`draft-toomim-httpbis-braid-http-05.txt`](https://raw.githubusercontent.com/braid-org/braid-spec/master/draft-toomim-httpbis-braid-http-05.txt)
 
-HTTP transfers a snapshot of a resource's state, once, in response to each
-request.  But the state of today's web keeps changing, and many people and
-programs share it.  So programmers synchronize it themselves, outside of HTTP,
-with WebSockets and protocols of their own.  Braid-HTTP brings
-synchronization into HTTP itself, so that the HyperText Transfer Protocol
-becomes a HyperState Synchronization Protocol.  Just as a page can link to a
-page on any other website by its URL alone, a website can then synchronize
-with the state of any other website by its URL alone.  In this overview, we
-describe how the extensions fit together, and what they make possible, from
-CDNs to collaborative editors.  Start here.
+Braid-HTTP extends HTTP from transferring state to synchronizing it.  With it,
+a website can synchronize with any other website's state by its URL alone,
+just as a page can link to any other page.  Start here.
 
 ## The extensions
 
