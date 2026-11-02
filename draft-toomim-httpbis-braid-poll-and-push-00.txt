@@ -92,16 +92,15 @@ Table of Contents
 
 1.  Introduction
 
-   A subscription in the stream mode [SUBSCRIPTIONS] holds one response
-   open, and sends each change in it.  Not every server or path can hold
-   a response open.  For example, imagine a newspaper's website on
-   election night, as in [SUBSCRIPTIONS], with a results page that
-   changes all evening.  The examples in this document follow two cases
-   from that night.  A reader at work sits behind a proxy that buffers
-   each response until it ends, so her browser never sees the first byte
-   of a stream.  And the county's election office posts the official
-   results from shared hosting, which ends any response that runs for
-   more than 30 seconds.
+   A subscription in the stream mode [SUBSCRIPTIONS] needs a response
+   held open, and not every server or path can hold one.  For example,
+   imagine a newspaper's website on election night, as in
+   [SUBSCRIPTIONS], with a results page that changes all evening.  The
+   examples in this document follow two cases from that night.  A reader
+   at work sits behind a proxy that buffers each response until it ends,
+   so her browser never sees the first byte of a stream.  And the
+   county's election office posts the official results from shared
+   hosting, which ends any response that runs for more than 30 seconds.
 
    This document defines a mode for each case.  In the long-poll mode
    (Section 2), the reader's browser sends a GET for each change, and
@@ -119,7 +118,6 @@ Table of Contents
    take its own path, as HTTP's statelessness allows (Section 3.3 of
    [RFC9110]).
 
-
    The webhook mode generalizes three existing designs.  In GRIP [GRIP],
    a proxy at the resource's own URL holds the subscriptions for its
    origin server.  In Mercure [MERCURE], a hub at its own URL relays
@@ -127,6 +125,7 @@ Table of Contents
    [WEBSUB], a hub pushes each update to a subscriber's own URL.  A
    subscription gateway can sit in any of these places (Section 3).
 
+
    This document extends Subscriptions [SUBSCRIPTIONS], which lists
    these modes.  The long-poll mode needs Versions [VERSIONS], to name
    the version that each poll resumes from, and the webhook mode needs
@@ -167,8 +166,8 @@ Table of Contents
 
 2.  Subscribe: long-poll sends one response to each poll
 
-   In the long-poll mode, the client sends a GET for each response,
-   which we call a poll, and the server holds each poll until it has
+   In the long-poll mode, the client sends a GET, which we call a poll,
+   for each response, and the server holds each poll until it has
    something to send.  For example, the reader at work never sees the
    first byte of her stream, so her browser subscribes again, with
    long-poll:
@@ -227,12 +226,12 @@ Table of Contents
    the client too.
 
    The server answers each poll as it would an ordinary GET with the
-   same headers, with the response's own Cache-Control, and a cache
-   stores the answers as it would any response.  If several changes have
-   happened since the poll's version, the server can answer with a
-   multiresponse [MULTIRESPONSE] that holds each of them, since a poll's
-   Subscribe header says that the client can read one, or with one
-   snapshot.
+   same headers, with the response's own Cache-Control.  A cache stores
+   the answers as it would any response.  If several changes have
+   happened since the poll's version, the server can answer with one
+   snapshot, or with a multiresponse [MULTIRESPONSE] that holds each
+   change, since a poll's Subscribe header says that the client can read
+   one.
 
 
 2.1.  Each answer to a poll is a heartbeat
@@ -263,8 +262,9 @@ Table of Contents
    sub-responses ([SUBSCRIPTIONS], Section 5.2).  In the long-poll mode,
    it arrives in the headers of each answer: an Origin-Status header,
    with its age on a down, and a Proxy-Status header on a down.  For
-   example, at 03:20:30 the paper's CDN loses the origin server while
-   the reader's poll waits, and it answers the poll at once:
+   example, at 03:20:30 the paper's CDN loses its connection to the
+   origin server while the reader's poll waits, and it answers the poll
+   at once:
 
 
          HTTP/1.1 304 Not Modified
@@ -342,7 +342,7 @@ Table of Contents
    A gateway asks for a push subscription with a GET, naming its push
    URL in the "to" parameter of the webhook mode.  For example, the
    county's hosting provider runs a gateway on the path to the county's
-   site, which subscribes for the results like this:
+   site.  The gateway subscribes for the results like this:
 
 
       Request:
@@ -495,10 +495,10 @@ Table of Contents
 
    If the gateway has no push subscription for the resource yet, it asks
    the origin server for one, as in Section 3.1.  The gateway proposes
-   the form of its URLs, and the origin server writes the Location.  An
-   origin server can also hand off with a plain 307 response and no
-   catch-up, which fetch() [FETCH] follows on its own, for clients that
-   can't read a multiresponse.
+   the form of its URLs, and the origin server writes the Location.  For
+   clients that can't read a multiresponse, an origin server can also
+   hand off with a plain 307 response and no catch-up, which fetch()
+   [FETCH] follows on its own.
 
 
 3.5.  An origin server checks where it pushes
