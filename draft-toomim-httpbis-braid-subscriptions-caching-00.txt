@@ -183,8 +183,6 @@ Table of Contents
       it forwards requests to, which can be the origin server or another
       cache.
 
-   Subscriber:  A client that subscribes to a resource through a cache.
-
    Subscription key:  A subscription's variant key ([VERSIONS], Section
       2.1.1), which is made of its method, its target URI, and the
       request headers that select the variant.  Subscriptions with the
@@ -345,9 +343,9 @@ Table of Contents
    shares a response to a request with credentials only as the
    response's directives allow:
 
-     - If the response is public (Section 5.2.2.9 of [RFC9111]), the
-       credentials don't matter for it, and the cache shares it with any
-       subscriber.
+     - If the response is public (Section 5.2.2.9 of [RFC9111]), and has
+       none of no-cache, must-revalidate, or s-maxage, the credentials
+       don't matter for it, and the cache shares it with any subscriber.
 
      - If the response has must-revalidate or s-maxage, or is public
        with no-cache, the cache shares it, but first forwards each new

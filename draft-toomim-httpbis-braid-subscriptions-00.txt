@@ -737,12 +737,13 @@ Table of Contents
 
      - If an origin server sends no up, its responses still arrive as
        each change happens, and caches can still serve one subscription
-       to many clients, but nothing is validated.  If the site has
-       configured its CDN to send origin status for the origin server,
-       the CDN sends ups and downs of its own.  The site runs the origin
-       server, so it can make that promise for the origin server, in the
-       CDN's configuration.  The CDN then sends a down when it loses its
-       connection to the origin server.
+       to many clients, but nothing is validated.  But the site that
+       runs the origin server can tell its CDN, by configuration, that
+       the origin server sends each change as it happens.  Then the CDN
+       sends origin status itself: an up while its connection to the
+       origin server holds, and a down when that connection is lost.
+       The CDN then sends a down when it loses its connection to the
+       origin server.
 
 
 8.  Implementation Status
