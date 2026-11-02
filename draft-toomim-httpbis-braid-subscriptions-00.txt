@@ -12,11 +12,11 @@ Abstract
    response, but if the resource subsequently changes, an HTTP server
    has no way to notify its client of the new version.  This document
    defines subscriptions.  When a client adds the Subscribe header to a
-   GET, the server will respond not only with the resource's current
-   state, but will continue to stream responses for each change
-   thereafter.  Each response is the one the server would have sent to
-   the same GET just after the change, so content negotiation,
-   authorization, and caching work as they do for any GET request.
+   GET, the server responds with the resource's current state, and then
+   with a response for each change, as it happens.  Each response is the
+   one the server would have sent to the same GET just after the change,
+   so content negotiation, authorization, and caching work as they do
+   for any GET request.
 
    When a server grants a subscription, it promises to send each change
    as it happens.  So once a client is caught up, a quiet subscription
@@ -104,13 +104,13 @@ Table of Contents
    HTTP responds to a GET once.  If the resource changes afterward, the
    client does not hear about it, unless it asks again.  For example,
    imagine a newspaper's website on election night, with a results page
-   at /election that changes all evening.  The examples in this document
-   follow this site through the night.  Every reader reloads the results
-   page, again and again.  A cache can answer the reloads only while its
-   stored copy is fresh, so the site has to choose between stale results
-   and a flood of requests to its origin server.  Sites that want their
-   pages to change with the news often send each change over a WebSocket
-   [RFC6455], which bypasses the caches entirely.
+   at /election that changes all evening.  Every reader reloads the
+   results page, again and again.  A cache can answer the reloads only
+   while its stored copy is fresh, so the site has to choose between
+   stale results and a flood of requests to its origin server.  Sites
+   that want their pages to change with the news often send each change
+   over a WebSocket [RFC6455], which bypasses the caches entirely.  The
+   examples in this document follow this site through the night.
 
 
    With a subscription, the reader's browser sends its GET once, with a
@@ -156,12 +156,12 @@ Table of Contents
 
    A cache can subscribe, too.  It holds one subscription to the origin
    server, and serves it to every reader who asks the cache for one
-   [SUBSCRIPTIONS-CACHING].  The origin server then updates the cache in
-   half a round trip, each time the results change, and the cache can
+   [SUBSCRIPTIONS-CACHING].  Each time the results change, the origin
+   server updates the cache in half a round trip.  The cache can then
    answer even plain GETs with the new results, without asking the
-   origin server again.  And if an origin server can't hold a response
-   open, as on serverless hosting, its changes can still reach its
-   readers as they happen [POLL-AND-PUSH].
+   origin server.  And if an origin server can't hold a response open,
+   as on serverless hosting, its changes can still reach its readers as
+   they happen [POLL-AND-PUSH].
 
    This document defines the Subscribe header, which asks for a
    subscription (Section 3), and the stream mode, which sends the whole
@@ -206,14 +206,14 @@ Table of Contents
    Origin status:  Whether a client is caught up, with every hop between
       it and the origin server connected (Section 5.2).
 
-   Validated:  Of a stored copy, known to match the origin server's
-      current state, so that a validation request (Section 4.3 of
+   Validated:  Known to match the origin server's current state, as a
+      stored copy is when a validation request (Section 4.3 of
       [RFC9111]) would bring back nothing new.
 
-   Continuously validating:  Of a subscription, between an origin status
-      of "up" and the next "down", while its heartbeats arrive.  The
-      client's copy is validated at every moment of this time (Section
-      5).
+   Continuously validating:  The state of a subscription between an
+      origin status of "up" and the next "down", while its heartbeats
+      arrive.  The client's copy is validated at every moment of this
+      time (Section 5).
 
 
 2.  Each response in a subscription responds to a GET
@@ -226,9 +226,9 @@ Table of Contents
    ([VERSIONS], Section 2.2.3), that GET has a Parents header naming the
    version that the client held just before the change.
 
-   These are the implied requests [MULTIRESPONSE] of a subscription.  In
-   the example in Section 1, the first response responds to an ordinary
-   GET, which any reader could send:
+   These GETs are the subscription's implied requests [MULTIRESPONSE].
+   In the example in Section 1, the first response responds to an
+   ordinary GET, which any reader could send:
 
 
          GET /election
@@ -242,20 +242,20 @@ Table of Contents
          Parents: ("1")
 
 
-   We call the first responses, which bring the client up to the
-   server's current version, the "catch-up".  A new subscriber's
+   The first responses bring the client up to the server's current
+   version, and we call them the "catch-up".  A new subscriber's
    catch-up is often one snapshot of the current state.  When a client
    resumes a subscription from a version (Section 3.1), its catch-up
-   holds only the changes since that version, and when the client
-   already holds the current version, its catch-up is empty, since
-   nothing has changed.
+   holds only the changes since that version.  If the client already
+   holds the current version, its catch-up is empty, since nothing has
+   changed.
 
    So a subscription sends a history of ordinary HTTP responses, which
-   every HTTP peer already understands, and everything that HTTP defines
+   every HTTP peer already understands.  Everything that HTTP defines
    for a GET applies to each one.  Content negotiation selects each
    subscriber's variant.  For instance, a reader who sends
    "Accept-Language: es" gets each change in Spanish.  The Vary header
-   still applies.  The subscriber's own credentials authorize each
+   applies too.  The subscriber's own credentials authorize each
    response, as they would its GET.  And a cache can store each response
    as the response to its implied request, as [SUBSCRIPTIONS-CACHING]
    describes.
@@ -267,11 +267,11 @@ Table of Contents
    replays them reaches the same state.
 
    A subscription promises to keep the client caught up, and no more.
-   How often responses come, how they are rebased, and the merge types,
-   patch formats, and version types they use are for other mechanisms to
-   negotiate, such as the Merge-Type [MERGE-TYPES] and Accept-Patch
-   [UPDATES] headers.  There are many ways to view the same history, and
-   subscriptions work with any of them.
+   Other mechanisms negotiate the rest: how often responses come, how
+   they are rebased, and which merge types, patch formats, and version
+   types they use, as the Merge-Type [MERGE-TYPES] and Accept-Patch
+   [UPDATES] headers do.  There are many ways to view the same history,
+   and subscriptions work with any of them.
 
 
 3.  The Subscribe Header
@@ -285,11 +285,11 @@ Table of Contents
 
 
    This document defines the "stream" mode (Section 4).  If a client
-   also accepts long polling [POLL-AND-PUSH], it lists both, in its
-   order of preference: "Subscribe: stream, long-poll".  Subscribe is a
-   Simpler Field [SIMPLER-FIELDS].  Its value is a List of Tokens, each
-   naming a mode, which can have parameters.  A server ignores any mode
-   that it doesn't know.
+   also accepts long polling [POLL-AND-PUSH], it lists both:
+   "Subscribe: stream, long-poll".  Subscribe is a Simpler Field
+   [SIMPLER-FIELDS].  Its value is a List of Tokens, each naming a mode,
+   which can have parameters.  A server ignores any mode that it doesn't
+   know.
 
    If the server grants a subscription, its response has a Subscribe
    header naming the mode it granted, with that mode's parameters.  If
@@ -298,12 +298,12 @@ Table of Contents
    one that the GET would get without Subscribe, and the client can
    poll, or try again later.
 
-   A server that has subscriptions SHOULD send "Vary: Subscribe" in
-   every response to a GET for a resource that a client can subscribe
-   to.  Then a cache that doesn't know subscriptions won't answer a
-   subscription request with a response that it stored for an ordinary
-   GET (Section 7).  And a client can take the Vary header as a sign
-   that it can subscribe to the resource.
+   A server SHOULD send "Vary: Subscribe" in every response to a GET for
+   a resource that a client can subscribe to.  Then if a cache doesn't
+   know subscriptions, it won't answer a subscription request with a
+   response that it stored for an ordinary GET (Section 7).  And a
+   client can take the Vary header as a sign that it can subscribe to
+   the resource.
 
    This document defines Subscribe on GET.  Its meaning on other methods
    is left to future specifications, which might, for instance, deliver
@@ -351,11 +351,11 @@ Table of Contents
 
    A client resumes with Parents, and sends no Version header.  The
    state at a version never changes, so a subscription to it would have
-   nothing to send after its catch-up.  So if a subscription request has
-   a Version header, the server responds as it would to the same GET
-   without Subscribe, and grants no subscription.  Future specifications
-   can define a subscription at a version, for instance to send more of
-   a version's state as the server receives it.
+   nothing to send after its catch-up.  If a subscription request has a
+   Version header anyway, the server responds as it would to the same
+   GET without Subscribe, and grants no subscription.  Future
+   specifications can define a subscription at a version, for instance
+   to send more of a version's state as the server receives it.
 
 
 3.2.  Subscribe to headers only, with Method-Override
@@ -363,8 +363,8 @@ Table of Contents
    Some subscribers need to know only when the resource changes, and to
    which version.  For example, the paper's notification server alerts
    its readers' phones whenever the results change, and has no use for
-   the results themselves.  So it subscribes with "Method-Override:
-   HEAD" ([MULTIRESPONSE], Section 5):
+   the results themselves.  So it subscribes with
+   "Method-Override: HEAD" ([MULTIRESPONSE], Section 5):
 
 
       Request:
@@ -412,12 +412,12 @@ Table of Contents
 
    So if a server grants a subscription, it MUST ignore the request's
    If-None-Match and If-Modified-Since headers, and send the catch-up as
-   if they were absent.  An extension can change how preconditions are
-   evaluated in this way (Section 13.2.1 of [RFC9110]).  The cache that
-   added the header gets the 209, and passes it on to its client, as it
-   would any full response to a validation request (Section 4.3.3 of
-   [RFC9111]).  A future specification may give these headers a meaning
-   on a subscription.
+   if they were absent.  RFC 9110 lets an extension change how
+   preconditions are evaluated in this way (Section 13.2.1 of
+   [RFC9110]).  The cache that added the header gets the 209, and passes
+   it on to its client, as it would any full response to a validation
+   request (Section 4.3.3 of [RFC9111]).  A future specification may
+   give these headers a meaning on a subscription.
 
 
 4.  Subscribe: stream sends a 209 Multiresponse
@@ -560,7 +560,7 @@ Table of Contents
    whether the client is caught up, and whether every hop between the
    client and the origin server is connected.  For example, a reader
    subscribes through the paper's CDN, which catches the reader up, and
-   then says that the reader is caught up:
+   then says so:
 
 
       Request:
@@ -658,10 +658,10 @@ Table of Contents
    Section 2.3.5).
 
    A server can end a subscription to shed load, or to shut down.  It
-   MAY first say why, with a sub-response that has "Responds-To:
-   container-request" ([MULTIRESPONSE], Section 4).  For example, at the
-   peak of election night, the origin server has more subscribers than
-   it can hold, and ends some of them like this:
+   MAY first say why, with a sub-response that has
+   "Responds-To: container-request" ([MULTIRESPONSE], Section 4).  For
+   example, at the peak of election night, the origin server has more
+   subscribers than it can hold, and ends some of them like this:
 
 
          HTTP/1.1 503 Service Unavailable
