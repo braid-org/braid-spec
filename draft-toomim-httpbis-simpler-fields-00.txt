@@ -165,7 +165,7 @@ Table of Contents
 2.2.  Serialization is canonical
 
    A sender MUST serialize each value as Section 4.1 of [RFC9651]
-   specifies:  with no space after a ";", exactly one space after a ",",
+   specifies: with no space after a ";", exactly one space after a ",",
    and exactly one space between the members of an Inner List.  Then
    each value has exactly one serialization.
 

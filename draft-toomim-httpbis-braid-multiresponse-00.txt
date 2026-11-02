@@ -11,9 +11,9 @@ Abstract
    Each HTTP request has only a single response.  This document defines
    the 209 Multiresponse status code, whose content holds several
    responses, and the application/http-history media type, which encodes
-   a sequence of responses to one resource over time.  Together they let
-   a server send a history of a resource, or a stream of its changes, in
-   one response, which caches can store piece by piece.
+   a sequence of responses to one resource over time.  With them, a
+   server can send a history of a resource, or a stream of its changes,
+   in one response, which caches can store piece by piece.
 
    This document is one of the Braid-HTTP extensions, which work alone
    or together; together they make HTTP a state synchronization
@@ -91,17 +91,17 @@ Table of Contents
 1.  Introduction
 
    Each HTTP request has a single response.  But sometimes a server
-   wants to send several.  When a client asks for a span of a resource's
-   history, for instance [VERSIONS], the server sends each update in the
-   span, and when a client subscribes to a resource, the server sends
-   each change as it occurs [SUBSCRIPTIONS].
+   wants to send several.  For instance, when a client asks for a span
+   of a resource's history [VERSIONS], the server sends each update in
+   the span, and when a client subscribes to a resource [SUBSCRIPTIONS],
+   the server sends each change as it occurs.
 
-   This document lets the server send them all in one response, with a
-   new status code: 209 Multiresponse.  The content of a multiresponse
-   is a sequence of responses, which we call sub-responses.  This
-   document also defines a format to encode that content, the
-   application/http-history media type, which encodes the responses to a
-   request made over time, in the order of time.
+   This document defines a new status code, 209 Multiresponse, so that
+   the server can send them all in one response.  The content of a
+   multiresponse is a sequence of responses, which we call
+   sub-responses.  This document also defines a format for that content,
+   the application/http-history media type, which holds the responses to
+   a request made over time, in the order of time.
 
    For example, a client can request the history of /chat from version
    "1" to version "3":
@@ -149,13 +149,13 @@ Table of Contents
    request, and later serve it to a client that sends that request.  But
    it does not store the multiresponse itself.
 
-   We use a new status code so that caches do not store the
-   Multiresponse container itself.  They also make client polyfills
-   easy.  Legacy clients treat 209 as a 200 (Section 15 of [RFC9110]),
-   and pass the response body to the application, which allows the body
-   to be parsed by a polyfill library into the subresponses.  This
-   allows Multiresponse to be polyfilled on top of existing browser and
-   server fetch() APIs.
+   We use a new status code so that a cache can tell a multiresponse
+   from the resource itself.  A new status code also makes client
+   polyfills easy.  If a client doesn't know 209, it treats it as a 200
+   (Section 15 of [RFC9110]), and passes the response body to its
+   application, where a polyfill library can parse it into
+   sub-responses.  So a library can add multiresponses on top of the
+   fetch() APIs that browsers and servers already have.
 
 
 1.1.  Terminology
@@ -209,13 +209,13 @@ Table of Contents
 2.2.  Each sub-response responds to a request
 
    Each sub-response responds to an implied request: a request the
-   client could have sent, to get just that response.  Each use of
-   multiresponses defines its own implied requests, as variations of the
-   client's own request.  For a span of history, [VERSIONS] replaces the
-   request's Parents and Version headers with those of each response,
-   and [SUBSCRIPTIONS] defines them for a subscription.  A sub-response
-   with a Responds-To header (Section 4) responds to the request that
-   the header names.
+   client could have sent, to get just that response.  Each
+   specification that uses multiresponses defines its own implied
+   requests, as variations of the client's own request.  For a span of
+   history, [VERSIONS] replaces the request's Parents and Version
+   headers with those of each response, and [SUBSCRIPTIONS] defines them
+   for a subscription.  A sub-response with a Responds-To header
+   (Section 4) responds to the request that the header names.
 
    An implied request MUST have the same target URI, and the same
    credentials, as the client's own request.  To respond to a request
@@ -240,7 +240,7 @@ Table of Contents
    But if a cache doesn't know the 209, it may still store the whole
    response, when the response has explicit freshness information
    (Section 3 of [RFC9111]).  So every 209 Multiresponse MUST include
-   "Cache-Control:  no-store".  A cache can still build a multiresponse
+   "Cache-Control: no-store".  A cache can still build a multiresponse
    of its own, out of responses it has stored.
 
    A cache MAY store each sub-response as though it had received it in
@@ -257,16 +257,16 @@ Table of Contents
    When a proxy relays a multiresponse byte for byte, it passes these
    sub-responses on with the rest.  But consider a cache that builds its
    own multiresponse for its client, out of the responses it gets from
-   upstream.  When the upstream server sends it "Responds-To:
-   container-request", that sub-response responds to the cache's own
-   request to the upstream server.  So the cache MUST NOT forward it to
-   its client.  It responds to its client's request with sub-responses
-   of its own.
+   upstream.  When the upstream server sends it
+   "Responds-To: container-request", that sub-response responds to the
+   cache's own request to the upstream server.  So the cache MUST NOT
+   forward it to its client.  It responds to its client's request with
+   sub-responses of its own.
 
    By default, an intermediary that forwards a history passes on every
-   response in it, in order.  Other specifications can let it do
-   otherwise, for instance by replacing several responses with one that
-   describes the same state.
+   response in it, in order.  Another specification can define when it
+   may do otherwise, for instance by replacing several responses with
+   one that describes the same state.
 
    A multiresponse can stay open for a long time, as a subscription's
    does [SUBSCRIPTIONS].  If an intermediary buffers it, its client gets
@@ -282,11 +282,10 @@ Table of Contents
    resource over time, in order, each responding to its implied request.
 
    Each response builds on the ones before it, so a recipient reads them
-   in order.  When the responses carry versions [VERSIONS], their
-   Parents form a partial order, and the history lists each response
-   after the ones it builds on.  (The application/http media type, in
-   Section 10.2 of [RFC9112], holds messages that each stand alone, as
-   in a batch.)
+   in order.  When the responses have versions [VERSIONS], their Parents
+   form a partial order, and the history lists each response after the
+   ones it builds on.  (The application/http media type, in Section 10.2
+   of [RFC9112], holds messages that each stand alone, as in a batch.)
 
    The responses can be any responses.  When they are updates as
    [UPDATES] defines them, every peer that replays the history arrives
@@ -303,8 +302,8 @@ Table of Contents
        to a HEAD request, ends at the empty line after its header
        section.
 
-     - Every other response carries a Content-Length header, which gives
-       the length of its content.  No response uses Transfer-Encoding.
+     - Every other response has a Content-Length header, which gives the
+       length of its content.  No response uses Transfer-Encoding.
 
    Every sub-response responds to a HEAD request when the multiresponse
    has "Method-Override: HEAD" (Section 5).
@@ -314,7 +313,7 @@ Table of Contents
    multiresponse.
 
    A recipient skips any bare CRLFs before and between responses.  A
-   sender can send them to keep a quiet connection alive, as a
+   server can send them to keep a quiet connection alive, as a
    subscription does for its heartbeats [SUBSCRIPTIONS].
 
    The status line's prefix is flexible: a recipient reads "HTTP/1.1
@@ -323,11 +322,11 @@ Table of Contents
 
 4.  The Responds-To Header
 
-   A sub-response uses the Responds-To header to say which request it
-   responds to, when that isn't its implied request.  Responds-To is a
-   Simpler Field [SIMPLER-FIELDS].  Its value is a Dictionary with
-   exactly one member, whose key names the kind of request.  This
-   document defines one key:
+   A server puts a Responds-To header on a sub-response to say which
+   request it responds to, when that isn't its implied request.
+   Responds-To is a Simpler Field [SIMPLER-FIELDS].  Its value is a
+   Dictionary with exactly one member, whose key names the kind of
+   request.  This document defines one key:
 
    container-request:  The sub-response responds to the client's own
       request.  The key has no value, which a Dictionary reads as true:
@@ -378,13 +377,12 @@ Table of Contents
                                                           |
 
 
-   "Method-Override: HEAD" makes each implied request a HEAD.  So each
-   sub-response has the header section that the response to a GET
+   With "Method-Override: HEAD", each implied request is a HEAD.  So
+   each sub-response has the header section that the response to a GET
    would have, and ends at the empty line after it (Section 3.1).  Its
    Content-Length gives the length that its content would have, as in
-   any response to a HEAD (Section 8.6 of [RFC9110]).  The
-   multiresponse itself responds to the GET, so its content holds the
-   sub-responses.
+   any response to a HEAD (Section 8.6 of [RFC9110]).  The multiresponse
+   itself responds to the GET, so its content holds the sub-responses.
 
    Method-Override is a Simpler Field [SIMPLER-FIELDS], whose value is
    a Token that names a method.  This document defines one value,
@@ -450,8 +448,9 @@ Table of Contents
 
    If a recipient misread the length of one response, it would read part
    of that response's content as the next response, much as in response
-   splitting.  Requiring a Content-Length, and stopping when it's
-   missing (Section 3.1), keeps each response's boundaries clear.
+   splitting.  Since every response has a Content-Length, and a
+   recipient stops when one is missing (Section 3.1), each response's
+   boundaries stay clear.
 
    Assembling and sending a long history costs a server resources, so a
    server can limit how large a multiresponse it sends, and how often it

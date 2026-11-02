@@ -19,8 +19,8 @@ Abstract
 
    This document analyzes existing methods of versioning in HTTP,
    highlights limitations, and specifies a more general versioning
-   approach that can enable new use-cases for HTTP.  An upgrade path for
-   legacy intermediaries is provided.
+   approach that can enable new use-cases for HTTP.  It also provides an
+   upgrade path for legacy intermediaries.
 
    This document is one of the Braid-HTTP extensions, which work alone
    or together; together they make HTTP a state synchronization
@@ -99,7 +99,7 @@ Table of Contents
    3.2.  Approaches defining versions as new resources .............22
    3.2.1.  Creating additional "Version Resources" .................23
    3.2.2.  Standardizing versions as external resources ............23
-   3.3.  Requirements for general versioning .......................24
+   3.3.  Requirements for general versioning .......................23
    3.3.1.  Distributed Time ........................................24
    3.3.2.  Included within existing HTTP requests and responses ....24
    3.3.3.  Generalizable Timestamps ................................25
@@ -148,9 +148,8 @@ Table of Contents
    We call this a "linear" history.
 
    However, when multiple networked computers change a resource
-   "simultaneously" -- before their edits propagate to one another --
-   the global perspective of version history actually forks into a DAG,
-   or "partial order":
+   "simultaneously", before their edits propagate to one another, the
+   version history as a whole forks into a DAG, or "partial order":
 
 
                   o  <-- oldest version
@@ -171,12 +170,12 @@ Table of Contents
    use-cases concretely.
 
    Each of these systems needs a way to represent *time*, but different
-   systems have different requirements for how time is represented.
-   This document enumerates these needs, and proposes a general
-   versioning system to satisfy them.
+   systems have different requirements for representing it.  This
+   document enumerates these needs, and proposes a general versioning
+   system to satisfy them.
 
    (Note that this document does NOT speak to the versioning of HTTP
-   APIs -- only HTTP resources, which are used within APIs.)
+   APIs, only to the versioning of the HTTP resources used within them.)
 
 
 2.  HTTP Resource Versioning
@@ -187,10 +186,9 @@ Table of Contents
 
 2.1.  Model of time
 
-   This specification adds a dimension of time to HTTP resources.
-   Whereas HTTP Resources already have a dimension of *space* -- queried
-   with the Range header -- this specification provides Resources a
-   dimension of *time* -- queried by the Version header:
+   This specification adds a dimension of *time* to HTTP resources.  A
+   client queries it with the Version header, as it queries a resource's
+   dimension of *space* with the Range header:
 
 
        == Variant, Time, and Space as dimensions of Resources ==
@@ -208,8 +206,8 @@ Table of Contents
         +----------------> Space     <-- Range: header
 
 
-   Any Resource can thus be queried for its Time and Space, via a
-   Version and Range:
+   So a client can query any resource in both time and space, with a
+   Version and a Range:
 
 
            GET /foo
@@ -217,27 +215,26 @@ Table of Contents
            Range: bytes=500-1000
 
 
-   In this model, the term "Version" is synonymous with "Timestamp" -- a
-   Version represents a point in distributed time.  Thus, a Version, on
-   its own, identifies a point in time for the whole Universe of
-   Resources.  We can use a Version to identify a point of time for a
-   single Resource, or for multiple Resources, to identify their states
-   at the same point in time.  A Version can be specified without
-   reference to a particular resource.
+   In this model, the term "Version" is synonymous with "timestamp", and
+   a Version represents a point in distributed time.  So on its own, a
+   Version identifies a point in time for the whole universe of
+   resources.  We can use a Version for a single resource, or for
+   several resources, to identify their states at the same point in
+   time.  A peer can specify a Version without reference to any
+   particular resource.
 
    It follows that a resource has a state at each Version, and that each
    variant of the resource, at a Version, is a representation: a
    particular body, or "snapshot."
 
-   Note that this model differs in terminology from some other
-   mechanisms, such as WebDAV Versioning, which use the term Version for
-   a copy of a resource's content.  In this document, a Version is a
-   point in time, and content is *at* a Version.
+   Some other mechanisms, such as WebDAV Versioning, use the term
+   Version for a copy of a resource's content.  In this document, a
+   Version is a point in time, and content is *at* a Version.
 
 
    A resource's "Version History" is the partial order (or DAG) of the
-   versions that its state has passed through.  This history has one
-   fork and one merge:
+   versions that its state has passed through.  For example, this
+   history has one fork and one merge:
 
 
                      "1"                   | Time
@@ -249,7 +246,7 @@ Table of Contents
                      "4"                   V
 
 
-   The semantics of a merge is specified by a Merge Type [Merge-Types].
+   A Merge Type [Merge-Types] specifies the semantics of a merge.
 
 
 2.1.1.  Terminology
@@ -272,9 +269,9 @@ Table of Contents
 
    State:  What a resource is at a version.
 
-   Variant:  One form of a resource, such as its JSON or HTML, as
-      selected by its URI, Accept, and other request headers, apart from
-      time.  Variants exist at multiple versions.
+   Variant:  One way of representing a resource, such as its JSON or
+      HTML, as selected by its URI, Accept, and other request headers,
+      apart from time.  Variants exist at multiple versions.
 
    Representation:  A variant at a point in time (version), which always
       has the same bytes.  (Section 3.2 of [RFC9110])
@@ -288,9 +285,8 @@ Table of Contents
 
 2.2.  Version and Parents headers
 
-   This specification introduces two new HTTP headers: Version and
-   Parents.  These headers communicate version information in requests
-   and responses.
+   This specification defines two new HTTP headers, Version and Parents,
+   which peers send in requests and responses.
 
    The Version header names the point in time that the message
    describes:
@@ -302,18 +298,18 @@ Table of Contents
 
            Parents: ("ajtva12kid" "cmdpvkpll2")
 
-   These headers may be used in PUT and DELETE requests, and GET and
-   HEAD responses, to convey the version before and after the Update
-   conveyed by the HTTP message.  (See [Updates].)
+   A peer can send these headers in PUT and DELETE requests, and in GET
+   and HEAD responses, to identify the versions just before and just
+   after the Update that the message contains.  (See [Updates].)
 
-   These headers can also be used in GET and HEAD requests to ask a
-   server for a specific version or span of history.
+   A client can also send them in GET and HEAD requests, to ask a server
+   for a specific version or span of history.
 
-   If an Update (a PUT or DELETE request, or a GET or HEAD response)
-   does not specify a Version header, the recipient MAY generate and
-   assign it a new version ID.  If an Update does not specify a Parents
-   header, the recipient MAY presume that its current version is the new
-   version's Parents.
+   If an Update (a PUT or DELETE request, or a GET or HEAD response) has
+   no Version header, the recipient MAY generate a new Event ID and
+   assign it to the Update.  If an Update has no Parents header, the
+   recipient MAY presume that its current version is the new version's
+   Parents.
 
    To describe a merger, a version MAY contain several Event IDs:
 
@@ -325,7 +321,7 @@ Table of Contents
    The Version and Parents headers are Simpler Fields [SIMPLER-FIELDS],
    a profile of Structured Fields [RFC9651].  Each Version or Parents
    field line holds one version, formatted as an Inner List of Strings.
-   Each String is called an Event ID:
+   We call each String an Event ID:
 
 
            Version:           <version>
@@ -335,20 +331,21 @@ Table of Contents
            <event-id>:        <string>
 
 
-   The Inner List is the set of events that names the version (Section
-   2.2.2), so the ordering of Event IDs within it carries no meaning.
-   Event IDs SHOULD be sorted lexicographically whenever received or
-   sent, so that each set has a unique serialization, e.g. as a unique
-   cache key.  An Event ID may occur at most once within a version.  An
-   empty Inner List, "()", names the version before any event.
+   The Inner List is the set of events that identifies the version
+   (Section 2.2.2), so the order of the Event IDs within it has no
+   meaning.  A peer SHOULD sort the Event IDs lexicographically whenever
+   it receives or sends a version, so that each set has a unique
+   serialization, e.g. as a unique cache key.  An Event ID may occur at
+   most once within a version.  An empty Inner List, "()", names the
+   version before any event.
 
 
    Like every String in a Simpler Field, each Event ID is
-   percent-encoded, so the Event ID "a,b" is sent as:
+   percent-encoded, so a peer sends the Event ID "a,b" as:
 
            Version: ("a%2Cb")
 
-   A version can carry two parameters:
+   A version can have two parameters:
 
      - "type", a Token naming the Version Type of its Event IDs
        (Section 2.6).  A Version Type's modifiers are further
@@ -378,34 +375,33 @@ Table of Contents
            Version: ("1780178921376000001");type=localtime;timeline="/"
 
 
-   HTTP lets a recipient join field lines into one, separated by commas
+   Any recipient can join field lines into one, separated by commas
    (Section 5.3 of [RFC9110]), so a recipient also accepts several
    versions in one field line, as a Structured Fields List.
 
    All the Event IDs on one timeline have the same Version Type, so a
-   message specifies each timeline's type once, on any of its Version,
-   Parents, or Current-Version field lines.
+   peer specifies each timeline's type once in a message, on any of its
+   Version, Parents, or Current-Version field lines.
 
 
 2.2.2.  Definition of Events and Versions
 
    An "Event" is a single moment at a single place, as an event is in
    physics: a point in time at one peer.  Every mutation occurs at an
-   event.  Events are generally defined at state mutations, but events
-   MAY also be defined at a "no-op mutation", when a unique identifier
-   to mark time is desired.  Each event is named by a unique Event ID,
-   and any peer can define an event, by generating a unique ID.
+   event.  Peers generally define events at state mutations, but a peer
+   MAY also define one at a "no-op mutation", when it wants a unique
+   identifier to mark time.  Each event has a unique Event ID, and any
+   peer can define an event, by generating a unique ID.
 
-   Conceptually, for any event E, all prior events that have been
-   observed by that peer before defining E can be referenced as the set
-   ancestors(E).  The frontier of this set, or frontier(ancestors(E)),
-   is defined as the events that are not in the ancestors(e') for any
-   other event e' in ancestors(E).  We define the parents(E) to be this
-   frontier(ancestors(E)).
+   Conceptually, for any event E, ancestors(E) is the set of all events
+   that the peer defining E had observed before it defined E.  The
+   frontier of this set, frontier(ancestors(E)), is the set of events in
+   ancestors(E) that are not in ancestors(e') for any other event e' in
+   ancestors(E).  We define parents(E) as this frontier(ancestors(E)).
 
-   A Version in time is likewise defined by the set of observed events
-   at that time, and we define any Version V as the
-   frontier(observed_events) at that time.
+   Likewise, we define the Version V at any point in time as
+   frontier(observed_events), the frontier of the set of events observed
+   by that time.
 
    Thus, the version immediately after any event E is simply the set
    {E}, and the version after the merger of two parallel events E1 and
@@ -420,8 +416,8 @@ Table of Contents
 
            Version: ("foo-123" "bar-abc")
 
-   However, it is also possible for a peer to define a no-op event that
-   represents the merger as a single Event ID:
+   A peer can also define a no-op event that represents the merger as a
+   single Event ID:
 
 
            Parents: ("foo-123" "bar-abc")
@@ -436,8 +432,9 @@ Table of Contents
    header, to compare with a Current-Version it receives (Section 2.5),
    and to know whether a request names the version it holds.
 
-   Before any update, the current version is unknown, unless a stored
-   copy of the resource names its Version.  Then, on each update:
+   Before any update, the peer doesn't know its current version, unless
+   it has stored a copy of the resource with a Version header.  Then, on
+   each update:
 
      - If the update has a Parents header, the peer removes each Event
        ID in its Parents from the set, and then adds each Event ID in
@@ -459,22 +456,22 @@ Table of Contents
 
    This computation only compares Event IDs for equality, as opaque
    strings, so a peer can do it without knowing the Version Type.  A
-   peer keeps a separate current version for each timeline.
+   peer tracks a separate current version for each timeline.
 
 
 2.3.  Using Versioning with HTTP Methods
 
-   The Version and Parents headers can be set in requests and
-   responses of methods:
+   A peer can send the Version and Parents headers in requests and
+   responses of these methods:
 
      - GET
      - HEAD
      - PUT
      - DELETE
 
-   For each of these methods, if a Version or Parents header exists in
-   the request, it should also exist in the response, and if not, the
-   server may nonetheless specify it in its response.
+   For each of these methods, if the request has a Version or Parents
+   header, the response should have it too.  If the request lacks one,
+   the server may still send it in its response.
 
    We now detail the ways in which these headers modify requests and
    responses for these methods.
@@ -482,7 +479,7 @@ Table of Contents
 
 2.3.1.  GET the current version
 
-   If the Version: header is not specified, a GET request returns the
+   If a GET request has no Version header, the server responds with the
    state at the current version, as usual:
 
 
@@ -505,8 +502,8 @@ Table of Contents
    The server MAY include a Version and/or Parents header in the
    response, to indicate the current version and its parents.
 
-   Clients can use a HEAD request to elicit versioning history without
-   downloading the body:
+   A client can send a HEAD request to get the Version and Parents
+   without downloading the body:
 
 
       Request:
@@ -523,10 +520,9 @@ Table of Contents
 
 2.3.2.  GET a specific version
 
-   A server can allow clients to request a resource at historical
-   versions in GET requests by responding to the Version and Parents
-   headers.  A client can specify a specific version that it wants with
-   the Version header:
+   A server can respond to GET requests for a resource at historical
+   versions, by honoring the Version and Parents headers.  A client
+   names the version it wants in the Version header:
 
 
       Request:
@@ -548,9 +544,9 @@ Table of Contents
 
 2.3.3.  PUT a new version
 
-   When a PUT request changes the state of a resource, it can specify
-   the version that the resource's new state is at, and the version that
-   it was based on:
+   When a client changes a resource's state with a PUT, it can specify
+   the version that the new state is at, and the version that the new
+   state builds on:
 
 
       Request:
@@ -570,18 +566,18 @@ Table of Contents
          HTTP/1.1 200 OK
 
 
-   The Version and Parents headers are optional.  If Version is omitted,
-   the recipient may assign new event IDs.  If Parents is omitted, the
-   recipient may assume that its current version is the version's
-   parents.
+   The Version and Parents headers are optional.  If a PUT has no
+   Version header, the recipient may assign new Event IDs.  If it has no
+   Parents header, the recipient may assume that its current version is
+   the new version's parents.
 
 
 2.3.4.  GET a span of history
 
-   A client can request a span of history by including a Parents and a
+   A client can request a span of history by sending a Parents and a
    Version header together.  The Parents marks the beginning of the span
-   (the oldest versions) and the Version marks the end of the span (the
-   newest versions) that it requests.
+   (the oldest versions), and the Version marks its end (the newest
+   versions).
 
 
       Request:
@@ -618,17 +614,18 @@ Table of Contents
            "author": {"link": "/user/yobot"}]
 
 
-   This example uses the 209 Multiresponse status code and the
-   application/http-history media type, both defined in [Multiresponse].
+   Here the server responds with the 209 Multiresponse status code and
+   the application/http-history media type, both defined in
+   [Multiresponse].
 
    Each sub-response responds to an implied request [Multiresponse]: the
    request for the span, with its Parents and Version replaced by the
    sub-response's own.  The first sub-response above responds to a
    request for the span from ("1a" "1b") to ("2"), and the second to a
    request from ("2") to ("3").  A cache can store each one as the
-   response to its request.  The implied request replaces the Version as
-   well as the Parents, because each sub-response holds just one step of
-   the span.
+   response to its request.  The implied request has the sub-response's
+   Version as well as its Parents, because each sub-response holds just
+   one step of the span.
 
 
    If the client just wants the version identifiers for a span of
@@ -682,12 +679,12 @@ Table of Contents
    If a GET request contains a Parents header:
 
      - The server SHOULD send the set of updates from the specified
-       Parents to the specified Version.  If no Version is specified,
-       then it should update the client to the server's current version.
+       Parents to the specified Version.  If the request has no Version,
+       the server should send the updates up to its current version.
 
 
      - If every event in the requested Version, or in the server's
-       current version when no Version is specified, is among the
+       current version when the request has no Version, is among the
        Parents or their ancestors, then the server responds with 304 Not
        Modified, with a Version header naming that version.
 
@@ -695,9 +692,9 @@ Table of Contents
        ignore the Parents header, but MUST NOT include the Parents
        header in its response.
 
-   A server does not need to honor historical version requests for all
-   documents, for all history. If a server no longer has the historical
-   context needed to honor a request, it responds with error code 432
+   A server does not need to honor historical version requests for every
+   resource, or for all of history.  If a server doesn't have the
+   history it needs to honor a request, it responds with status 432
    Version Not Found.
 
 
@@ -706,49 +703,50 @@ Table of Contents
    The Version and Parents headers operate independently of the
    conditional request headers (If-Match, If-None-Match,
    If-Modified-Since, If-Unmodified-Since) defined in [RFC9110] Section
-   13.  Conditional headers evaluate against entity-tags (ETags) or
-   modification dates, while Version and Parents reference version
-   identifiers.
+   13.  Conditional headers contain entity-tags (ETags) or modification
+   dates, while Version and Parents contain versions.
 
-   An ETag identifies a representation, which is a variant at a
-   version, while a version identifies a point in time, across all of a
-   resource's variants.  So a resource at one version can have several
-   ETags, one for each variant, and one ETag can recur at several
-   versions, when the state returns to an earlier value (Section 3.1.2).
+   An ETag identifies a representation, which is a variant at a version.
+   A version is a point in time, across all of a resource's variants.
+   So a resource at one version can have several ETags, one for each
+   variant, and one ETag can recur at several versions, when the state
+   returns to an earlier value (Section 3.1.2).
 
-   Parents and If-None-Match each let a client say that it already holds
+   With Parents or If-None-Match, a client says that it already holds
    something, so the server needn't send it again.  They differ in what
    they name, and in how the server can respond:
 
-     - If-None-Match names representations, and a list of ETags means
-       alternatives: any one of these.  The server responds with a 304,
-       or with the whole representation.
+     - If-None-Match names representations, and its list of ETags gives
+       alternatives, any one of which can match.  The server responds
+       with a 304, or with the whole representation.
 
-     - Parents names a point in time, across every variant, and the set
-       of Event IDs in it means one version.  The server can respond
-       with only what came after it, as patches or as a snapshot.
+     - Parents names a point in time, across every variant, and the
+       Event IDs in it together make up one version.  The server can
+       respond with only what came after it, as patches or as a
+       snapshot.
 
-   A GET's Parents header also acts as a precondition: when the
+   A GET's Parents header also works as a precondition.  When the
    requested version is already among the Parents or their ancestors,
    the server responds with 304 Not Modified (Section 2.3.5).
 
-   When both are present, the server SHOULD first resolve the requested
-   version, then evaluate any preconditions.
+   When a request has both versioning and conditional headers, the
+   server SHOULD first resolve the requested version, and then evaluate
+   any preconditions.
 
-   The Parents header in mutation requests (PUT and DELETE) serves a
-   related but distinct purpose from If-Match: whereas If-Match causes
-   the request to fail if the resource's current state does not match,
-   Parents specifies the version lineage of the mutation, which the
-   server may use to detect conflicts, perform merges, or construct
-   version history.
+   In mutation requests (PUT and DELETE), the Parents header serves a
+   purpose related to If-Match's, but distinct.  With If-Match, the
+   server rejects the request if the resource's current state does not
+   match.  With Parents, the client says which version the mutation
+   builds on, and the server may use it to detect conflicts, perform
+   merges, or construct the version history.
 
 
 2.4.  Status 432: Version Not Found
 
-   If a server does not have a version required of a request, it should
+   If a server does not have a version that a request needs, it should
    respond with status 432 Version Not Found, and include copies of the
    request header(s) with versions it could not satisfy.  For example,
-   if a client does:
+   if a client sends:
 
 
            GET /foo
@@ -756,7 +754,7 @@ Table of Contents
            Parents: ("bob-32")
 
 
-   ...but the server does not have the versions 'alice-44', it should
+   ...but the server does not have the version ("alice-44"), it should
    respond with:
 
 
@@ -767,27 +765,27 @@ Table of Contents
    The server can also include a Current-Version header naming its
    current version, so that the client knows where it can resume.
 
-   Peers can drop history at any time.  Clients cannot rely on any
+   Peers can drop history at any time.  A client cannot rely on any
    particular portion of history existing on a server or intermediary
-   when it makes requests.
+   when it makes a request.
 
    We define a new status code because a 404 Not Found is heuristically
    cacheable (Section 15.1 of [RFC9110]).  If a cache ignores the
    Version header, it could store a 404 for a missing version as the
    response for the resource itself, and then tell every client that the
-   resource doesn't exist.  A cache stores a 432 only when it carries
-   explicit caching information (Section 3 of [RFC9111]), and a client
-   that doesn't know the 432 treats it as a 400 (Section 15 of
+   resource doesn't exist.  A cache stores a 432 only when the response
+   has explicit caching information (Section 3 of [RFC9111]), and if a
+   client doesn't know the 432, it treats it as a 400 (Section 15 of
    [RFC9110]).
 
 
 2.5.  The Current-Version header
 
-   While sending historical versions, a server or client can specify its
-   current latest version with the Current-Version header, formatted
-   as a version (Section 2.2.1).  The other party may desire this
-   information to know when it has caught up with the latest version.
-   This is also used in the resumable uploads example below.
+   When a server or client sends historical versions, it can send its
+   current version in a Current-Version header, which has the syntax of
+   a version (Section 2.2.1).  The recipient can use it to know when it
+   has caught up.  A client also sends Current-Version to start a
+   resumable upload (Section 4.3).
 
    A client compares the Current-Version it receives with its own
    current version (Section 2.2.3), and when they match, it has caught
@@ -798,14 +796,14 @@ Table of Contents
 2.6.  Version Types
 
    The optional "type" parameter of a version specifies constraints on
-   the format and interpretation of its Event IDs.  This allows for
-   various optimizations and specialized versioning schemes.
+   the format and interpretation of its Event IDs.  Peers can use these
+   constraints for optimizations and specialized versioning schemes.
 
    For example:
 
            Version: ("9531a97");type=git
 
-   This could indicate that event IDs will be git-style hashes,
+   This type could indicate that the Event IDs are git-style hashes,
    branches, or tags.  Peers could verify that the entire repository at
    a given version hashes to the specified ID.
 
@@ -815,32 +813,32 @@ Table of Contents
 
    Diamond-Types, Automerge, and other algorithms use this format to
    compress history metadata through run-length encoding of consecutive
-   insertions.  This allows a set of 50 inserted characters to be stored
-   as 50 bytes plus one event ID, rather than 50 bytes plus 50 event
-   IDs (each of which takes up multiple bytes).
+   insertions.  With it, a peer stores a run of 50 inserted characters
+   as 50 bytes plus one Event ID.  Without it, the run takes 50 bytes
+   plus 50 Event IDs, each of several bytes.
 
    Implementers may define custom Version Types to suit specific needs.
-   A Version Vector Event ID might take the form:
+   A Version Vector Event ID might look like this:
 
            Version: ("[peerid1:3 peerid2:2]");type=version-vector
 
-   Version Vectors enable direct computation of partial order between
-   any two event IDs without examining the full version history graph.
+   With Version Vectors, a peer can compute the partial order between
+   any two Event IDs directly, without examining the full version
+   history graph.
 
    (To know the order between two Version Vectors A and B, one needs
    only to compare each peer's counter between A and B.  If A dominates
    across all peers, it is newer.  If B dominates, then it is newer.
-   Otherwise, the ordering between the two version vectors is not known,
-   and we can say that they happened in parallel.)
+   Otherwise, neither came before the other, and they happened in
+   parallel.)
 
 
 2.7.  Versioning through intermediaries
 
-   Intermediaries can take advantage of versioning to uniquely
-   reference, store, and serve multiple states/updates across a
-   resource's history.  To distinguish versions, intermediaries must add
-   the "Version" and "Parents" headers to their cache keys -- equivalent
-   to the Vary header:
+   An intermediary can use versions to identify, store, and serve each
+   of a resource's states and updates across its history.  To
+   distinguish versions, it must add the Version and Parents headers to
+   its cache keys, as this Vary header would:
 
       Vary: version, parents
 
@@ -854,20 +852,20 @@ Table of Contents
    header, does not go out of date.  An origin server can say so with a
    long freshness lifetime and "Cache-Control: immutable" [RFC8246].
 
-   Intermediaries SHOULD behave as if the Version and Parents headers
-   have been added to the Vary header in every response passing through
-   them.  To support legacy versioning-unaware intermediaries, the
-   origin server is RECOMMENDED to explicitly add or extend Vary with
-   "version, parents" in all its responses, unless it is certain that no
-   legacy intermediaries will process the response.
+   An intermediary SHOULD behave as if every response passing through it
+   had Version and Parents in its Vary header.  To support legacy
+   intermediaries that don't know versioning, the origin server is
+   RECOMMENDED to add "version, parents" to the Vary header of all its
+   responses, unless it is certain that no legacy intermediary will
+   process the response.
 
 
 2.7.1.  Detecting legacy intermediaries
 
-   In the case that a legacy intermediary *does* process a versioned
-   response without the Vary header, it can be detected by the client
-   noticing that the Version and Parents Event IDs in a client request
-   are not present in the request's response.  Here is an example:
+   If a legacy intermediary *does* process a versioned response without
+   the Vary header, a client can detect it, by noticing that the
+   response lacks Event IDs that were in its request's Version and
+   Parents.  Here is an example:
 
 
       Presume we start with two versions:
@@ -913,43 +911,40 @@ Table of Contents
 
    To detect this, the client SHOULD check that the Version and Parents
    headers in the response contain a superset of the Event IDs specified
-   in the request.  (A missing Version or Parents header is considered
-   to be an empty set for the version or parents of this superset
-   calculation.)  The client can throw a warning to the programmer when
-   encountering a response that does not contain the request's Event
-   IDs, so that he knows to add Vary to the server's responses.
+   in the request.  (For this check, the client treats a missing Version
+   or Parents header as an empty set.)  When a response lacks the
+   request's Event IDs, the client can warn the programmer, so that he
+   or she knows to add Vary to the server's responses.
 
 
 3.  Analysis of existing versioning approaches in HTTP
 
    Existing approaches to versioning in HTTP address disparate
    use-cases, but have limitations and trade-offs.  The Last-Modified
-   and ETag headers were invented for cache consistency, but do not
-   provide an ordering of version history through time, nor do they
-   handle forks and merges in distributed time.  On the other hand, a
-   number of forking/merging versioning systems have been proposed
-   (WebDAV, Link Relations) that define new resources to represent
-   versions of existing resources, but these require additional network
-   round-trips to query and learn about these new version resources.  No
-   HTTP versioning system today allows for articulating custom
-   distributed timestamp formats such as version vectors.
+   and ETag headers were invented for cache consistency, but a peer
+   can't use them to order versions through time, or to represent forks
+   and merges in distributed time.  Other versioning systems, such as
+   WebDAV and Link Relations, support forks and merges by defining a new
+   resource to hold an existing resource's state at each version.  A
+   client then needs additional network round trips to discover and
+   query these version resources.  No existing HTTP versioning system
+   can express custom formats of distributed timestamps, such as version
+   vectors.
 
-   We now enumerate the existing approaches.  The following section
-   provides an overview of their limitations for a general versioning
-   system.
+   We now describe each existing approach, and then summarize their
+   limitations for a general versioning system.
 
 
 3.1.  Approaches with versions in headers
 
-   The "Last-Modified" and "ETag" headers are by far the most
-   commonly-used versioning system used in HTTP today.  They specify a
-   resource's version directly in request and/or response headers.  This
-   is simple and efficent, as versions are communicated immediately,
-   without extra round trips, and very practically useful for caching
-   and conditional requests.  However, the version format of
-   Last-Modified and ETag do not provide enough information to compute
-   an accurate order of versions, and thus cannot be used to represent
-   distributed time.
+   The "Last-Modified" and "ETag" headers are by far the most commonly
+   used versioning system in HTTP today.  They specify a resource's
+   version directly in request and/or response headers.  This is simple
+   and efficient, since each version arrives in the message itself, with
+   no extra round trips, and it is very useful in practice for caching
+   and conditional requests.  However, their values don't give a peer
+   enough information to compute an accurate order of versions, so they
+   cannot represent distributed time.
 
 
 3.1.1.  Last-Modified
@@ -962,12 +957,12 @@ Table of Contents
    This header is useful for caching and conditional requests (using the
    If-Modified-Since header). However, it has several limitations:
 
-   1. It is limited to the precision of the wallclock.  If a resource
-      changes within the same second, the Last-Modified date won't
-      change, and caches can become inconsistent.
+   1. It is limited to the one-second precision of an HTTP date.  If a
+      resource changes within the same second, the Last-Modified date
+      won't change, and caches can become inconsistent.
 
-   2. It stores linear time; not distributed (partial order) time.  It
-      cannot represent the ambiguity of forked time.
+   2. It stores only linear time.  It cannot represent distributed
+      (partial order) time, or the ambiguity of forked time.
 
    3. It is susceptible to clock skew in distributed systems,
       potentially leading to inconsistencies across different servers.
@@ -975,8 +970,8 @@ Table of Contents
 
 3.1.2.  ETag
 
-   The ETag header allows more precision.  It specifies a string that
-   uniquely identifies a cacheable representation:
+   The ETag header is more precise.  It specifies a string that uniquely
+   identifies a cacheable representation:
 
            ETag: "2u34fa7yorz0"
 
@@ -984,40 +979,37 @@ Table of Contents
 
            ETag: W/"2u34fa7yorz0"
 
-   ETags are used in conditional requests with If-None-Match and
-   If-Match headers and can be used for optimistic concurrency
-   control. However:
+   Clients send ETags in conditional requests, with the If-None-Match
+   and If-Match headers, and can use them for optimistic concurrency
+   control.  However:
 
-   1. While helping with cache validation, ETags are not accurate
-      markers of time.  There is no way to order versions by ETag, or
-      know which version came before another.
+   1. ETags help with cache validation, but do not mark time accurately.
+      A peer has no way to order versions by ETag, or to know which
+      version came before another.
 
-   2. ETags are unique to content, not timestamps.  It's possible for
-      the same ETag to recur over time if the resource changes back and
-      forth between a common state.
+   2. An ETag identifies content.  So the same ETag can recur over time,
+      if the resource's state returns to an earlier value.
 
-   3. Strong ETags are sensitive to Content-Encoding. If a resource at
-      a single version is transmitted with different
-      Content-Encodings (e.g., gzip), it will be sent with different
-      strong ETags.
+   3. A strong ETag depends on the Content-Encoding.  If a server sends
+      a resource at one version with different Content-Encodings (e.g.,
+      gzip), each one has a different strong ETag.
 
-   Thus, one can have multiple ETags for the same version in history, as
-   well as a single ETag for multiple versions in history.
+   So one version can have several ETags, and one ETag can recur at
+   several versions.
 
 
 3.2.  Approaches defining versions as new resources
 
-   Rather than placing versioning information into headers, a second set
-   of approaches create new "version resources" for each version of an
-   original resource, and then add ways to navigate the "version
-   resources."
+   A second set of approaches creates a new "version resource" to hold
+   an original resource's state at each version, and adds ways to
+   navigate the version resources.
 
-   A variety of approaches exist -- from hand-copied "foo-v2.html" URIs,
-   to standards like WebDAV.  However, they all require additional
-   round-trips, with new URIs or new methods, to discover and navigate
-   version information, which reduces performance, adds complexity, and
-   makes it challenging for intermediaries to use versioning information
-   without performing additional network requests themselves.
+   These approaches range from hand-copied "foo-v2.html" URIs to
+   standards like WebDAV.  However, they all require additional round
+   trips, with new URIs or new methods, to discover and navigate version
+   information.  This reduces performance, adds complexity, and makes it
+   hard for intermediaries to use versioning information without making
+   additional network requests of their own.
 
 
 3.2.1.  Creating additional "Version Resources"
@@ -1029,14 +1021,13 @@ Table of Contents
 
    This approach is common, but has several limitations:
 
-   1. It loses the semantics of a "resource changing over time."
-      Instead, it creates multiple version resources for each resource.
+   1. It loses the semantics of a "resource changing over time", and
+      creates multiple version resources for each resource.
 
-   2. It then necessitates standards to, given a URI, extract the
-      current version of the resource, get the previous and next
-      version(s), understand the format of the version(s) (e.g.,
-      major.minor.patch), and to create new versions.  These standards
-      are discussed next.
+   2. It then needs standards that, given a URI, extract the current
+      version of the resource, get the previous and next versions,
+      interpret the format of the versions (e.g., major.minor.patch),
+      and create new versions.  We discuss these standards next.
 
    3. It can lead to URI proliferation, complicating a web application's
       URI space, and potentially impacting caching strategies and SEO.
@@ -1044,46 +1035,45 @@ Table of Contents
 
 3.2.2.  Standardizing versions as external resources
 
-   A number of approaches enable ways to organize and navigate a set of
-   "version resources."  Memento [RFC7089] provides read-only access to
-   prior states through datetime negotiation, but defines no mechanism
-   for creating new versions.  WebDAV Versioning [RFC3253] provides a
-   full lifecycle through CHECKOUT/CHECKIN methods, but requires
-   server-assigned version identifiers.  Link Relations for Version
-   Navigation [RFC5829] defines link relation types for navigating
-   between version resources, but leaves the creation and management of
-   those versions to other protocols.  WebDAV and Link Relations also
-   allow for a partial order of distributed time, whereas Memento is
-   limited to linear wallclock time.
+   Several standards organize and navigate a set of "version resources."
+   Memento [RFC7089] provides read-only access to prior states through
+   datetime negotiation, but defines no mechanism for creating new
+   versions.  WebDAV Versioning [RFC3253] provides a full lifecycle
+   through CHECKOUT/CHECKIN methods, but requires server-assigned
+   version identifiers.  Link Relations for Version Navigation [RFC5829]
+   defines link relation types for navigating between version resources,
+   but leaves the creation and management of those versions to other
+   protocols.  WebDAV and Link Relations also support a partial order of
+   distributed time, whereas Memento is limited to linear wallclock
+   time.
 
-   However, these approaches all require dereferencing additional URIs
-   (and thus additional network round-trips) to discover version
-   information, rather than embedding it inline in the headers of a
-   normal GET or PUT to the resource.  This prevents intermediaries from
-   organizing the version history without doing additional network
-   requests themselves.  Furthermore, although WebDAV supports forking
-   and merging history, the methods it provides to manipulate the
-   history (CHECKIN, CHECKOUT, VERSION-CONTROL, LOCK, UNLOCK) require a
-   centralized server.
+   However, with each of these approaches, a client discovers version
+   information by dereferencing additional URIs, with additional network
+   round trips.  The headers of a normal GET or PUT to the resource
+   don't have it, so an intermediary can't organize the version history
+   without making network requests of its own.  Furthermore, although
+   WebDAV supports forking and merging history, the methods it provides
+   to manipulate the history (CHECKIN, CHECKOUT, VERSION-CONTROL, LOCK,
+   UNLOCK) require a centralized server.
 
-
+
 3.3.  Requirements for general versioning
 
    This section defines the requirements for a general versioning
-   standard.  It then provides a feature table enumerating which
-   requirements the existing approaches support and do not support.
+   standard.  It then provides a feature table showing which
+   requirements each existing approach supports.
 
-   These requirements are derived from the use-cases described in
-   Section 4, which together span the range of versioning needs we have
-   identified in HTTP systems -- from cache consistency and incremental
-   updates, to distributed collaborative editing and hosting
-   version-control systems like git.
+   We derived these requirements from the use-cases in Section 4, which
+   together span the range of versioning needs we have identified in
+   HTTP systems, from cache consistency and incremental updates to
+   distributed collaborative editing and hosting version-control systems
+   like git.
 
-
+
 3.3.1.  Distributed Time
 
-   Distributed systems (see examples in section 4) require support for
-   distributed time, including:
+   Distributed systems (see the examples in Section 4) require support
+   for distributed time, including:
 
      (a) A comparable partial order:
 
@@ -1108,27 +1098,26 @@ Table of Contents
 
 3.3.2.  Included within existing HTTP requests and responses
 
-   The versions should be included within existing HTTP requests and
-   responses, wherever possible, without requiring additional requests
-   and round-trips.  This simplifies implementation, improves
-   performance, and allows intermediaries to understand and accurately
-   cache the version history of state as it flows over the wire, without
-   having to make additional requests themselves.  It also allows
-   applications to add versioning information to their existing
-   resources without impacting the definition of their existing URI
-   space -- an unnecessary burden for many applications.
+   A general versioning system should include versions within existing
+   HTTP requests and responses, wherever possible, with no additional
+   requests and round trips.  This simplifies implementation and
+   improves performance.  An intermediary can then understand and
+   accurately cache the version history of state as it passes through,
+   without making additional requests of its own.  And an application
+   can add versioning information to its existing resources, and leave
+   its existing URI space unchanged.  Changing the URI space would be an
+   unnecessary burden for many applications.
 
    We enumerate these requirements as follows:
 
       (a) Includes versioning in every existing request and response
           where state is queried or mutated.
 
-
       (b) Does not require additional round-trips.
 
       (c) Does not require polluting the application's URL namespace.
 
-
+
 3.3.3.  Generalizable Timestamps
 
    Some systems have requirements for Version timestamps themselves:
@@ -1159,8 +1148,7 @@ Table of Contents
 
 3.4.  Feature table of existing approaches
 
-   We compose a table of existing approaches, and the features they do
-   not yet provide, here:
+   This table shows which requirements each existing approach meets:
 
 
                          | 1a | 1b | 1c | 2a | 2b | 2c | 3a | 3b |
@@ -1175,24 +1163,22 @@ Table of Contents
 
    Because no existing versioning approach satisfies all needs,
    programmers today must implement multiple approaches to versioning in
-   their applications -- each with subtly different logic -- and cannot
+   their applications, each with subtly different logic, and cannot
    implement common infrastructure for distributed versioning,
    archiving, and collaborative editing that works across HTTP systems.
 
+   This document specifies a general versioning model that satisfies all
+   8 requirements above, by adding versions to HTTP requests and
+   responses (Section 2).
+
 
-   This document specifies a general versioning model satisfying all 8
-   requirements above.  We start by specifying how to add versioning to
-   HTTP requests and responses.
-
-
 4.  Informative Use-Cases
 
    A general mechanism for versioning HTTP resources could enable a
    number of new use-cases:
 
-     - RSS clients could request incremental updates when polling,
-       instead of re-downloading redundant unchanged feed items after
-       each change to any item
+     - RSS clients could request incremental updates when polling, and
+       download only the feed items that changed
 
      - Servers could accept incoming patches based on old or parallel
        versions of history, and even rebase those patches for other
@@ -1201,9 +1187,9 @@ Table of Contents
      - Collaborative editing could be built directly into HTTP
        resources, providing the abilities of Google Docs at any URL
 
-     - Git repositories could be hosted directly over HTTP; rather than
-       embedding versioning information within opaque blobs that use
-       HTTP just as a transport
+     - Git repositories could be hosted directly over HTTP, with their
+       versioning information in HTTP headers, where git today embeds it
+       within opaque blobs that use HTTP just as a transport
 
      - Caches and archives could hold and serve a resource at multiple
        versions, enabling audits and distributed backups
@@ -1216,9 +1202,9 @@ Table of Contents
 
 4.1.  Incremental RSS Subscription
 
-   Traditional RSS readers inefficiently poll servers, often downloading
-   entire feeds when only minor changes have occurred.  HTTP Resource
-   Versioning enables more efficient incremental updates.
+   An RSS reader polls its server, and often downloads the entire feed
+   when only a small part of it has changed.  With HTTP Resource
+   Versioning, the reader can download just the changes.
 
    A client can specify its last known version using the Parents header:
 
@@ -1254,8 +1240,8 @@ Table of Contents
 
 
    This approach significantly reduces bandwidth usage and processing
-   time for both client and server.  The specific patch format used can
-   vary; see [Updates] or [Range-Patch] for examples.
+   time for both client and server.  Peers can use any patch format,
+   such as those in [Updates] or [Range-Patch].
 
 
 4.2.  Hosting git via HTTP
@@ -1263,8 +1249,8 @@ Table of Contents
    We can host a git repository directly through HTTP, where each file
    corresponds to a resource, and all have a version history.
 
-   Git versions are normally specified as a hash.  The server can
-   express this with a "type=git" parameter:
+   Git identifies each version with a hash.  The server can say so with
+   a "type=git" parameter:
 
 
       Request:
@@ -1281,9 +1267,9 @@ Table of Contents
          ...
 
 
-   Git also allows specifying a version with a short string, like
-   "HEAD", which works for any tag or branch.  We can request the latest
-   "development" branch version with:
+   Git also names versions with short strings, such as "HEAD", or the
+   name of any tag or branch.  We can request the head of the
+   "development" branch with:
 
 
       Request:
@@ -1301,7 +1287,7 @@ Table of Contents
          ...
 
 
-   One can also request the files from release tagged "1.3.5" using:
+   A client can also request a file at the release tagged "1.3.5":
 
 
       Request:
@@ -1310,8 +1296,8 @@ Table of Contents
          Version: ("1.3.5")
 
 
-   One can clone a repo by asking for all versions from the root to
-   HEAD:
+   A client can clone a repo by asking for every version from the root
+   to HEAD:
 
 
       Request:
@@ -1345,9 +1331,9 @@ Table of Contents
 
    In fact, git itself already supports two HTTP protocols: a "dumb" and
    a "smart" protocol.  The dumb protocol uses plain HTTP, but doesn't
-   support incremental updates -- each pull re-downloads the entire pack
-   file.  The smart protocol allows the client to specify the version it
-   has, and the version it wants:
+   support incremental updates, so each pull re-downloads the entire
+   pack file.  With the smart protocol, the client specifies the version
+   it has, and the version it wants:
 
 
       0054want 31f1c37dfa1bf983e4d67e06fac28e8e6f
@@ -1371,8 +1357,8 @@ Table of Contents
 
 4.3.  Resumable uploads protocol
 
-   Resource Versioning semantics enable efficient implementation of
-   resumable uploads, providing an alternative perspective to
+   With Resource Versioning, a client and server can implement resumable
+   uploads efficiently, which offers an alternative perspective to
    [Resumable Upload].
 
    To initiate an upload, the client specifies the expected final
@@ -1406,7 +1392,7 @@ Table of Contents
          Parents: ("abwejf-0")
 
 
-   The server's response determines the client's next action:
+   The client's next action depends on the server's response:
 
    A. Upload complete:
 
@@ -1455,22 +1441,22 @@ Table of Contents
 
    - Case C: Restart the upload from the beginning.
 
-   This protocol leverages general version semantics, allowing servers
-   implementing HTTP Resource Versioning with the "bytestream"
-   Version Type to inherently support resumable uploads.
+   This protocol relies on the general semantics of versions.  So if a
+   server implements HTTP Resource Versioning with the "peer-counter"
+   Version Type and its "bytestream" modifier, it supports resumable
+   uploads inherently.
 
 
 4.4.  Distributed collaborative editing
 
-   This versioning system can also support full CRDT and OT
-   collaborative editing features (when used with other extensions such
-   as [Braid-HTTP]), allowing every URL to gain the functionality of
-   Google Docs.
+   With other extensions, such as those of [Braid-HTTP], this versioning
+   system can also support full CRDT and OT collaborative editing, so
+   that every URL can gain the functionality of Google Docs.
 
 
    The [Braid-Text] project implements a very efficient style of this.
-   When you first load a resource, a server provides it as a single
-   version:
+   When a client first loads a resource, the server sends its state at a
+   single version:
 
 
       Request:
@@ -1495,7 +1481,7 @@ Table of Contents
          Hello world!
 
 
-   Updates are expressed as a stream of patches:
+   Then the server sends each update as a patch:
 
 
       Response (continued):
@@ -1517,31 +1503,31 @@ Table of Contents
          )
 
 
-   This versioning system supports multiple [Merge-Types], and they can
-   even co-exist simultaneously for the same resource.  For instance,
-   braid-text supports three merge-types simultaneously:
+   This versioning system supports multiple Merge Types [Merge-Types],
+   and they can even co-exist for the same resource.  For instance,
+   braid-text supports three merge types at once:
 
-     - The "simpleton" merge-type requires the server to rebase all
+     - The "simpleton" merge type requires the server to rebase all
        edits for the client
 
 
-     - The "dt" merge-type uses a fully peer-to-peer merge algorithm
+     - The "dt" merge type uses a fully peer-to-peer merge algorithm
        called Diamond-Types
 
-     - The "yjs" merge-type uses Yjs, another peer-to-peer merge
+     - The "yjs" merge type uses Yjs, another peer-to-peer merge
        algorithm
 
-   Clients can connect with any of these merge-types, and can even
-   change merge-type on-the-fly -- the version history itself can be
-   re-used.
+   A client can connect with any of these merge types, and can even
+   change merge type on the fly, since they all use the same version
+   history.
 
 
 4.5.  Improved Header Compression with runs
 
-   A header compression scheme can leverage Version Type patterns to
-   significantly compress messages.  For example, consider the following
-   scenario where 4 characters are inserted into a collaborative editor,
-   requiring 495 bytes when uncompressed:
+   A header compression scheme can use the patterns of a Version Type to
+   compress messages significantly.  For example, suppose a peer inserts
+   4 characters in a collaborative editor, with four PUTs that take 495
+   bytes uncompressed:
 
 
            PUT /some.txt
@@ -1577,8 +1563,8 @@ Table of Contents
            f
 
 
-   Huffman Encoding (e.g. in HTTP's HPACK and QPACK) can compress these
-   headers by identifying repeated strings and assigning them codes:
+   HTTP's HPACK and QPACK can compress these headers by identifying
+   repeated strings and assigning them codes:
 
 
            U = "PUT /some.txt"
@@ -1628,11 +1614,11 @@ Table of Contents
    bytes.
 
 
-   Further compression is possible by recognizing that the numeric
-   parameters in each header increment by 1 from the previous header.
-   This allows us to take advantage of run-length encoding; specified as
-   "type=peer-counter;text-runs".  We can thus compress the
-   entire run of inserts using a new compression function, RUN(a, b, c):
+   We can compress further, since the numbers in each message's headers
+   increase by 1 from the previous message.  The Version Type
+   "type=peer-counter;text-runs" specifies this pattern, so we can use
+   run-length encoding.  We compress the entire run of insertions with a
+   new compression function, RUN(a, b, insertions):
 
 
            RUN(a, b, insertions) =
@@ -1661,29 +1647,28 @@ Table of Contents
 
            RUN(57, 474, 'asdf')
 
-   For even more compact representation, sacrificing human-readability,
-   this can be encoded in 12 bytes:
+   Giving up human readability, we can encode this even more compactly,
+   in 12 bytes:
 
            R57,474,asdf
 
-   Further compression is possible by using variable-length integer
-   encoding (such as LEB128 or Protocol Buffers' varint) for the numeric
-   values.  This approach could potentially reduce the encoding to 7
-   bytes for these 4 insertions, or just 1.41% of the uncompressed 495
-   bytes.
+   We can compress further by encoding the numbers as variable-length
+   integers (such as LEB128 or Protocol Buffers' varint).  That could
+   reduce the encoding to 7 bytes for these 4 insertions, just 1.41% of
+   the uncompressed 495 bytes.
 
 
 4.6.  Run-Length Compression without Header Compression
 
-   In practice, run-length compression can also be applied without
-   relying on header compression.  By specifying the Version Type:
+   In practice, peers can also apply run-length compression without
+   header compression.  When an update has the Version Type:
 
            type=peer-counter;text-runs
 
-   ...any peer can receive a series of N insertions as a single update
+   ...any peer can receive a series of N insertions as a single update,
    and infer that the string in the update was composed of N separate
-   insertions.  For instance, the previous example of four PUT requests
-   can be compressed into a single update without any header
+   insertions.  For instance, a peer can compress the four PUT requests
+   of the previous example into a single update, without any header
    compression:
 
 
@@ -1698,11 +1683,10 @@ Table of Contents
 
    This single request expresses the change from version 3f84786c-56 to
    3f84786c-60, implicitly including the three intermediate versions
-   (3f84786c-57, 3f84786c-58, and 3f84786c-59).  Any client or server
-   that understands the "peer-counter" Version Type with "text-runs"
-   can infer
-   these intermediate versions when necessary by slicing the content
-   "asdf" to the appropriate length for each version.
+   (3f84786c-57, 3f84786c-58, and 3f84786c-59).  If a client or server
+   understands the "peer-counter" Version Type with "text-runs", it can
+   infer these intermediate versions when it needs them, by slicing the
+   content "asdf" to the appropriate length for each version.
 
    For example:
 
@@ -1711,15 +1695,16 @@ Table of Contents
       - Version 3f84786c-59 would contain "asd"
       - Version 3f84786c-60 would contain the full "asdf"
 
-   This approach significantly reduces the number of HTTP requests and
-   amount of data required for a series of small, consecutive inserts,
-   while still allowing for precise version control and the ability to
-   reconstruct any intermediate state.
+   This approach significantly reduces the number of HTTP requests, and
+   the amount of data, for a series of small, consecutive insertions,
+   and every peer can still identify each intermediate version and
+   reconstruct its state.
 
 
 5.  Acknowledgements
 
-   This is derived from prior draft [Braid-HTTP] with authors:
+   This document is derived from the prior draft [Braid-HTTP], written
+   by:
 
      - Michael Toomim
      - Greg Little
@@ -1727,7 +1712,7 @@ Table of Contents
      - Bryn Bellomy
      - Joseph Gentle
 
-   And incorporates additional ideas from:
+   It also incorporates ideas from:
 
      - Rahul Gupta
      - Duane Johnson
@@ -1771,9 +1756,10 @@ Table of Contents
       Reference: Section 2.5 of this document
 
 
-   Additionally, this new status code should be added to the "HTTP
-   Status Codes" registry at
-   <https://www.iana.org/assignments/http-status-codes>:
+   This document also registers the following status code in the
+   "Hypertext Transfer Protocol (HTTP) Status Code Registry", maintained
+   at <https://www.iana.org/assignments/http-status-codes>, as described
+   in Section 16.2.1 of [RFC9110]:
 
 
       Value: 432
@@ -1819,7 +1805,7 @@ Table of Contents
 7.2.2.  Version Type Registrations
 
    The "peer-counter" Version Type specifies that each Event ID is a
-   Lamport timestamp, of the form:
+   Lamport timestamp, with this syntax:
 
       Version: ("<peer>-<counter>");type=peer-counter
 
@@ -1830,9 +1816,9 @@ Table of Contents
       Version: ("<peer>-<counter>");type=peer-counter;bytestream
 
 
-   It is guaranteed that, for any peer, the counter will always increase
-   in subsequent versions.  Therefore, any two Event IDs from the same
-   peer can be compared in time just by examining their counters.
+   Each peer guarantees that its counter will always increase in
+   subsequent versions.  So a recipient can order any two Event IDs from
+   the same peer in time, just by examining their counters.
 
 
    The modifier "text-runs" further constrains the behavior of the
@@ -1842,11 +1828,11 @@ Table of Contents
    every deleted set of characters, the counter is constrained to
    represent the number of unicode codepoints that have been deleted.
 
-   Furthermore, it defines that intermediate versions can be inferred,
-   between any explicitly transmitted version, by assuming that for any
-   insertion, all characters are inserted one-by-one, left-to-right, by
-   unicode codepoint; and for any deletion, all characters are deleted
-   right-to-left, by unicode codepoint.
+   With "text-runs", a recipient can also infer the intermediate
+   versions between any two versions sent explicitly, by assuming that
+   each insertion inserts its characters one by one, left to right, by
+   unicode codepoint, and that each deletion deletes its characters
+   right to left, by unicode codepoint.
 
 
    The "bytestream" modifier specifies that the resource can be
@@ -1854,8 +1840,8 @@ Table of Contents
 
       Version: ("<peer>-<counter>");type=peer-counter;bytestream
 
-   Each <counter> then specifies that the number of bytes in the
-   resource is equal to <counter> at time <peer>-<counter>.
+   At the version <peer>-<counter>, the resource then has <counter>
+   bytes.
 
    For example, "x82ha-344" indicates "the resource state after peer
    `x82ha` appended 344 bytes".
@@ -1931,9 +1917,9 @@ Table of Contents
      - braidfs [Braidfs] synchronizes a folder of local files with HTTP
        resources, and sends Version and Parents with each PUT.
 
-     - braid-chrome [Braid-Chrome], a browser extension for Chrome and
-       Firefox, lets a developer view and navigate the version history
-       of a resource.
+     - With braid-chrome [Braid-Chrome], a browser extension for Chrome
+       and Firefox, a developer can view and navigate the version
+       history of a resource.
 
      - Editor plugins for Emacs [Braid-Emacs], Neovim [Braid-Neovim],
        and VS Code [Braid-VSCode] send Version and Parents with each
@@ -1946,48 +1932,46 @@ Table of Contents
 
 9.  Security Considerations
 
-   Version IDs may reveal information about the structure and activity
-   of a resource's editors.  For instance, the "peer-counter"
-   Version Type encodes a peer identifier and a monotonically
-   increasing counter, from which an observer can infer who is editing
-   and how frequently.  Servers that expose version history SHOULD
-   apply the same access control to versioned requests as they do to
-   current-state requests, and SHOULD consider whether version
-   identifiers themselves leak information that the resource body does
-   not.
+   Event IDs may reveal information about the structure and activity of
+   a resource's editors.  For instance, the "peer-counter" Version Type
+   encodes a peer identifier and a monotonically increasing counter,
+   from which an observer can infer who is editing and how frequently.
+   If a server exposes version history, it SHOULD apply the same access
+   control to versioned requests as it does to current-state requests,
+   and SHOULD consider whether the Event IDs themselves leak information
+   that the resource body does not.
 
-   A client requesting a span of history (via Parents and Version
-   headers together) could probe for the existence of versions it is not
-   authorized to see.  Servers MUST NOT reveal version history to
-   clients that are not authorized to access the resource.  A server MAY
-   respond with 403 Forbidden or 404 Not Found rather than 432 Version
-   Not Found if acknowledging the existence of a version would itself
-   constitute an information leak.
+   By requesting a span of history, with Parents and Version headers
+   together, a client could probe for the existence of versions it is
+   not authorized to see.  A server MUST NOT reveal version history to a
+   client that is not authorized to access the resource.  If
+   acknowledging that a version exists would itself leak information, a
+   server MAY respond with 403 Forbidden or 404 Not Found in place of
+   432 Version Not Found.
 
-   Requesting a long span of history could require significant server
-   resources to assemble and transmit.  Servers SHOULD impose limits on
-   the size of version history responses and MAY respond with 413
-   Content Too Large if a request would exceed those limits.  Servers
-   MAY also rate-limit version history requests.
+   If a client requests a long span of history, the server could need
+   significant resources to assemble and send it.  A server SHOULD
+   impose limits on the size of its version history responses, and MAY
+   respond with 413 Content Too Large if a request would exceed those
+   limits.  A server MAY also rate-limit version history requests.
 
    As described in Section 2.7.1, a versioning-unaware intermediary may
-   cache a historical version and serve it in response to a request
-   for a different version.  If the resource is access-controlled,
-   this could result in a client receiving the resource at a version
-   it was not meant to see -- for instance, a version predating the
-   revocation of sensitive content.  Origin servers SHOULD include
-   "Vary: version, parents" in responses, and SHOULD consider adding
-   "Cache-Control: no-store" or "Cache-Control: private" to
-   versioned responses containing sensitive content.
+   store a response at a historical version, and serve it in response to
+   a request for a different version.  If the resource is
+   access-controlled, a client could then receive the resource at a
+   version it was not meant to see, such as a version predating the
+   revocation of sensitive content.  An origin server SHOULD include
+   "Vary: version, parents" in its responses, and SHOULD consider adding
+   "Cache-Control: no-store" or "Cache-Control: private" to versioned
+   responses containing sensitive content.
 
-   Since any peer can generate version IDs, a malicious client could
-   craft version IDs that collide with or mimic another peer's IDs.
-   This could corrupt version history or cause a server to
-   misattribute edits.  Systems where version history integrity is
-   important SHOULD validate version IDs against their expected
-   Version Type format and SHOULD treat version IDs from untrusted
-   clients as opaque, unverified claims rather than trusted
-   identifiers.
+   Since any peer can generate Event IDs, a malicious client could craft
+   Event IDs that collide with or mimic another peer's IDs.  This could
+   corrupt the version history, or cause a server to misattribute edits.
+   If a system depends on the integrity of its version history, it
+   SHOULD validate Event IDs against the format of their Version Type,
+   and SHOULD treat Event IDs from untrusted clients as opaque,
+   unverified claims.
 
 
 10.  References

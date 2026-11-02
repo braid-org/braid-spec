@@ -12,12 +12,12 @@ Intended status: Proposed Standard                        M. Milutinovic
 
 Abstract
 
-   Merge Types specify how to merge multiple simultaneous edits to a
-   resource.  This happens when two peers edit the same state over a
+   Merge Types specify how to merge parallel edits to a resource.
+   Parallel edits happen when two peers edit the same state over a
    network with latency.  A Merge Type specifies how to merge
-   conflicting changes.  If the peers implement and agree upon the
-   same Merge Type, then they can guarantee to reach a consistent state,
-   after arbitrary edits, eventually.
+   conflicting changes.  If the peers implement and agree upon the same
+   Merge Type, then they will reach a consistent state eventually,
+   whatever edits they make.
 
    You can define new Merge Types.  This document defines Merge Types,
    the structure of the Merge Type system, the Merge-Type header, and
@@ -98,8 +98,8 @@ Table of Contents
 
 1.  Introduction
 
-   Merge Types specify how parallel edits can be merged consistently.
-   In a version history [VERSIONS], a Merge Type defines the state of a
+   Merge Types specify how peers merge parallel edits consistently.  In
+   a version history [VERSIONS], a Merge Type defines the state of a
    resource at a version derived from two or more parent versions:
 
 
@@ -111,34 +111,33 @@ Table of Contents
                    V       dogcats   <-- merged state
 
 
-   This can be ambiguous if two or more edits overlap, and edit the same
-   thing in different ways.  It is desirable if all peers resolve
-   ambiguities in the same way, because then they will achieve
-   consistent results.  In the example above, one person replaced "bird"
-   with "dog", while the other replaced it with "cat", creating an
-   ambiguity, which the Merge Type resolved by merging these edits
-   together into "dogcats".  Some other Merge Type might resolve this
-   ambiguity differently.
+   The merged state can be ambiguous if two or more edits overlap, and
+   edit the same thing in different ways.  All peers should resolve
+   ambiguities in the same way, so that they reach consistent results.
+   In the example above, one person replaced "bird" with "dog", while
+   the other replaced it with "cat".  The Merge Type resolved this
+   ambiguity by merging both edits into "dogcats".  Some other Merge
+   Type might resolve this ambiguity differently.
 
-   Currently popular approaches are using conflict-free replicated data
-   types [CRDT] or operational transformation [OT].  Different
+   Popular approaches to merging include conflict-free replicated data
+   types [CRDT] and operational transformation [OT].  Different
    algorithms merge in different ways.  Different applications need
-   different parts of their data to merge in different ways.  The Merge
+   different parts of their data to merge in different ways.  A Merge
    Type specifies the outcome of a merge.  Different algorithms can
    implement the same Merge Type to interoperate.
 
-   If a Merge Type is specified for a history of updates, and all peers
-   implement that Merge Type, then they will be consistent, no matter
-   the order that events arrive over the network, or the algorithms
-   they use to implement the Merge Types.
+   If all peers merge a history of updates with the same Merge Type,
+   then they will be consistent, no matter the order in which the
+   updates arrive over the network, or the algorithms that the peers use
+   to implement that Merge Type.
 
    This document defines how to specify a Merge Type within a
-   standardized naming scheme, and how a request or response names the
+   standardized naming scheme, and how a client or server says which
    Merge Type it uses, with the Merge-Type header.
 
-   Merge Types are one of the Braid-HTTP extensions [BRAID-HTTP].  A
-   merge needs two of the others: Versions [VERSIONS], to know which
-   edits happened in parallel, and Updates [UPDATES], to know what
+   Merge Types are one of the Braid-HTTP extensions [BRAID-HTTP].  To
+   merge, a peer needs two of the others: Versions [VERSIONS], to know
+   which edits happened in parallel, and Updates [UPDATES], to know what
    each edit changed.
 
 
@@ -146,24 +145,24 @@ Table of Contents
 
    Different applications merge different resources in different ways,
    and can use different Merge Types.  For example, if a string
-   represents a collaborative text document, then parallel edits should
-   be merged together.  But if a string represents a database entry ID
-   and it is modified by two requests simultaneously, the appropriate
-   behavior is to choose one or the other.
+   represents a collaborative text document, then the application should
+   merge parallel edits together.  But if a string represents a database
+   entry ID, and two requests modify it in parallel, then the
+   application should choose one or the other.
 
-   Similarly, if the resource is a number that represents a bank account
-   balance, then it should merge multiple simultaneous debits by adding
-   the amounts of the debits together.
+   Similarly, if a number represents a bank account balance, then the
+   application should merge parallel debits by adding their amounts
+   together.
 
-   Thus, it is nice to re-use a Merge Type across multiple types of
-   data; and each application has different needs for how its data
-   should merge.
+   So each application has different needs for how its data should
+   merge.  And it is useful to reuse a Merge Type across multiple types
+   of data.
 
 
 1.2.  A Merge Type is specified as a function
 
-   A Merge Type is a function that produces a merged state when provided
-   with an edit history:
+   A Merge Type is a function that takes an edit history, and returns a
+   merged state:
 
 
                          Merge Type
@@ -172,23 +171,24 @@ Table of Contents
 
 
    A Merge Type must be a deterministic function.  Given the same edit
-   history, it should always return the same resulting merged state.
-   This guarantees eventual consistency.
+   history, it always returns the same merged state.  This guarantees
+   eventual consistency.
 
-   The edit history holds every edit that led to the parent versions
-   being merged.  In the example above, merging "dogs" and "cats" into
-   "dogcats" requires knowing that each edit replaced "bird".  The
-   function cannot depend on state outside that edit history or its
-   specification.
+   The edit history holds every edit that led to the parent versions of
+   the merge.  In the example above, to merge "dogs" and "cats" into
+   "dogcats", the Merge Type needs to know that each edit replaced
+   "bird".  The function cannot depend on state outside that edit
+   history or its specification.
 
-   A Merge Type might only work on a particular Content-Type. For
-   instance, a "counter" Merge Type only works on numbers.  A Merge Type
-   SHOULD state any limitations in the set of states that it is capable
-   of operating upon, and any assumptions it makes about the data.
+   A Merge Type might only work on a particular Content-Type.  For
+   instance, a "counter" Merge Type only works on numbers.  A Merge
+   Type's specification SHOULD state any limits on the states that the
+   Merge Type can operate on, and any assumptions that it makes about
+   the data.
 
-   But given that it has data that meets those assumptions, a Merge Type
-   MUST return a result when merging any set of versions.  A Merge Type
-   cannot reject a new version.
+   If the data meets those assumptions, a Merge Type MUST return a
+   result when it merges any set of versions.  A Merge Type cannot
+   reject a new version.
 
 
 2.  Definitions
@@ -203,10 +203,10 @@ Table of Contents
 
 3.  Merge Type Naming
 
-   Naming of Merge Type follows naming requirements of media types as
-   described in Section 4.2. of [RFC6838] with two exceptions: Merge
-   Type names consist only of a type-name without a sub-type, and they
-   begin with a letter, so that each name is a Token [RFC9651].
+   Merge Type names follow the naming requirements for media types in
+   Section 4.2 of [RFC6838], with two exceptions: Merge Type names
+   consist only of a type-name without a sub-type, and they begin with a
+   letter, so that each name is a Token [RFC9651].
 
    Merge Type parameters are Parameters of that Token, as defined in
    [RFC9651].
@@ -221,8 +221,8 @@ Table of Contents
 
 4.  The Merge-Type Header
 
-   The Merge-Type header names the Merge Type that a request or response
-   uses to merge parallel versions.  It can be sent with any update
+   The Merge-Type header names the Merge Type that peers use to merge
+   parallel versions.  A client or server can send it with any update
    [UPDATES], in a request such as a PUT, or in a response:
 
 
@@ -242,18 +242,18 @@ Table of Contents
          HTTP/1.1 200 OK
 
 
-   Here the new version has two parents, and its Merge-Type, "dt", says
-   how to merge them.
+   Here the new version has two parents, and "dt" is the Merge Type that
+   merges them.
 
    The value of Merge-Type is a Structured Field Item [RFC9651]: a Token
    that names the Merge Type, with any parameters, as in Section 3.
 
 
-   A resource can offer its history in more than one Merge Type, as
-   variants of that history, and a client chooses one by sending
-   Merge-Type in its request.  For instance, one Merge Type can leave
-   parallel versions for the client to merge, while another presents
-   the history as a single path through it, with the same versions.
+   A server can offer a resource's history in more than one Merge Type,
+   as variants of that history.  A client chooses one by sending
+   Merge-Type in its request.  For instance, under one Merge Type, the
+   server can leave parallel versions for the client to merge, and under
+   another, it can present the same versions as a single path.
 
 
 5.  IANA Considerations
@@ -379,9 +379,8 @@ Table of Contents
        and VS Code [BRAID-VSCODE] merge text with "simpleton", to edit
        any braid-text resource collaboratively.
 
-     - "sync9" [SYNC9], a peer-to-peer CRDT for text and JSON, is
-       implemented in antimatter [ANTIMATTER] and antimatter_wiki
-       [ANTIMATTER-WIKI].
+     - antimatter [ANTIMATTER] and antimatter_wiki [ANTIMATTER-WIKI]
+       implement "sync9" [SYNC9], a peer-to-peer CRDT for text and JSON.
 
 
 7.  Security Considerations
@@ -411,19 +410,18 @@ Table of Contents
 
      o Merge Types might operate in a way that, while not directly
        harmful, may result in disclosure of information that either
-       facilitates a subsequent attack or else violates user's privacy
+       facilitates a subsequent attack or else violates a user's privacy
        in some way.
 
-     o A Merge Type should be considered in concert with the rules that
-       an application uses to accept or reject updates.  For instance,
-       it is possible for two updates A and B to both be valid
-       individually, but when merged, the result is not valid.
-       For instance, if a bank account has $1, then two simultaneous
-       debits of $1 are both valid individually, but the resulting
-       merger, yielding -$2, drains the bank account balance below $0.
-       This is the double-spend problem.  A system using Merge Types
-       SHOULD be aware of how its Merge Types interact with the rules
-       it uses to accept or reject updates.
+     o The analysis should consider the Merge Type together with the
+       rules that an application uses to accept or reject updates.  Two
+       updates A and B can each be valid alone, and still merge into a
+       result that is not valid.  For instance, if a bank account holds
+       $1, then two parallel debits of $1 are each valid alone, but
+       together they debit $2, and drain the balance below $0.  This is
+       the double-spend problem.  A system using Merge Types SHOULD be
+       aware of how its Merge Types interact with the rules it uses to
+       accept or reject updates.
 
 
 8.  Conventions
@@ -460,11 +458,11 @@ Table of Contents
    [RFC9651]  Nottingham, M. and P-H. Kamp, "Structured Field Values
               for HTTP", RFC 9651, September 2024.
 
-
    [UPDATES]  Toomim, M., "Replayable Updates for HTTP",
               draft-toomim-httpbis-braid-updates-00, work in progress,
               November 2026.
 
+
    [VERSIONS] Toomim, M., "Resource Versioning for HTTP",
               draft-toomim-httpbis-braid-versions-00, work in progress,
               November 2026.
@@ -517,11 +515,11 @@ Table of Contents
    [SYNC9]    braid.org, "Sync9: a Peer-to-Peer Synchronizer",
               <https://braid.org/sync9>.
 
-
    [BRAID-CHROME]
               braid.org, "braid-chrome",
               <https://github.com/braid-org/braid-chrome>.
 
+
    [ANTIMATTER]
               braid.org, "antimatter",
               <https://github.com/braid-org/antimatter>.

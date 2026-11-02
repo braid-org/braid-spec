@@ -18,64 +18,66 @@ becomes a HyperState Synchronization Protocol.  Start here.
 
 ### Subscriptions: [`draft-toomim-httpbis-braid-subscriptions-00.txt`](https://raw.githubusercontent.com/braid-org/braid-spec/master/draft-toomim-httpbis-braid-subscriptions-00.txt)
 
-When a client GETs a resource, the server responds once, and the client hears
-nothing of the changes that follow.  To hear them, the client can subscribe, by
-adding the Subscribe header to its GET.  Then the server keeps responding, with
-the current state, and then with each change as it happens.  Each of these is
-an ordinary HTTP response, so a cache can store it.  And when a cache
-subscribes, it knows that its copy is current for as long as its subscription
-stays connected to the origin.  So it can answer requests from that copy
-without asking the origin.
+Subscriptions turn a GET into a stream of changes.  The client adds the
+Subscribe header, and the server responds with the current state, and then
+with each change as it happens.  Each change is an ordinary HTTP response, so
+every cache along the way can store and serve it.
 
 Two drafts extend Subscriptions:
 
 ### Subscriptions Caching: [`draft-toomim-httpbis-braid-subscriptions-caching-00.txt`](https://raw.githubusercontent.com/braid-org/braid-spec/master/draft-toomim-httpbis-braid-subscriptions-caching-00.txt)
 
-A cache can subscribe to a resource, as any client can.  It stores each
-response in the subscription, answers requests from its copy while the
-subscription is continuously validating, and serves many subscribers of its
-own from one subscription to the origin server.
+When a cache subscribes, its subscription becomes a validation that keeps
+going.  The origin sends the cache each change as it happens, so while the
+subscription stays connected, the cache knows its copy is current.  It serves
+every reader at its edge from that subscription, without asking the origin
+again.
 
 ### Poll and Push: [`draft-toomim-httpbis-braid-poll-and-push-00.txt`](https://raw.githubusercontent.com/braid-org/braid-spec/master/draft-toomim-httpbis-braid-poll-and-push-00.txt)
 
-Some origin servers can't hold a response open, and on some paths a proxy
-buffers each response until it ends.  For them, Poll and Push defines two
-more subscription modes: long polling, in which the client sends a GET for
-each change, and webhooks, in which the origin server pushes each change to a
-subscription gateway.
+Poll and Push brings subscriptions to servers, and paths, that can't hold a
+response open.  A client can long-poll, with a GET that the server holds until
+the next change, or an origin can push each change to a subscription gateway,
+which serves its subscribers for it.  Each message names the version it builds
+on, so no message depends on a connection staying open.
 
 ### Updates: [`draft-toomim-httpbis-braid-updates-00.txt`](https://raw.githubusercontent.com/braid-org/braid-spec/master/draft-toomim-httpbis-braid-updates-00.txt)
 
-HTTP has no way to express a change that means the same from client to
-server and from server to client.  Updates defines snapshots, patches, and deletions that mean
-the same thing in a request and in a response, so every peer that replays
-them reaches the same state.
+Updates make each change mean the same thing in both directions.  A client
+sends a patch to a server in a PUT, and the server sends the same patch on to
+other clients, in a response.  Every peer that replays the same updates reaches
+the same state, whether it's a client, a server, or a cache in between.
 
 ### Versions: [`draft-toomim-httpbis-braid-versions-00.txt`](https://raw.githubusercontent.com/braid-org/braid-spec/master/draft-toomim-httpbis-braid-versions-00.txt)
 
-HTTP has no way to name a point in a resource's history.  Versions names
-points in time, with the events of a DAG, so that a client can GET the state at a
-version, and say which version its PUT builds on.
+Versions give HTTP a sense of time.  A message can name the point in history
+that it's at, and the points just before it, so a client can GET the state at
+any version, and say which version its PUT builds on.  History can branch and
+merge, as a DAG, and every peer names each point the same way.
 
 ### Merge Types: [`draft-toomim-httpbis-braid-merge-types-00.txt`](https://raw.githubusercontent.com/braid-org/braid-spec/master/draft-toomim-httpbis-braid-merge-types-00.txt)
 
-HTTP doesn't say how to merge changes that peers make in parallel.  A Merge
-Type says how to merge them, so that every peer reaches the same state.  It
-builds on Versions and Updates.
+With Merge Types, many peers can edit one resource at once, and still agree.  A
+Merge Type names the algorithm, OT or CRDT, that every peer uses to merge
+parallel edits, so they all reach the same state.  It builds on Versions, to
+tell which edits were parallel, and on Updates, to know what each one changed.
 
 ### Multiresponse: [`draft-toomim-httpbis-braid-multiresponse-00.txt`](https://raw.githubusercontent.com/braid-org/braid-spec/master/draft-toomim-httpbis-braid-multiresponse-00.txt)
 
-Each HTTP request gets one response.  Multiresponse defines the 209
-Multiresponse status code, whose content holds several responses, and
-application/http-history, a format for a resource's responses over time.
+Multiresponse fits many responses into one.  A 209 Multiresponse holds a
+sequence of ordinary responses, such as a span of a resource's history, or a
+subscription's changes as they happen.  Each one still responds to a request of
+its own, so caches can store them one by one.
 
 ## The syntax they share
 
 ### Simpler Fields: [`draft-toomim-httpbis-simpler-fields-00.txt`](https://raw.githubusercontent.com/braid-org/braid-spec/master/draft-toomim-httpbis-simpler-fields-00.txt)
 
-Simpler Fields is a profile of Structured Fields that a light client can
-parse with a regular expression.  The new header fields of all these drafts
-use it.
+Simpler Fields keeps every new header field one regular expression away.  It's
+a profile of Structured Fields, with special characters in strings
+percent-encoded, so a light client can parse a field with a regular expression,
+and a full Structured Fields parser reads it unchanged.  Every new header field
+in these drafts uses it.
 
 ## Where to start reading
 
