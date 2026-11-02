@@ -77,22 +77,22 @@ Table of Contents
 
    1.  Introduction ...................................................4
    1.1.  Merge Types vary across applications .........................5
-   1.2.  A Merge Type is specified as a function ......................6
+   1.2.  A Merge Type is specified as a function ......................5
    2.  Definitions ....................................................6
    3.  Merge Type Naming ..............................................6
-   4.  The Merge-Type Header ..........................................7
-   5.  IANA Considerations ............................................8
-   5.1.  Merge-Type Header Field Registration .........................8
-   5.2.  Merge Type Registry ..........................................8
-   5.2.1.  Procedure ..................................................8
-   5.2.2.  Registrations ..............................................9
-   5.2.3.  Comments on Merge Type Registrations .......................9
-   5.2.4.  Change Procedures ..........................................9
-   6.  Security Considerations .......................................10
-   7.  Conventions ...................................................11
-   8.  References ....................................................11
-   8.1.  Normative References ........................................11
-   8.2.  Informative References ......................................11
+   4.  The Merge-Type Header ..........................................6
+   5.  IANA Considerations ............................................7
+   5.1.  Merge-Type Header Field Registration .........................7
+   5.2.  Merge Type Registry ..........................................7
+   5.2.1.  Procedure ..................................................7
+   5.2.2.  Registrations ..............................................8
+   5.2.3.  Comments on Merge Type Registrations .......................8
+   5.2.4.  Change Procedures ..........................................8
+   6.  Security Considerations ........................................9
+   7.  Conventions ....................................................9
+   8.  References ....................................................10
+   8.1.  Normative References ........................................10
+   8.2.  Informative References ......................................10
 
 
 1.  Introduction
@@ -100,6 +100,7 @@ Table of Contents
    Merge Types specify how parallel edits can be merged consistently.
    In a version history [VERSIONS], a Merge Type defines the state of a
    resource at a version derived from two or more parent versions:
+
 
                    _
              Time: |        birds
@@ -156,15 +157,18 @@ Table of Contents
    Thus, it is nice to re-use a Merge Type across multiple types of
    data; and each application has different needs for how its data
    should merge.
-
+
+
 1.2.  A Merge Type is specified as a function
 
    A Merge Type is a function that produces a merged state when provided
    with an edit history:
 
+
                          Merge Type
 
                 (edit history) -> merged state
+
 
    A Merge Type must be a deterministic function.  Given the same edit
    history, it should always return the same resulting merged state.
@@ -185,14 +189,16 @@ Table of Contents
    MUST return a result when merging any set of versions.  A Merge Type
    cannot reject a new version.
 
+
 2.  Definitions
 
-   For the purpose of this document we define a "merge" as the
-   computation of the state at a version with two or more parent
-   versions, from the edit history that led to them, which resolves any
+   For the purpose of this document we define a "merge" as computing the
+   state at a version that has two or more parent versions.  A merge
+   works from the edit history that led to the parents, and resolves any
    conflicts between their edits.  There are multiple approaches to
    resolving conflicts, and we define "Merge Type" as an identifier that
    corresponds to an approach of resolving conflicts.
+
 
 3.  Merge Type Naming
 
@@ -206,15 +212,18 @@ Table of Contents
 
    Example:
 
+
      automerge-counter
      sharedb-json;variant=1
      biggest-wins;sortby=versionid
-
+
+
 4.  The Merge-Type Header
 
    The Merge-Type header names the Merge Type that a request or response
    uses to merge parallel versions.  It can be sent with any update
    [UPDATES], in a request such as a PUT, or in a response:
+
 
       Request:
 
@@ -231,19 +240,23 @@ Table of Contents
 
          HTTP/1.1 200 OK
 
-   Here the new version has two parents, and its Merge-Type, "dt",
-   specifies how they are merged.
+
+   Here the new version has two parents, and its Merge-Type, "dt", says
+   how to merge them.
 
    The value of Merge-Type is a Structured Field Item [RFC9651]: a Token
    that names the Merge Type, with any parameters, as in Section 3.
 
+
    A resource can offer its history in more than one Merge Type, as
    variants of that history, and a client chooses one by sending
    Merge-Type in its request.  For instance, one Merge Type can leave
    parallel versions for the client to merge, while another presents
    the history as a single path through it, with the same versions.
-
+
+
 5.  IANA Considerations
+
 
 5.1.  Merge-Type Header Field Registration
 
@@ -252,10 +265,12 @@ Table of Contents
    at <https://www.iana.org/assignments/http-fields>, as described in
    Section 16.3.1 of [RFC9110]:
 
+
       Field Name: Merge-Type
       Status: permanent
       Structured Type: Item
       Reference: Section 4 of this document
+
 
 5.2.  Merge Type Registry
 
@@ -263,6 +278,7 @@ Table of Contents
    names and refers to their corresponding specifications.  The registry
    will be created and maintained at
    <https://www.iana.org/assignments/merge-types>.
+
 
 5.2.1.  Procedure
 
@@ -286,14 +302,16 @@ Table of Contents
 
    o  Person & email address to contact for further information
 
-   Values are added to this namespace under the "Specification
-   Required" policy (see [RFC8126], Section 4.6), so that a Merge Type
-   defined outside the IETF can be registered.
-
 
+   IANA adds values to this namespace under the "Specification Required"
+   policy (see [RFC8126], Section 4.6), so that anyone can register a
+   Merge Type defined outside the IETF.
+
+
 5.2.2.  Registrations
 
    This document registers no Merge Types.
+
 
 5.2.3.  Comments on Merge Type Registrations
 
@@ -306,6 +324,7 @@ Table of Contents
    approves, the comment will be made accessible in conjunction with the
    type registration.
 
+
 5.2.4.  Change Procedures
 
    Once a Merge Type has been published by the IANA, the owner may
@@ -316,7 +335,7 @@ Table of Contents
    Merge Type registrations may not be deleted; Merge Types that are no
    longer believed appropriate for use can be declared OBSOLETE; such
    Merge Types will be clearly marked in the list published by the IANA.
-
+
    Significant changes to a Merge Type's definition should be requested
    only when there are serious omissions or errors in the published
    specification.  When review is required, a change request may be
@@ -333,6 +352,7 @@ Table of Contents
    or is otherwise unable to make changes that are important to the
    community.
 
+
 6.  Security Considerations
 
    An analysis of security issues SHOULD be done for all registered
@@ -373,7 +393,7 @@ Table of Contents
        SHOULD be aware of how its Merge Types interact with the rules
        it uses to accept or reject updates.
 
-
+
 7.  Conventions
 
    The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
@@ -382,7 +402,9 @@ Table of Contents
    BCP 14 [RFC2119] [RFC8174] when, and only when, they appear in all
    capitals, as shown here.
 
+
 8.  References
+
 
 8.1.  Normative References
 
@@ -414,6 +436,7 @@ Table of Contents
               draft-toomim-httpbis-braid-versions-00, work in progress,
               November 2026.
 
+
 8.2.  Informative References
 
    [BRAID-HTTP]
@@ -431,6 +454,7 @@ Table of Contents
               groupware systems", in SIGMOD '89 Proceedings of the 1989
               ACM SIGMOD international conference on Management of data,
               June 1989.
+
 
 Authors' Addresses
 

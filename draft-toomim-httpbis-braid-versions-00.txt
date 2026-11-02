@@ -77,53 +77,53 @@ Table of Contents
    2.1.  Model of time ..............................................6
    2.1.1.  Terminology ..............................................7
    2.2.  Version and Parents headers ................................8
-   2.2.1.  Formatting of versions in versioning headers .............9
+   2.2.1.  Formatting of versions in versioning headers .............8
    2.2.2.  Definition of Events and Versions .......................10
-   2.2.3.  Computing the current version ...........................11
-   2.3.  Using Versioning with HTTP Methods ........................12
+   2.2.3.  Computing the current version ...........................10
+   2.3.  Using Versioning with HTTP Methods ........................11
    2.3.1.  GET the current version .................................12
-   2.3.2.  GET a specific version ..................................14
-   2.3.3.  PUT, POST, or PATCH a new version .......................14
-   2.3.4.  GET a range of historical versions ......................15
-   2.3.5.  Rules for Version and Parents headers ...................17
-   2.3.6.  Interaction with Conditional Request Headers ............18
-   2.4.  Status 432: Version Not Found .............................19
-   2.5.  The Current-Version header ................................19
-   2.6.  Version Types .............................................20
-   2.7.  Versioning through intermediaries .........................21
-   2.7.1.  Detecting legacy intermediaries .........................22
-   3.  Analysis of existing versioning approaches in HTTP ..........23
-   3.1.  Approaches with versions in headers .......................23
-   3.1.1.  Last-Modified ...........................................23
-   3.1.2.  ETag ....................................................24
-   3.2.  Approaches defining versions as new resources .............25
-   3.2.1.  Creating additional "Version Resources" .................25
-   3.2.2.  Standardizing versions as external resources ............26
-   3.3.  Requirements for general versioning .......................27
-   3.3.1.  Distributed Time ........................................27
-   3.3.2.  Included within existing HTTP requests and responses ....28
-   3.3.3.  Generalizable Timestamps ................................28
-   3.4.  Feature table of existing approaches ......................29
-   4.  Informative Use-Cases .......................................30
-   4.1.  Incremental RSS Subscription ..............................30
-   4.2.  Hosting git via HTTP ......................................32
-   4.3.  Resumable uploads protocol ................................35
-   4.4.  Distributed collaborative editing .........................37
-   4.5.  Improved Header Compression with runs .....................39
-   4.6.  Run-Length Compression without Header Compression .........42
-   5.  Acknowledgements ............................................43
-   6.  Conventions .................................................43
-   7.  IANA Considerations .........................................44
-   7.1.  HTTP Field Registrations ..................................44
-   7.2.  Version Type Registry .....................................44
-   7.2.1.  Procedure ...............................................45
-   7.2.2.  Version Type Registrations ..............................46
-   7.2.3.  Comments on Version Type Registrations ..................47
-   7.2.4.  Change Procedures .......................................47
-   8.  Security Considerations .....................................48
-   9.  References ..................................................49
-   9.1.  Normative References ......................................49
-   9.2.  Informative References ....................................49
+   2.3.2.  GET a specific version ..................................13
+   2.3.3.  PUT, POST, or PATCH a new version .......................13
+   2.3.4.  GET a span of history ...................................14
+   2.3.5.  Rules for Version and Parents headers ...................15
+   2.3.6.  Interaction with Conditional Request Headers ............16
+   2.4.  Status 432: Version Not Found .............................17
+   2.5.  The Current-Version header ................................17
+   2.6.  Version Types .............................................18
+   2.7.  Versioning through intermediaries .........................18
+   2.7.1.  Detecting legacy intermediaries .........................20
+   3.  Analysis of existing versioning approaches in HTTP ..........21
+   3.1.  Approaches with versions in headers .......................21
+   3.1.1.  Last-Modified ...........................................21
+   3.1.2.  ETag ....................................................22
+   3.2.  Approaches defining versions as new resources .............22
+   3.2.1.  Creating additional "Version Resources" .................23
+   3.2.2.  Standardizing versions as external resources ............23
+   3.3.  Requirements for general versioning .......................24
+   3.3.1.  Distributed Time ........................................24
+   3.3.2.  Included within existing HTTP requests and responses ....24
+   3.3.3.  Generalizable Timestamps ................................25
+   3.4.  Feature table of existing approaches ......................25
+   4.  Informative Use-Cases .......................................26
+   4.1.  Incremental RSS Subscription ..............................26
+   4.2.  Hosting git via HTTP ......................................27
+   4.3.  Resumable uploads protocol ................................30
+   4.4.  Distributed collaborative editing .........................31
+   4.5.  Improved Header Compression with runs .....................33
+   4.6.  Run-Length Compression without Header Compression .........36
+   5.  Acknowledgements ............................................37
+   6.  Conventions .................................................37
+   7.  IANA Considerations .........................................37
+   7.1.  HTTP Field Registrations ..................................37
+   7.2.  Version Type Registry .....................................38
+   7.2.1.  Procedure ...............................................38
+   7.2.2.  Version Type Registrations ..............................39
+   7.2.3.  Comments on Version Type Registrations ..................40
+   7.2.4.  Change Procedures .......................................40
+   8.  Security Considerations .....................................41
+   9.  References ..................................................42
+   9.1.  Normative References ......................................42
+   9.2.  Informative References ....................................42
 
 
 
@@ -176,7 +176,6 @@ Table of Contents
 
    (Note that this document does NOT speak to the versioning of HTTP
    APIs -- only HTTP resources, which are used within APIs.)
-
 
 
 2.  HTTP Resource Versioning
@@ -231,8 +230,8 @@ Table of Contents
 
    Note that this model differs in terminology from some other
    mechanisms, such as WebDAV Versioning, which use the term Version for
-   a copy of a resource's content.  In this document, a Version is
-   always a point in time, and content is always *at* a Version.
+   a copy of a resource's content.  In this document, a Version is a
+   point in time, and content is *at* a Version.
 
 
    A resource's "Version History" is the partial order (or DAG) of the
@@ -264,8 +263,8 @@ Table of Contents
       time at one peer.  Every mutation occurs at an event (Section
       2.2.2).
 
-   Timeline:  A space of events, named by a URI, whose events form a
-      DAG (Section 2.2.1).
+   Timeline:  A set of events, named by a URI, that form a DAG (Section
+      2.2.1).
 
    Peer:  Any client, server, or intermediary that holds a resource's
       state.
@@ -292,13 +291,13 @@ Table of Contents
    Parents.  These headers communicate version information in requests
    and responses.
 
-   The Version header specifies the version at which a message
-   represents the resource:
+   The Version header names the point in time that the message
+   describes:
 
            Version: ("dkn7ov2vwg")
 
-   The Parents header specifies the version immediately before it,
-   which the message's update was built upon:
+   The Parents header names the version just before it, which the
+   message's update builds on:
 
            Parents: ("ajtva12kid" "cmdpvkpll2")
 
@@ -307,7 +306,7 @@ Table of Contents
    the Update conveyed by the HTTP message.  (See [Updates].)
 
    These headers can also be used in GET and HEAD requests to ask a
-   server for a specific version or range of version history.
+   server for a specific version or span of history.
 
    If an Update (a PUT, PATCH, POST, or DELETE request, or a GET or HEAD
    response) does not specify a Version header, the recipient MAY
@@ -319,7 +318,7 @@ Table of Contents
 
            Version: ("dkn7ov2vwg" "v2vwgdkn7o")
 
-
+
 2.2.1.  Formatting of versions in versioning headers
 
    The Version and Parents headers are Simpler Fields [SIMPLER-FIELDS],
@@ -327,11 +326,13 @@ Table of Contents
    field line holds one version, formatted as an Inner List of Strings.
    Each String is called an Event ID:
 
+
            Version:           <version>
            Parents:           <version>
 
            <version>:         (<event-id> <event-id> ...)<parameters>
            <event-id>:        <string>
+
 
    The Inner List is the set of events that names the version (Section
    2.2.2), so the ordering of Event IDs within it carries no meaning.
@@ -340,6 +341,7 @@ Table of Contents
    cache key.  An Event ID may occur at most once within a version.  An
    empty Inner List, "()", names the version before any event.
 
+
    Like every String in a Simpler Field, each Event ID is
    percent-encoded, so the Event ID "a,b" is sent as:
 
@@ -353,36 +355,37 @@ Table of Contents
 
            Version: ("x82ha-344");type=peer-counter;bytestream
 
-     - "timeline", a String holding a URI reference that names the
-       timeline of its Event IDs, resolved against the target URI
-       (Section 5 of [RFC3986]).  Without it, the timeline is the
-       target URI itself, so each resource has a timeline of its own.
-       A timeline's events form a DAG, which forks wherever peers act
-       in parallel (Section 2.1).
-       A fragment names a timeline local to the resource, such as one
-       peer's clock; a path names one shared by resources on the same
-       site, such as a transaction across several of them; and an
-       absolute URI can name one shared across sites:
+     - "timeline", a String that names the timeline of its Event IDs.
+       The String holds a URI reference, which a recipient resolves
+       against the target URI (Section 5 of [RFC3986]).  Without this
+       parameter, the timeline is the target URI itself, so each
+       resource has a timeline of its own.  A timeline's events form a
+       DAG, which forks wherever peers act in parallel (Section 2.1).
+       The URI reference can be a fragment, for a timeline local to the
+       resource, such as one peer's clock; a path, for one shared by the
+       resources of a site, such as a transaction across several of
+       them; or an absolute URI, for one shared across sites:
 
            Version: ("alice-7");timeline="#alice"
            Version: ("tx-12");timeline="/tx/g24397"
 
-   A message can specify versions on more than one timeline, with one
-   field line for each, which says that they are the same point in time:
+   A message can name one point in time on several timelines, with one
+   field line for each:
+
 
            Version: ("3nf3tsbk" "27phny49tgl")
            Version: ("1780178921376000001");type=localtime;timeline="/"
 
-   A recipient also accepts such versions joined into one field line,
-   separated by commas, as a Structured Fields List, since HTTP allows a
-   recipient to join field lines that way (Section 5.3 of [RFC9110]).
 
-
+   HTTP lets a recipient join field lines into one, separated by commas
+   (Section 5.3 of [RFC9110]), so a recipient also accepts several
+   versions in one field line, as a Structured Fields List.
+
    All the Event IDs on one timeline have the same Version Type, so a
    message specifies each timeline's type once, on any of its Version,
    Parents, or Current-Version field lines.
 
-
+
 2.2.2.  Definition of Events and Versions
 
    An "Event" is a single moment at a single place, as an event is in
@@ -419,10 +422,11 @@ Table of Contents
    However, it is also possible for a peer to define a no-op event that
    represents the merger as a single Event ID:
 
+
            Parents: ("foo-123" "bar-abc")
            Version: ("[foo-123 bar-abc]")
 
-
+
 2.2.3.  Computing the current version
 
    A peer tracks its current version for a resource as a set of Event
@@ -438,6 +442,7 @@ Table of Contents
        ID in its Parents from the set, and then adds each Event ID in
        its Version.
 
+
      - If the update has no Parents header, it builds on everything the
        peer holds (Section 2.2), so the set becomes the update's
        Version.
@@ -447,15 +452,15 @@ Table of Contents
        names one.
 
    For a linear history, the set holds a single Event ID.  While it
-   holds more than one, the history has parallel branches, and a peer
-   that cannot merge them cannot build the state at its current
+   holds more than one, the history has parallel branches, and the peer
+   needs a merge (Section 2.1) to build the state at its current
    version.
 
-   This computation compares Event IDs only for equality, as opaque
-   strings, so a peer needs no knowledge of a Version Type to perform
-   it.  A peer keeps a separate current version for each timeline.
+   This computation only compares Event IDs for equality, as opaque
+   strings, so a peer can do it without knowing the Version Type.  A
+   peer keeps a separate current version for each timeline.
 
-
+
 2.3.  Using Versioning with HTTP Methods
 
    The Version and Parents headers can be set in requests and
@@ -475,11 +480,12 @@ Table of Contents
    We now detail the ways in which these headers modify requests and
    responses for these methods.
 
-
+
 2.3.1.  GET the current version
 
    If the Version: header is not specified, a GET request returns the
    state at the current version, as usual:
+
 
       Request:
 
@@ -500,7 +506,6 @@ Table of Contents
    The server MAY include a Version and/or Parents header in the
    response, to indicate the current version and its parents.
 
-
    Clients can use a HEAD request to elicit versioning history without
    downloading the body:
 
@@ -572,12 +577,12 @@ Table of Contents
    parents.
 
 
-2.3.4.  GET a range of historical versions
+2.3.4.  GET a span of history
 
-   A client can request a range of history by including a Parents and a
-   Version header together.  The Parents marks the beginning of the
-   range (the oldest versions) and the Version marks the end of the
-   range (the newest versions) that it requests.
+   A client can request a span of history by including a Parents and a
+   Version header together.  The Parents marks the beginning of the span
+   (the oldest versions) and the Version marks the end of the span (the
+   newest versions) that it requests.
 
 
       Request:
@@ -617,15 +622,16 @@ Table of Contents
    application/http-history media type, both defined in [Multiresponse].
 
    Each sub-response responds to an implied request [Multiresponse]: the
-   range request, with its Parents and Version headers replaced by the
-   sub-response's own.  So the first sub-response above responds to a
-   request for the range from ("1a" "1b") to ("2"), and the second to
-   one for the range from ("2") to ("3"), and a cache can store each one
-   as the response to that request.  Replacing the Version, as well as
-   the Parents, keeps each sub-response from claiming to respond to the
-   request for the whole range.
+   request for the span, with its Parents and Version replaced by the
+   sub-response's own.  The first sub-response above responds to a
+   request for the span from ("1a" "1b") to ("2"), and the second to a
+   request from ("2") to ("3").  A cache can store each one as the
+   response to its request.  The implied request replaces the Version as
+   well as the Parents, because each sub-response holds just one step of
+   the span.
+
 
-   If the client just wants the version identifiers for a range of
+   If the client just wants the version identifiers for a span of
    history, it can use a HEAD request:
 
 
@@ -654,7 +660,7 @@ Table of Contents
 
          ...
 
-
+
 2.3.5.  Rules for Version and Parents headers
 
    If a GET request contains a Version header:
@@ -679,6 +685,7 @@ Table of Contents
        Parents or their ancestors, then the server responds with 304 Not
        Modified, with a Version header naming that version.
 
+
      - If the server does not support historical versions, then it MAY
        ignore the Parents header, but MUST NOT include the Parents
        header in its response.
@@ -688,7 +695,7 @@ Table of Contents
    context needed to honor a request, it responds with error code 432
    Version Not Found.
 
-
+
 2.3.6.  Interaction with Conditional Request Headers
 
    The Version and Parents headers operate independently of the
@@ -705,8 +712,8 @@ Table of Contents
    versions, when the state returns to an earlier value (Section 3.1.2).
 
    Parents and If-None-Match each let a client say that it already holds
-   something, so that the server need not send it again.  They differ in
-   what they name, and in how the server can respond:
+   something, so the server needn't send it again.  They differ in what
+   they name, and in how the server can respond:
 
      - If-None-Match names representations, and a list of ETags means
        alternatives: any one of these.  The server responds with a 304,
@@ -738,15 +745,19 @@ Table of Contents
    request header(s) with versions it could not satisfy.  For example,
    if a client does:
 
+
            GET /foo
            Version: ("alice-44")
            Parents: ("bob-32")
 
+
    ...but the server does not have the versions 'alice-44', it should
    respond with:
 
+
            432 Version Not Found
            Version: ("alice-44")
+
 
    The server can also include a Current-Version header naming its
    current version, so that the client knows where it can resume.
@@ -755,14 +766,14 @@ Table of Contents
    particular portion of history existing on a server or intermediary
    when it makes requests.
 
-   Version Not Found is a status code of its own because a 404 Not Found
-   is heuristically cacheable (Section 15.1 of [RFC9110]): a cache that
-   ignores the Version header could store a 404 for a missing version as
-   the response for the resource itself, and then respond to every
-   request for the resource as though it did not exist.  A cache does
-   not store a 432 without explicit caching information (Section 3 of
-   [RFC9111]), and a client that does not recognize 432 treats it as a
-   400 (Section 15 of [RFC9110]).
+   We define a new status code because a 404 Not Found is heuristically
+   cacheable (Section 15.1 of [RFC9110]).  If a cache ignores the
+   Version header, it could store a 404 for a missing version as the
+   response for the resource itself, and then tell every client that the
+   resource doesn't exist.  A cache stores a 432 only when it carries
+   explicit caching information (Section 3 of [RFC9111]), and a client
+   that doesn't know the 432 treats it as a 400 (Section 15 of
+   [RFC9110]).
 
 
 2.5.  The Current-Version header
@@ -773,10 +784,10 @@ Table of Contents
    information to know when it has caught up with the latest version.
    This is also used in the resumable uploads example below.
 
-   A recipient compares a Current-Version it receives with its own
-   current version (Section 2.2.3).  When they match, it has caught up.
-   This lets it tell, when no updates arrive, whether it is up to date
-   or the updates have not been sent yet.
+   A client compares the Current-Version it receives with its own
+   current version (Section 2.2.3), and when they match, it has caught
+   up.  So even when no updates arrive, the client can tell whether it
+   is up to date, or still waiting for them.
 
 
 2.6.  Version Types
@@ -817,7 +828,7 @@ Table of Contents
    Otherwise, the ordering between the two version vectors is not known,
    and we can say that they happened in parallel.)
 
-
+
 2.7.  Versioning through intermediaries
 
    Intermediaries can take advantage of versioning to uniquely
@@ -828,13 +839,14 @@ Table of Contents
 
       Vary: version, parents
 
-   A cache needs no knowledge of a Version Type to do this: it compares
-   versions only for equality, as sets of opaque Event IDs, after
+   A cache can do this without knowing any Version Type: it only
+   compares versions for equality, as sets of opaque Event IDs, after
    sorting them (Section 2.2.1).
 
-   A representation at a version never changes (Section 2.1.1), so a
+
+   A representation at a version does not change (Section 2.1.1), so a
    response to a GET with a Version header, and without a Parents
-   header, never goes out of date.  An origin server can say so with a
+   header, does not go out of date.  An origin server can say so with a
    long freshness lifetime and "Cache-Control: immutable" [RFC8246].
 
    Intermediaries SHOULD behave as if the Version and Parents headers
@@ -987,7 +999,7 @@ Table of Contents
    Thus, one can have multiple ETags for the same version in history, as
    well as a single ETag for multiple versions in history.
 
-
+
 3.2.  Approaches defining versions as new resources
 
    Rather than placing versioning information into headers, a second set
@@ -1002,7 +1014,7 @@ Table of Contents
    makes it challenging for intermediaries to use versioning information
    without performing additional network requests themselves.
 
-
+
 3.2.1.  Creating additional "Version Resources"
 
    Application programmers often define copies of a resource, at various
@@ -1024,7 +1036,7 @@ Table of Contents
    3. It can lead to URI proliferation, complicating a web application's
       URI space, and potentially impacting caching strategies and SEO.
 
-
+
 3.2.2.  Standardizing versions as external resources
 
    A number of approaches enable ways to organize and navigate a set of
@@ -1088,7 +1100,7 @@ Table of Contents
          the merger of two parallel versions A and B, without relying on
          a central authority to assign a new version identifier AB.
 
-
+
 3.3.2.  Included within existing HTTP requests and responses
 
    The versions should be included within existing HTTP requests and
@@ -1106,6 +1118,7 @@ Table of Contents
       (a) Includes versioning in every existing request and response
           where state is queried or mutated.
 
+
       (b) Does not require additional round-trips.
 
       (c) Does not require polluting the application's URL namespace.
@@ -1138,7 +1151,7 @@ Table of Contents
           multiple resources can be versioned and referred to at the
           same points in time.
 
-
+
 3.4.  Feature table of existing approaches
 
    We compose a table of existing approaches, and the features they do
@@ -1161,11 +1174,12 @@ Table of Contents
    implement common infrastructure for distributed versioning,
    archiving, and collaborative editing that works across HTTP systems.
 
+
    This document specifies a general versioning model satisfying all 8
    requirements above.  We start by specifying how to add versioning to
    HTTP requests and responses.
 
-
+
 4.  Informative Use-Cases
 
    A general mechanism for versioning HTTP resources could enable a
@@ -1238,7 +1252,7 @@ Table of Contents
    time for both client and server.  The specific patch format used can
    vary; see [Updates] or [Range-Patch] for examples.
 
-
+
 4.2.  Hosting git via HTTP
 
    We can host a git repository directly through HTTP, where each file
@@ -1261,7 +1275,7 @@ Table of Contents
 
          ...
 
-
+
    Git also allows specifying a version with a short string, like
    "HEAD", which works for any tag or branch.  We can request the latest
    "development" branch version with:
@@ -1281,7 +1295,7 @@ Table of Contents
 
          ...
 
-
+
    One can also request the files from release tagged "1.3.5" using:
 
 
@@ -1290,7 +1304,7 @@ Table of Contents
          GET /repo/readme.md
          Version: ("1.3.5")
 
-
+
    One can clone a repo by asking for all versions from the root to
    HEAD:
 
@@ -1321,7 +1335,7 @@ Table of Contents
 
          ...
 
-
+
    In fact, git itself already supports two HTTP protocols: a "dumb" and
    a "smart" protocol.  The dumb protocol uses plain HTTP, but doesn't
    support incremental updates -- each pull re-downloads the entire pack
@@ -1357,6 +1371,7 @@ Table of Contents
    To initiate an upload, the client specifies the expected final
    version, and its Version Type, using the Current-Version header:
 
+
       Request:
 
          PUT /something
@@ -1365,23 +1380,29 @@ Table of Contents
 
          <binary data of length 900>
 
+
    For a successful upload, the server responds as usual:
+
 
       Response:
 
          200 OK
 
+
    If the upload is interrupted, the client can query the server's
    current state:
+
 
       Request:
 
          HEAD /something
          Parents: ("abwejf-0")
 
+
    The server's response determines the client's next action:
 
    A. Upload complete:
+
 
       Response:
 
@@ -1389,7 +1410,9 @@ Table of Contents
          Parents: ("abwejf-0")
          Version: ("abwejf-900")
 
+
    B. Partial upload:
+
 
       Response:
 
@@ -1397,16 +1420,20 @@ Table of Contents
          Parents: ("abwejf-0")
          Version: ("abwejf-400")
 
+
    C. No upload progress:
+
 
       Response:
 
          416 Range Not Satisfiable
-
+
+
    Based on the response, the client proceeds as follows:
 
    - Case A: Upload is complete, no further action needed.
    - Case B: Resume the upload from the last received byte:
+
 
       Request:
 
@@ -1418,13 +1445,14 @@ Table of Contents
 
          <binary data from 400-900>
 
+
    - Case C: Restart the upload from the beginning.
 
    This protocol leverages general version semantics, allowing servers
    implementing HTTP Resource Versioning with the "bytestream"
    Version Type to inherently support resumable uploads.
 
-
+
 4.4.  Distributed collaborative editing
 
    This versioning system can also support full CRDT and OT
@@ -1432,6 +1460,7 @@ Table of Contents
    as [Braid-HTTP]), allowing every URL to gain the functionality of
    Google Docs.
 
+
    The [Braid-Text] project implements a very efficient style of this.
    When you first load a resource, a server provides it as a single
    version:
@@ -1454,7 +1483,7 @@ Table of Contents
 
          Hello world!
 
-
+
    Updates are expressed as a stream of patches:
 
 
@@ -1487,16 +1516,18 @@ Table of Contents
      - The "dt" merge-type uses a fully peer-to-peer merge algorithm
        called Diamond-Types
 
+
    Clients can connect with either merge-type, and can even change
    merge-type on-the-fly -- the version history itself can be re-used.
 
-
+
 4.5.  Improved Header Compression with runs
 
    A header compression scheme can leverage Version Type patterns to
    significantly compress messages.  For example, consider the following
    scenario where 4 characters are inserted into a collaborative editor,
    requiring 495 bytes when uncompressed:
+
 
            PUT /some.txt
            Version: ("3f84786c-57")
@@ -1530,9 +1561,10 @@ Table of Contents
 
            f
 
-
+
    Huffman Encoding (e.g. in HTTP's HPACK and QPACK) can compress these
    headers by identifying repeated strings and assigning them codes:
+
 
            U = "PUT /some.txt"
            W = "Version: (\"3f84786c-{ }\")"
@@ -1540,7 +1572,9 @@ Table of Contents
            Y = "Content-Length: 1"
            Z = "Content-Range: text { }"
 
+
    This compression reduces the messages to:
+
 
            U
            W{57}
@@ -1574,14 +1608,17 @@ Table of Contents
 
            f
 
+
    This initial compression reduces the 495 bytes to approximately 123
    bytes.
+
 
    Further compression is possible by recognizing that the numeric
    parameters in each header increment by 1 from the previous header.
    This allows us to take advantage of run-length encoding; specified as
    "type=peer-counter;text-runs".  We can thus compress the
    entire run of inserts using a new compression function, RUN(a, b, c):
+
 
            RUN(a, b, insertions) =
              for i, char in insertions
@@ -1595,11 +1632,14 @@ Table of Contents
                  char
                `
 
+
    Where the parameters are:
+
 
       a: Initial version number
       b: Initial content range
       insertions: String of characters to be inserted
+
 
    We could then compress the 495 bytes down to a single 20-byte
    message:
@@ -1631,6 +1671,7 @@ Table of Contents
    can be compressed into a single update without any header
    compression:
 
+
            PUT /some.txt
            Version: ("3f84786c-60");type=peer-counter;text-runs
            Parents: ("3f84786c-56")
@@ -1638,6 +1679,7 @@ Table of Contents
            Content-Range: text 471:474
 
            asdf
+
 
    This single request expresses the change from version 3f84786c-56 to
    3f84786c-60, implicitly including the three intermediate versions
@@ -1686,8 +1728,9 @@ Table of Contents
    BCP 14 [RFC2119] [RFC8174] when, and only when, they appear in all
    capitals, as shown here.
 
-
+
 7.  IANA Considerations
+
 
 7.1.  HTTP Field Registrations
 
@@ -1712,7 +1755,7 @@ Table of Contents
       Structured Type: List
       Reference: Section 2.5 of this document
 
-
+
    Additionally, this new status code should be added to the "HTTP
    Status Codes" registry at
    <https://www.iana.org/assignments/http-status-codes>:
@@ -1730,7 +1773,7 @@ Table of Contents
    registry will be created and maintained at
    <https://www.iana.org/assignments/version-types>.
 
-
+
 7.2.1.  Procedure
 
    Registration of a Version Type MUST include the following fields:
@@ -1753,9 +1796,9 @@ Table of Contents
 
    o  Person & email address to contact for further information
 
-   Values are added to this namespace under the "Specification
-   Required" policy (see [RFC8126], Section 4.6), so that a Version
-   Type defined outside the IETF can be registered.
+   IANA adds values to this namespace under the "Specification Required"
+   policy (see [RFC8126], Section 4.6), so that anyone can register a
+   Version Type defined outside the IETF.
 
 
 7.2.2.  Version Type Registrations
@@ -1767,8 +1810,10 @@ Table of Contents
 
    Or, with a modifier:
 
+
       Version: ("<peer>-<counter>");type=peer-counter;text-runs
       Version: ("<peer>-<counter>");type=peer-counter;bytestream
+
 
    It is guaranteed that, for any peer, the counter will always increase
    in subsequent versions.  Therefore, any two Event IDs from the same
@@ -1846,7 +1891,6 @@ Table of Contents
    community.
 
 
-
 8.  Security Considerations
 
    Version IDs may reveal information about the structure and activity
@@ -1859,19 +1903,19 @@ Table of Contents
    identifiers themselves leak information that the resource body does
    not.
 
-   A client requesting a range of version history (via Parents and
-   Version headers together) could probe for the existence of versions
-   it is not authorized to see.  Servers MUST NOT reveal version
-   history to clients that are not authorized to access the resource.
-   A server MAY respond with 403 Forbidden or 404 Not Found rather
-   than 432 Version Not Found if acknowledging the existence of a
-   version would itself constitute an information leak.
+   A client requesting a span of history (via Parents and Version
+   headers together) could probe for the existence of versions it is not
+   authorized to see.  Servers MUST NOT reveal version history to
+   clients that are not authorized to access the resource.  A server MAY
+   respond with 403 Forbidden or 404 Not Found rather than 432 Version
+   Not Found if acknowledging the existence of a version would itself
+   constitute an information leak.
 
-   Requesting a large range of version history could require
-   significant server resources to assemble and transmit.  Servers
-   SHOULD impose limits on the size of version history responses and
-   MAY respond with 413 Content Too Large if a request would exceed
-   those limits.  Servers MAY also rate-limit version history requests.
+   Requesting a long span of history could require significant server
+   resources to assemble and transmit.  Servers SHOULD impose limits on
+   the size of version history responses and MAY respond with 413
+   Content Too Large if a request would exceed those limits.  Servers
+   MAY also rate-limit version history requests.
 
    As described in Section 2.7.1, a versioning-unaware intermediary may
    cache a historical version and serve it in response to a request
@@ -1891,8 +1935,10 @@ Table of Contents
    Version Type format and SHOULD treat version IDs from untrusted
    clients as opaque, unverified claims rather than trusted
    identifiers.
+
 
 9.  References
+
 
 9.1.  Normative References
 
@@ -1944,10 +1990,9 @@ Table of Contents
 
    [RFC8246]  "HTTP Immutable Responses", RFC 8246.
 
-
+
 Authors' Addresses
 
-
    For more information, the authors of this document are best contacted
    via Internet mail:
 

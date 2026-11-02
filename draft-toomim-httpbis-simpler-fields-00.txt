@@ -13,10 +13,10 @@ Abstract
    light client that needs to read only one or two fields.  This
    document defines Simpler Fields, a profile of Structured Fields that
    a client can parse with a short regular expression.  Its strings are
-   percent-encoded, so they never contain quotes, backslashes, or the
-   field's delimiters; its serialization is canonical; and its types are
-   fixed.  Every Simpler Field value is a valid Structured Field value,
-   so a general parser reads it unchanged.
+   percent-encoded, so they contain no quotes, backslashes, or field
+   delimiters; its serialization is canonical; and its types are fixed.
+   Every Simpler Field value is a valid Structured Field value, so a
+   general parser reads it unchanged.
 
 
 About This Document
@@ -65,46 +65,46 @@ Copyright Notice
 Table of Contents
 
    1.  Introduction ...................................................4
-   1.1.  Conventions ..................................................4
+   1.1.  Conventions ..................................................5
    2.  Rules for Simpler Fields .......................................5
    2.1.  Strings are percent-encoded ..................................5
    2.2.  Serialization is canonical ...................................5
    2.3.  The types are fixed ..........................................5
    2.4.  Defining a Simpler Field .....................................6
-   3.  Parsing a Simpler Field with a regular expression ..............7
+   3.  Parsing a Simpler Field with a regular expression ..............6
    4.  Tradeoffs ......................................................7
-   5.  Implementation Status ..........................................8
-   6.  Security Considerations ........................................9
-   7.  IANA Considerations ............................................9
-   8.  References .....................................................9
-   8.1.  Normative References .........................................9
-   8.2.  Informative References ......................................10
+   5.  Implementation Status ..........................................7
+   6.  Security Considerations ........................................7
+   7.  IANA Considerations ............................................7
+   8.  References .....................................................8
+   8.1.  Normative References .........................................8
+   8.2.  Informative References .......................................8
 
 
 1.  Introduction
 
    Structured Field Values [RFC9651] define a common syntax for HTTP
    fields: Lists, Dictionaries, and Items, with parameters, built from a
-   small set of types.  This lets a new field reuse a well-tested parser
-   instead of defining its own grammar.
+   small set of types.  So a new field can reuse a well-tested parser,
+   with no grammar of its own.
 
    However, a general parser is a sizable dependency.  The
    structured-headers package for JavaScript [STRUCTURED-HEADERS], for
-   instance, is 10 KB minified.  A light client that needs to read just
-   one field, perhaps in a language without such a library at hand,
-   would rather parse it with a regular expression.  Parsers that small,
-   in many languages, make a protocol easier to implement, and so
+   instance, is 10 KB minified.  A light client often needs just one
+   field, perhaps in a language without such a library at hand, and
+   would rather parse it with a regular expression.  Small parsers like
+   that, in many languages, make a protocol easier to implement, and so
    encourage its adoption.
 
-   What makes Structured Fields hard to parse that way is its strings.
-   A String can contain an escaped quote or backslash, and it can
-   contain the delimiters of the field around it -- commas, semicolons,
-   and parentheses -- so a regular expression cannot tell where a String
-   ends without tracking its escapes.
+   Strings make Structured Fields hard to parse that way.  A String can
+   contain an escaped quote or backslash, and the field's own delimiters
+   -- commas, semicolons, and parentheses -- so a regular expression has
+   to track escapes to find where a String ends.
 
-   This document defines a profile of Structured Fields, called Simpler
-   Fields, that removes these difficulties.  For example, these are all
+   This document defines a profile of Structured Fields that removes
+   these difficulties, which we call Simpler Fields.  These are all
    Simpler Fields:
+
 
            Version: ("a%2Cb" "c")
            Parents: ("a3" "b7")
@@ -112,24 +112,25 @@ Table of Contents
            Heartbeats: 0.5
            Origin-Status: down;age=12
 
-   In a Simpler Field, a String never contains a quote, a backslash, a
-   comma, a semicolon, or a parenthesis.  So a regular expression can
-   find every String with /"[^"]*"/, and can split the field at its
-   commas and semicolons without looking inside its Strings.  Each
-   String is percent-encoded, and its recipient decodes it, so the first
-   Event ID above is "a,b".
 
-   Simpler Fields make both kinds of parser possible.  A client that
-   needs one field can parse it with a short regular expression of its
-   own, and an implementation that handles many fields can use a
-   general Structured Fields parser, since every Simpler Field value is
-   also a valid Structured Field value, and add just the decoding step.
+   In a Simpler Field, a String contains no quotes, backslashes, commas,
+   semicolons, or parentheses.  So a regular expression can find every
+   String with /"[^"]*"/, and can split the field at its commas and
+   semicolons without looking inside its Strings.  The sender
+   percent-encodes each String, and the recipient decodes it, so the
+   first Event ID above is "a,b".
 
-   Several fields are defined as Simpler Fields, including Version,
-   Parents, and Current-Version [VERSIONS], Subscribe, Heartbeats, and
-   Origin-Status [SUBSCRIPTIONS], and Responds-To [MULTIRESPONSE].
+   Simpler Fields make both kinds of parser possible.  A client can
+   parse the one field it needs with a short regular expression of its
+   own.  And since every Simpler Field value is also a valid Structured
+   Field value, an implementation that handles many fields can use a
+   general Structured Fields parser, and add just the decoding step.
 
+   Several fields are Simpler Fields, including Version, Parents, and
+   Current-Version [VERSIONS], Subscribe, Heartbeats, and Origin-Status
+   [SUBSCRIPTIONS], and Responds-To [MULTIRESPONSE].
 
+
 1.1.  Conventions
 
    The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
@@ -138,25 +139,24 @@ Table of Contents
    BCP 14 [RFC2119] [RFC8174] when, and only when, they appear in all
    capitals, as shown here.
 
-
+
 2.  Rules for Simpler Fields
 
-   A field that is defined as a Simpler Field follows the rules of
-   Structured Fields [RFC9651], and also the rules of this section.
+   A Simpler Field follows the rules of Structured Fields [RFC9651], and
+   also the rules of this section.
 
 
 2.1.  Strings are percent-encoded
 
-   A sender MUST percent-encode, as in Section 2.1 of [RFC3986], every
-   byte of a String's UTF-8 encoding [RFC3629] that is not printable
-   ASCII, and each of the characters DQUOTE, "\", ",", "(", ")", ";",
-   and "%".  It MAY percent-encode other characters too.
+   A sender MUST percent-encode these in a String, as Section 2.1 of
+   [RFC3986] describes: every byte of its UTF-8 encoding [RFC3629]
+   outside printable ASCII, and the characters DQUOTE, "\", ",", "(",
+   ")", ";", and "%".  It MAY percent-encode other characters too.
 
-   A recipient percent-decodes the value of every String after parsing
-   the field, whichever parser it uses: the decoding is part of each
-   field's meaning.  A "%" that is not followed by two hexadecimal
-   digits makes the field invalid, and so does a decoded value that is
-   not valid UTF-8.
+   After parsing the field, a recipient percent-decodes every String,
+   whichever parser it used, since the decoding is part of each field's
+   meaning.  A "%" without two hexadecimal digits after it makes the
+   field invalid, and so does a decoded value that isn't valid UTF-8.
 
    Since percent-encoding can carry any Unicode character, Simpler
    Fields do not use Display Strings.
@@ -166,14 +166,13 @@ Table of Contents
 
    A sender MUST serialize each value as Section 4.1 of [RFC9651] does:
    with no space after a ";", exactly one space after a ",", and exactly
-   one space between the members of an Inner List.  Then the same value
-   always has the same serialization.
+   one space between the members of an Inner List.  Then each value has
+   exactly one serialization.
 
-   A recipient that joins field lines joins them with a comma and a
+   When a recipient joins field lines, it joins them with a comma and a
    single space, as Section 5.3 of [RFC9110] recommends, so the joined
-   value is canonical too.  So a regular expression can match the
-   canonical form exactly, or accept other spacing, such as with " ?",
-   to be lenient.
+   value is canonical too.  A regular expression can match that form
+   exactly, or be lenient and accept other spacing, such as with " ?".
 
 
 2.3.  The types are fixed
@@ -197,32 +196,33 @@ Table of Contents
      - what a recipient does with a member or parameter that it does
        not know.
 
-   The last of these matters because ignoring an unknown parameter is
-   not always safe.  When every parameter of a member helps identify
-   something, a recipient that ignored one it did not know would
-   identify the wrong thing, so such a field tells the recipient not to
-   use the member at all.
+   The last of these matters, because ignoring an unknown parameter can
+   be unsafe.  Suppose a member's parameters together identify a
+   request.  If a recipient skipped one it didn't know, it would
+   identify a different request, so such a field tells recipients to
+   ignore the whole member.
 
-
+
 3.  Parsing a Simpler Field with a regular expression
 
-   A client that reads only a few fields can parse each one with a
-   short regular expression of its own, written for that field.  An
-   implementation that reads many fields will do better with a general
+   When a client reads only a few fields, it can parse each one with a
+   short regular expression of its own, written for that field.  When an
+   implementation reads many fields, it will do better with a general
    Structured Fields parser, which reads every Simpler Field too.
 
-   A regular expression for a field can rely on its Strings, since a
-   String never contains a quote, a comma, a semicolon, or a
-   parenthesis.  It can split the field's value at its commas, into the
-   members of its List, and split each member at its semicolons, into
-   its Item or Inner List and its parameters.  It finds each String
-   with /"([^"]*)"/, and percent-decodes it.
+   Since a String contains no quotes, commas, semicolons, or
+   parentheses, a regular expression can safely split a field's value at
+   its commas, into the members of its List, and split each member at
+   its semicolons, into its Item or Inner List and its parameters.  Then
+   it finds each String with /"([^"]*)"/, and percent-decodes it.
 
    For example, this JavaScript reads the Event IDs from one field line
    of the Version field [VERSIONS]:
 
+
            var event_ids = field_line.match(/"[^"]*"/g)
                  .map(s => decodeURIComponent(s.slice(1, -1)))
+
 
    And this regular expression reads the Origin-Status field
    [SUBSCRIPTIONS], with its optional age:
@@ -237,7 +237,7 @@ Table of Contents
 
            (?:;[a-z][a-z0-9_.-]*(?:=(?:[a-z][a-z0-9-]*|"[^"]*"))?)*
 
-
+
 4.  Tradeoffs
 
    A String with special characters is less readable, since it carries
@@ -247,11 +247,11 @@ Table of Contents
    Every String takes one decoding step after parsing.
 
    A general Structured Fields serializer escapes quotes and backslashes
-   with backslashes, which a Simpler Field never contains, so a sender
-   percent-encodes its Strings before passing them to such a
-   serializer.
+   with a backslash.  So a sender percent-encodes its Strings before
+   passing them to such a serializer, which then finds nothing to
+   escape.
 
-
+
 5.  Implementation Status
 
    This section is to be removed before publishing as an RFC.  It
@@ -262,12 +262,13 @@ Table of Contents
    [VERSIONS], written under these rules, were presented at braid.org
    meeting 136 [MEETING-136].  Without comments, they take:
 
+
            JavaScript    32 lines    1.5 KB
            Python        25 lines    about 800 bytes
            Lua           63 lines    2.6 KB
            Emacs Lisp    59 lines    2.8 KB
 
-
+
 6.  Security Considerations
 
    The security considerations of [RFC9651] apply.
@@ -278,12 +279,12 @@ Table of Contents
    would any String.
 
    A recipient decodes each String exactly once.  Decoding twice would
-   turn "%2541" into "A", so that two different Strings decode to the
+   turn "%2541" into "A", so two different Strings would decode to the
    same value, which can defeat a check that compares them.
 
    Since a sender MAY percent-encode more than it needs to, the same
-   value can be serialized as "%41" or as "A".  A recipient that
-   compares Strings, such as a cache comparing versions, compares their
+   value can be serialized as "%41" or as "A".  When a recipient
+   compares Strings, as a cache compares versions, it compares their
    decoded values.
 
 
@@ -291,8 +292,9 @@ Table of Contents
 
    This document has no IANA actions.
 
-
+
 8.  References
+
 
 8.1.  Normative References
 
@@ -315,7 +317,7 @@ Table of Contents
    [RFC9651]  Nottingham, M. and P-H. Kamp, "Structured Field Values
               for HTTP", RFC 9651, September 2024.
 
-
+
 8.2.  Informative References
 
    [MEETING-136]
@@ -344,7 +346,7 @@ Table of Contents
               draft-toomim-httpbis-braid-versions-00, work in progress,
               November 2026.
 
-
+
 Authors' Addresses
 
    Michael Toomim
