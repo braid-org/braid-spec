@@ -1,0 +1,647 @@
+Internet-Draft                                                 M. Toomim
+Expires: 6 May 2027                                    Invisible College
+Intended status: Proposed Standard                       2 November 2026
+
+
+               Poll and Push Modes for HTTP Subscriptions
+              draft-toomim-httpbis-braid-poll-and-push-00
+
+Abstract
+
+   In the stream mode, a subscription holds one response open, and sends
+   each change in it.  Some origin servers can't hold a response open,
+   such as serverless functions and shared hosting, and some paths can't
+   carry one, such as a proxy that buffers each response until it ends.
+   This document defines two subscription modes that hold nothing open
+   for long.  In the long-poll mode, the client sends a GET for each
+   change, and the server answers it when the change happens.  In the
+   webhook mode, the origin server pushes each change to a subscription
+   gateway as a PUT or a DELETE, and the gateway serves the subscription
+   to its clients.  In both, versions tie the messages of a subscription
+   together, so each message can take its own path.
+
+   This document is one of the Braid-HTTP extensions, which work alone
+   or together; together they make HTTP a state synchronization
+   protocol.
+
+
+About This Document
+
+   This note is to be removed before publishing as an RFC.
+
+   Discussion of this document takes place on the HTTP Working Group
+   mailing list (ietf-http-wg@w3.org).  The source of this document, and
+   an issue tracker, are at https://github.com/braid-org/braid-spec.
+
+
+Status of this Memo
+
+   This Internet-Draft is submitted in full conformance with the
+   provisions of BCP 78 and BCP 79.
+
+   Internet-Drafts are working documents of the Internet Engineering
+   Task Force (IETF).  Note that other groups may also distribute
+   working documents as Internet-Drafts.  The list of current
+   Internet-Drafts is at https://datatracker.ietf.org/drafts/current/.
+
+   Internet-Drafts are draft documents valid for a maximum of six months
+   and may be updated, replaced, or obsoleted by other documents at any
+   time.  It is inappropriate to use Internet-Drafts as reference
+   material or to cite them other than as "work in progress."
+
+   This Internet-Draft will expire on 6 May 2027.
+
+
+Copyright Notice
+
+   Copyright (c) 2026 IETF Trust and the persons identified as the
+   document authors.  All rights reserved.
+
+   This document is subject to BCP 78 and the IETF Trust's Legal
+   Provisions Relating to IETF Documents
+   (https://trustee.ietf.org/license-info) in effect on the date of
+   publication of this document.  Please review these documents
+   carefully, as they describe your rights and restrictions with respect
+   to this document.  Code Components extracted from this document must
+   include Revised BSD License text as described in Section 4.e of the
+   Trust Legal Provisions and are provided without warranty as described
+   in the Revised BSD License.
+
+
+Table of Contents
+
+   1.  Introduction ...................................................3
+   1.1.  Terminology ..................................................4
+   2.  Subscribe: long-poll sends one response to each poll ...........5
+   2.1.  Each answer to a poll is a heartbeat .........................6
+   2.2.  Each answer has an Origin-Status header ......................6
+   2.3.  Either side can end a long-poll subscription .................7
+   3.  Subscribe: webhook pushes each change as a request .............7
+   3.1.  The gateway asks the origin server to push to it .............8
+   3.2.  The gateway re-sends its subscription request ................9
+   3.3.  Either side can end a push subscription ......................9
+   3.4.  A handoff sends subscribers to a gateway ....................10
+   3.5.  An origin server checks where it pushes .....................11
+   4.  Implementation Status .........................................11
+   5.  Security Considerations .......................................12
+   6.  IANA Considerations ...........................................12
+   7.  References ....................................................12
+   7.1.  Normative References ........................................12
+   7.2.  Informative References ......................................13
+
+
+1.  Introduction
+
+   A subscription in the stream mode [SUBSCRIPTIONS] holds one response
+   open, and sends each change in it.  Not every server or path can hold
+   a response open.  For example, imagine a newspaper's website on
+   election night, as in [SUBSCRIPTIONS], with a results page that
+   changes all evening.  The examples in this document follow two cases
+   from that night.  A reader at work sits behind a proxy that buffers
+   each response until it ends, so her browser never sees the first byte
+   of a stream.  And the county's election office posts the official
+   results from shared hosting, which ends any response that runs for
+   more than 30 seconds.
+
+   This document defines a mode for each case.  In the long-poll mode
+   (Section 2), the reader's browser sends a GET for each change, and
+   the server holds each one until the change happens.  In the webhook
+   mode (Section 3), the origin server pushes each change to a
+   subscription gateway, as a request, and the gateway serves the
+   subscription to its own clients.
+
+   Both modes keep everything that a subscription promises.  The client
+   gets a catch-up, and then each change ([SUBSCRIPTIONS], Section 2),
+   and it learns from heartbeats and origin status whether it is caught
+   up ([SUBSCRIPTIONS], Section 5).  Each exchange resumes the
+   subscription from the client's version, with Parents [VERSIONS].  So
+   no exchange depends on a connection staying open, and each one can
+   take its own path, as HTTP's statelessness allows (Section 3.3 of
+   [RFC9110]).
+
+
+   The webhook mode generalizes three existing designs.  In GRIP [GRIP],
+   a proxy at the resource's own URL holds the subscriptions for its
+   origin server.  In Mercure [MERCURE], a hub at its own URL relays
+   each update from a publisher to its subscribers.  And in WebSub
+   [WEBSUB], a hub pushes each update to a subscriber's own URL.  A
+   subscription gateway can sit in any of these places (Section 3).
+
+   This document extends Subscriptions [SUBSCRIPTIONS], which lists
+   these modes.  The long-poll mode needs Versions [VERSIONS], to name
+   the version that each poll resumes from, and the webhook mode needs
+   Updates [UPDATES], since each push is an update.
+
+
+1.1.  Terminology
+
+   The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
+   "SHOULD", "SHOULD NOT", "RECOMMENDED", "NOT RECOMMENDED", "MAY", and
+   "OPTIONAL" in this document are to be interpreted as described in BCP
+   14 [RFC2119] [RFC8174] when, and only when, they appear in all
+   capitals, as shown here.
+
+   This document uses these terms from Subscriptions [SUBSCRIPTIONS]:
+   subscription, catch-up, caught up, hop, origin status, and
+   continuously validating.  It uses subscription key and upstream
+   subscription from Subscriptions Caching [SUBSCRIPTIONS-CACHING],
+   Version, Parents, and current version from Versions [VERSIONS], and
+   update, snapshot, patch, and deletion from Updates [UPDATES].  It
+   also uses these terms:
+
+   Poll:  One GET in a long-poll subscription.
+
+   Subscription gateway:  A server that holds subscriptions for an
+      origin server, asks the origin server to push each change to it,
+      and serves those changes to its own clients.
+
+   Push subscription:  A subscription in the webhook mode, from a
+      subscription gateway to an origin server.
+
+   Push:  A request that sends one change of a push subscription to the
+      gateway.
+
+   Push URL:  The URL that an origin server sends a push subscription's
+      pushes to.
+
+
+2.  Subscribe: long-poll sends one response to each poll
+
+   In the long-poll mode, the client sends a GET for each response,
+   which we call a poll, and the server holds each poll until it has
+   something to send.  For example, the reader at work never sees the
+   first byte of her stream, so her browser subscribes again, with
+   long-poll:
+
+
+      Request:
+
+         GET /election
+         Subscribe: long-poll
+         Heartbeats: 30
+
+      Response:
+
+         HTTP/1.1 200 OK
+         Subscribe: long-poll
+         Heartbeats: 30
+         Version: ("2")
+         Content-Type: text/plain
+         Content-Length: 21
+
+         Bob leads, 51% to 49%
+
+
+   The server answers the first poll at once, with the catch-up, as it
+   would an ordinary GET.  Its response has "Subscribe: long-poll",
+   which grants the subscription.  Then the browser sends its next poll,
+   with Parents set to the version it now holds, and the server holds
+   that poll until the results change:
+
+
+      Request:
+
+         GET /election
+         Subscribe: long-poll
+         Heartbeats: 30
+         Parents: ("2")
+
+      Response:
+
+         HTTP/1.1 200 OK
+         Subscribe: long-poll
+         Heartbeats: 30
+         Version: ("3")
+         Parents: ("2")
+         Content-Type: text/plain
+         Content-Length: 20
+
+         Bob wins, 51% to 49%
+
+
+   Then the browser polls again, from version 3.  Once a client knows
+   its current version ([VERSIONS], Section 2.2.3), each of its polls
+   MUST have a Parents header naming it, since the server answers each
+   poll with what changed since then.  Parents names the client's whole
+   current version, so a change on another branch of the history reaches
+   the client too.
+
+   The server answers each poll as it would an ordinary GET with the
+   same headers, with the response's own Cache-Control, and a cache
+   stores the answers as it would any response.  If several changes have
+   happened since the poll's version, the server can answer with a
+   multiresponse [MULTIRESPONSE] that holds each of them, since a poll's
+   Subscribe header says that the client can read one, or with one
+   snapshot.
+
+
+2.1.  Each answer to a poll is a heartbeat
+
+   A client asks for heartbeats with the Heartbeats header, as in the
+   stream mode ([SUBSCRIPTIONS], Section 5.1), and the server's response
+   gives the interval that it will use.  In the long-poll mode, the
+   server answers each poll within that interval.  If nothing has
+   changed by the time the interval runs out, it answers with a 304 (Not
+   Modified), as it would any GET whose Parents is the current version
+   ([VERSIONS], Section 2.3.5).  For an ordinary GET, the server sends
+   that 304 at once.  For a poll, it holds the 304 until the interval
+   runs out, and answers sooner with the change, if one happens.
+
+   So each answer is a heartbeat.  If no answer comes within the
+   interval, plus an allowance for network delay, the client treats the
+   hop as dead, as in the stream mode, and polls again from its current
+   version.
+
+   A server ignores If-None-Match and If-Modified-Since on a poll, as on
+   any subscription ([SUBSCRIPTIONS], Section 3.3), since Parents
+   already tells the server what the client holds.
+
+
+2.2.  Each answer has an Origin-Status header
+
+   In the stream mode, origin status arrives in 105 (Origin Status)
+   sub-responses ([SUBSCRIPTIONS], Section 5.2).  In the long-poll mode,
+   it arrives in the headers of each answer: an Origin-Status header,
+   with its age on a down, and a Proxy-Status header on a down.  For
+   example, at 03:20:30 the paper's CDN loses the origin server while
+   the reader's poll waits, and it answers the poll at once:
+
+
+         HTTP/1.1 304 Not Modified
+         Subscribe: long-poll
+         Heartbeats: 30
+         Version: ("2")
+         Origin-Status: down;age=30
+         Proxy-Status: ExampleCDN; error=connection_read_timeout
+         Cache-Control: no-cache="Origin-Status"
+
+
+   Each poll says which status the client last heard, in an
+   Origin-Status header of its own.  When the status changes, the server
+   answers the poll at once, with a 304 if nothing else has changed, so
+   the client hears of the change without waiting for the interval to
+   run out.  The client needs only the current status, so it may not
+   hear of a down and an up that both happen between two of its polls.
+
+   Each hop sets the Origin-Status of what it sends, as caches set the
+   Age header (Section 5.1 of [RFC9111]).  So each answer, 304s
+   included, has a Cache-Control header with the directive
+   no-cache="Origin-Status" (Section 5.2.2.4 of [RFC9111]), which keeps
+   a cache from sending a stored Origin-Status to a later client.  As in
+   the stream mode, a server sends origin status only on a subscription
+   with heartbeats ([SUBSCRIPTIONS], Section 5).
+
+
+2.3.  Either side can end a long-poll subscription
+
+   The client ends the subscription by not sending its next poll, or by
+   canceling the poll in flight.  A cache that serves long-poll
+   subscribers treats one that stops polling as one that has left
+   ([SUBSCRIPTIONS-CACHING], Section 5.3).
+
+   The server ends the subscription by answering a poll without a
+   Subscribe header, as it would any GET for which it grants no
+   subscription.  It can say why in that answer, as with a 503 (Service
+   Unavailable) and a Retry-After header.
+
+
+3.  Subscribe: webhook pushes each change as a request
+
+   In the webhook mode, the origin server sends each change as a request
+   of its own, to a push URL.  Each push is the request form of an
+   update ([UPDATES], Section 2): a PUT for a snapshot, a PUT with
+   Patch-Type or Content-Range for a patch, and a DELETE for a deletion.
+   So the webhook mode carries only updates.  Responses that have no
+   request form, such as a 403 (Forbidden), reach the gateway in the
+   answers to its subscription requests (Section 3.2).
+
+   The pushes go to a subscription gateway, which holds subscriptions
+   for an origin server, and serves each change to its own clients, in
+   the stream or long-poll mode, as a cache does
+   ([SUBSCRIPTIONS-CACHING], Section 5).  A gateway can sit in any of
+   three places:
+
+     - On the path, at the resource's own URL, as a CDN or a reverse
+       proxy does.  Clients reach it without knowing that it is there,
+       as in GRIP [GRIP].
+
+     - At a URL of its own, as a Mercure hub [MERCURE] does.  Clients
+       reach it through a handoff from the origin server (Section 3.4).
+
+     - At the requester itself, as a WebSub subscriber does [WEBSUB],
+       when the requester can receive requests.
+
+
+   A gateway sees the content of the responses it serves, and holds the
+   credentials it forwards, so its clients and the origin server trust
+   it as they would any proxy (Section 5).
+
+
+3.1.  The gateway asks the origin server to push to it
+
+   A gateway asks for a push subscription with a GET, naming its push
+   URL in the "to" parameter of the webhook mode.  For example, the
+   county's hosting provider runs a gateway on the path to the county's
+   site, which subscribes for the results like this:
+
+
+      Request:
+
+         GET /results
+         Host: votes.county.example
+         Subscribe: webhook;to="https://votes.county.example/push/7f3a"
+
+      Response:
+
+         HTTP/1.1 200 OK
+         Subscribe: webhook;to="https://votes.county.example/push/7f3a"
+         Version: ("2")
+         Content-Type: text/plain
+         Content-Length: 21
+
+         Bob leads, 51% to 49%
+
+
+   The origin server grants the push subscription by echoing the
+   Subscribe header, and its response holds the catch-up.  Then it
+   pushes each later change to the push URL:
+
+
+         PUT /push/7f3a
+         Host: votes.county.example
+         Version: ("3")
+         Parents: ("2")
+         Content-Type: text/plain
+         Content-Length: 20
+
+         Bob wins, 51% to 49%
+
+
+   The gateway answers each push with a 200 (OK) or a 204 (No Content),
+   and serves the change to its clients.  It gives each push
+   subscription a push URL of its own, so the URL of each push says
+   which subscription it belongs to.  The origin server identifies a
+   push subscription by its subscription key and its push URL, so that
+   it can tell a re-sent request (Section 3.2) from a new subscription.
+
+   The webhook mode has one parameter, "to", a String that holds the
+   push URL.  A server ignores a webhook mode that has no "to"
+   parameter, since it names nowhere to push.
+
+
+3.2.  The gateway re-sends its subscription request
+
+   Between pushes, nothing connects the gateway to the origin server.
+   So the gateway re-sends its subscription request from time to time,
+   at a rate it picks, with Parents set to its current version.  The
+   origin server answers each one as it answered the first, and each
+   answer does three jobs:
+
+     - It is the hop's heartbeat.  An answer shows that the origin
+       server is up, and its Origin-Status header gives the origin
+       status, as in the long-poll mode (Section 2.2), so the gateway
+       can tell its clients whether they are caught up.  If no answer
+       comes within the interval the gateway picked, plus an allowance
+       for delay, the gateway sends origin status down to its clients,
+       and subscribes again.
+
+     - It repairs any gap.  If the gateway missed a push, the answer
+       holds the changes it missed.  Otherwise, the answer is a 304 (Not
+       Modified).
+
+     - It authorizes the subscribers again.  The gateway sends one
+       request for each set of credentials that its clients use, with
+       those credentials, and a 403 (Forbidden) ends the subscriptions
+       of the clients that use them.  The gateway passes the 403 on to
+       each of those clients, with "Responds-To: container-request" in a
+       stream ([MULTIRESPONSE], Section 4).
+
+   If a gateway re-sends its requests more often than the origin server
+   wants, the origin server can answer them with a 429 (Too Many
+   Requests) and a Retry-After header.
+
+
+3.3.  Either side can end a push subscription
+
+   A client ends its subscription at the gateway, as it would any
+   subscription.  Once the gateway has no clients left for a resource,
+   it answers the next push for it with a 410 (Gone), which ends the
+   push subscription.  The origin server ignores a 410 to a push that it
+   sent before the gateway's latest subscription request for that push
+   URL, since that request shows that the gateway wants the pushes
+   again.
+
+   The origin server ends a push subscription by answering a re-sent
+   request without "Subscribe: webhook".  A push to a gateway that has
+   gone away fails, and a gateway that restarts answers the pushes it
+   doesn't know with a 410, so neither side needs a lease.
+
+   If pushes come faster than the gateway can serve them, it answers
+   them with a 503 (Service Unavailable) or a 429 (Too Many Requests),
+   and a Retry-After header.  The origin server then retries the push,
+   or replaces the changes it hasn't pushed yet with one snapshot.
+
+
+3.4.  A handoff sends subscribers to a gateway
+
+   A gateway at its own URL needs the origin server to send clients to
+   it.  The origin server does this with a handoff: it answers a
+   subscription request with the catch-up, and then a 307 (Temporary
+   Redirect) sub-response that names the gateway.  For example, the
+   county's site can hand each reader to a gateway at gateway.example:
+
+
+      Request:
+
+         GET /results
+         Host: votes.county.example
+         Subscribe: stream
+
+      Response:
+
+         HTTP/1.1 209 Multiresponse
+         Subscribe: stream
+         Content-Type: application/http-history
+         Cache-Control: no-store
+         Incremental: ?1
+
+         HTTP/1.1 200 OK
+         Version: ("2")
+         Content-Type: text/plain
+         Content-Length: 21
+
+         Bob leads, 51% to 49%
+
+         HTTP/1.1 307 Temporary Redirect
+         Responds-To: container-request
+         Location: https://gateway.example/votes.county.example/results
+         Vary: Subscribe
+
+
+   The 307 has "Responds-To: container-request", so it responds to the
+   reader's own subscription request ([MULTIRESPONSE], Section 4), and
+   says that the subscription continues at its Location.  Its
+   "Vary: Subscribe" header keeps it to subscriptions, so plain GETs
+   stay at the origin server.  After the 307, the origin server ends the
+   multiresponse, and the reader's browser resubscribes at the gateway,
+   with Parents set to the version it now holds:
+
+
+         GET /votes.county.example/results
+         Host: gateway.example
+         Subscribe: stream
+         Parents: ("2")
+
+
+   If the gateway has no push subscription for the resource yet, it asks
+   the origin server for one, as in Section 3.1.  The gateway proposes
+   the form of its URLs, and the origin server writes the Location.  An
+   origin server can also hand off with a plain 307 response and no
+   catch-up, which fetch() [FETCH] follows on its own, for clients that
+   can't read a multiresponse.
+
+
+3.5.  An origin server checks where it pushes
+
+   A subscription request in the webhook mode names a URL for the origin
+   server to send requests to, so the origin server checks that URL
+   before it pushes to it:
+
+     - A push URL with the same origin [RFC6454] as the resource is
+       safe.  A gateway on the path, such as a CDN, already serves that
+       origin, so it needs nothing more.
+
+     - For any other push URL, the origin server pushes only if the
+       subscription request is signed with HTTP Message Signatures
+       [RFC9421], with a signature that covers the @method and
+       @target-uri components and the Subscribe header, by a key that
+       the push URL's host publishes.  That shows that the requester
+       controls the host.  A future revision of this document will say
+       how a host publishes its keys.
+
+   A gateway at its own URL serves subscriptions only for the origin
+   servers that have chosen it, by its configuration, so that it doesn't
+   act as an open proxy.  A future revision may let an origin server
+   publish its list of gateways.
+
+
+4.  Implementation Status
+
+   This section records the known implementations of this document, as
+   [RFC7942] describes.  It is to be removed before publishing as an
+   RFC.
+
+   No implementation yet supports the long-poll or the webhook mode.
+
+
+5.  Security Considerations
+
+   In the webhook mode, a client names a URL for the origin server to
+   send requests to.  Without the checks of Section 3.5, anyone could
+   make an origin server send requests to any host, such as a server
+   inside the origin server's own network.  So an origin server pushes
+   only within the resource's own origin, or to a host whose key signed
+   the subscription request.
+
+   A subscription gateway sees the content of the responses it serves,
+   private ones included, and holds the credentials that it forwards.
+   So its clients and the origin server trust it as they would any
+   proxy, and it follows the rules for credentials of a cache that
+   serves subscriptions ([SUBSCRIPTIONS-CACHING], Section 5.1).  A
+   future revision may let an origin server give a gateway a credential
+   that is good for one subscription only, to limit what a breach of the
+   gateway exposes.
+
+   If a gateway at its own URL served subscriptions for any origin
+   server, it would be an open proxy, so it serves only the origin
+   servers that chose it (Section 3.5).
+
+   Each re-sent subscription request costs the origin server a response,
+   so an origin server can limit how often it answers them, with a 429
+   (Too Many Requests) (Section 3.2).
+
+
+6.  IANA Considerations
+
+   This document has no IANA actions.  It uses the Subscribe,
+   Heartbeats, and Origin-Status headers, which [SUBSCRIPTIONS]
+   registers.
+
+
+7.  References
+
+
+7.1.  Normative References
+
+   [MULTIRESPONSE]
+              Toomim, M., "Multiresponses for HTTP",
+              draft-toomim-httpbis-braid-multiresponse-00, work in
+              progress, November 2026.
+
+   [RFC2119]  Bradner, S., "Key words for use in RFCs to Indicate
+              Requirement Levels", BCP 14, RFC 2119, March 1997.
+
+   [RFC6454]  Barth, A., "The Web Origin Concept", RFC 6454, December
+              2011.
+
+   [RFC8174]  Leiba, B., "Ambiguity of Uppercase vs Lowercase in RFC
+              2119 Key Words", BCP 14, RFC 8174, May 2017.
+
+   [RFC9110]  Fielding, R., Ed., Nottingham, M., Ed., and J. Reschke,
+              Ed., "HTTP Semantics", STD 97, RFC 9110, June 2022.
+
+
+   [RFC9111]  Fielding, R., Ed., Nottingham, M., Ed., and J. Reschke,
+              Ed., "HTTP Caching", STD 98, RFC 9111, June 2022.
+
+   [RFC9421]  Backman, A., Ed., Richer, J., Ed., and M. Sporny, "HTTP
+              Message Signatures", RFC 9421, February 2024.
+
+   [SUBSCRIPTIONS]
+              Toomim, M., "Subscriptions for HTTP",
+              draft-toomim-httpbis-braid-subscriptions-00, work in
+              progress, November 2026.
+
+   [SUBSCRIPTIONS-CACHING]
+              Toomim, M., "Caching for HTTP Subscriptions",
+              draft-toomim-httpbis-braid-subscriptions-caching-00, work
+              in progress, November 2026.
+
+   [UPDATES]  Toomim, M., "Replayable Updates for HTTP",
+              draft-toomim-httpbis-braid-updates-00, work in progress,
+              November 2026.
+
+   [VERSIONS] Toomim, M., "Resource Versioning for HTTP",
+              draft-toomim-httpbis-braid-versions-00, work in progress,
+              November 2026.
+
+
+7.2.  Informative References
+
+   [FETCH]    WHATWG, "Fetch Standard",
+              <https://fetch.spec.whatwg.org/>.
+
+   [GRIP]     Fanout, "Generic Realtime Intermediary Protocol",
+              <https://pushpin.org/docs/protocols/grip/>.
+
+   [MERCURE]  Dunglas, K., "The Mercure Protocol",
+              draft-dunglas-mercure-08, work in progress, August 2026.
+
+   [RFC7942]  Sheffer, Y. and A. Farrel, "Improving Awareness of Running
+              Code: The Implementation Status Section", BCP 205, RFC
+              7942, July 2016.
+
+   [WEBSUB]   Genestoux, J., Ed. and A. Parecki, Ed., "WebSub", W3C
+              Recommendation, January 2018,
+              <https://www.w3.org/TR/websub/>.
+
+
+Author's Address
+
+   Michael Toomim
+   Invisible College, Berkeley
+   2053 Berkeley Way
+   Berkeley, CA 94704
+
+   EMail: toomim@gmail.com
+   Web:   https://invisible.college/@toomim
