@@ -428,7 +428,7 @@ Table of Contents
    [RFC9651]  Nottingham, M. and P-H. Kamp, "Structured Field Values
               for HTTP", RFC 9651, September 2024.
 
-   [UPDATES]  Toomim, M., "Braid-HTTP Updates",
+   [UPDATES]  Toomim, M., "Replayable Updates for HTTP",
               draft-toomim-httpbis-braid-updates-00, work in progress,
               November 2026.
 
@@ -440,7 +440,7 @@ Table of Contents
 8.2.  Informative References
 
    [BRAID-HTTP]
-              Toomim, M., "Braid-HTTP: Synchronization for HTTP",
+              Toomim, M., "Braid-HTTP: State Synchronization for HTTP",
               draft-toomim-httpbis-braid-http-05, work in progress,
               November 2026.
 
