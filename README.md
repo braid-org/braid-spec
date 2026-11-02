@@ -19,12 +19,13 @@ becomes a HyperState Synchronization Protocol.  Start here.
 ### Subscriptions: [`draft-toomim-httpbis-braid-subscriptions-00.txt`](https://raw.githubusercontent.com/braid-org/braid-spec/master/draft-toomim-httpbis-braid-subscriptions-00.txt)
 
 When a client GETs a resource, the server responds once, and the client hears
-nothing of the changes that follow.  With a subscription, the client asks the
-server to keep responding, and the server sends the current state, then each
-change as it happens.  Each of these is an ordinary HTTP response, so a cache
-can store it.  And when a cache subscribes, it knows that its copy is current
-for as long as its subscription stays connected to the origin.  So it can
-answer requests from that copy without asking the origin.
+nothing of the changes that follow.  To hear them, the client can subscribe, by
+adding the Subscribe header to its GET.  Then the server keeps responding, with
+the current state, and then with each change as it happens.  Each of these is
+an ordinary HTTP response, so a cache can store it.  And when a cache
+subscribes, it knows that its copy is current for as long as its subscription
+stays connected to the origin.  So it can answer requests from that copy
+without asking the origin.
 
 Two drafts extend Subscriptions:
 

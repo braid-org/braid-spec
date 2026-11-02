@@ -233,11 +233,11 @@ Table of Contents
    A client sends an update to change the resource on a server.  A
    server sends one in response to a request for the resource's state:
    for instance, a GET with Parents, which asks for the updates since
-   that version ([VERSIONS], Section 2.3.4), or a subscription
+   that version ([VERSIONS], Section 2.3.5), or a subscription
    [SUBSCRIPTIONS].  A response is an update only when it responds to a
-   GET, whether a client sent the GET or a multiresponse implies it
-   [MULTIRESPONSE].  So a 200 or 204 that acknowledges a client's PUT is
-   not an update.
+   GET, whether a client sent the GET, or the GET is a sub-response's
+   implied request [MULTIRESPONSE].  So a 200 or 204 that acknowledges a
+   client's PUT is not an update.
 
    An update's Version header says which version it creates, and its
    Parents header says which version it applies to [VERSIONS].  If an
@@ -255,7 +255,8 @@ Table of Contents
    it accepts in an Accept-Ranges header (Section 14.3 of [RFC9110]),
    with the same syntax that a server uses in a response.  A server MUST
    NOT respond with a patch in a format, or a range unit, that the
-   request does not list.  It responds with a snapshot.
+   request does not list.  When the request lists none that fits, the
+   server responds with a snapshot.
 
 
 3.  A snapshot is a PUT request, or a 200 response
@@ -297,12 +298,11 @@ Table of Contents
 4.  Patch formats specify deterministic changes
 
    A patch changes part of the state, and its patch format specifies
-   how.  A patch is a function of the prior snapshot: it produces the
-   next snapshot from the prior one, and needs no other information.  So
-   a patch MUST NOT depend on anything but the prior snapshot: its patch
-   format has no merging, no locking, and no preconditions.  When peers
-   make updates in parallel, Merge Types [MERGE-TYPES] specify how to
-   merge them.
+   how.  A patch computes the next snapshot from the prior snapshot, and
+   from nothing else.  So a patch MUST NOT depend on anything but the
+   prior snapshot, and its patch format has no merging, no locking, and
+   no preconditions.  When peers make updates in parallel, Merge Types
+   [MERGE-TYPES] specify how to merge them.
 
    For example, JSON Patch [RFC6902] has a "test" operation, which makes
    the whole patch fail if a value does not match.  That is a
@@ -320,9 +320,9 @@ Table of Contents
 
 4.1.  Patch-Type allows any patch format, in both directions
 
-   Patch-Type lets a specification define any patch format, and lets
-   peers send its patches in either direction.  A client sends a patch
-   in a PUT, with Patch-Type set to the patch format's media type:
+   With Patch-Type, a specification can define any patch format, and
+   peers can send its patches in either direction.  A client sends a
+   patch in a PUT, with Patch-Type set to the patch format's media type:
 
 
       Request:
@@ -371,7 +371,7 @@ Table of Contents
    patch.  So the ETag of a 210 identifies the representation that
    results from applying the patch.
 
-   Delta encoding [RFC3229] lets a server send a patch in a 226 (IM
+   With delta encoding [RFC3229], a server can send a patch in a 226 (IM
    Used), when the client asks for an "instance manipulation" by name,
    from a registry of delta formats.  Patch-Type uses media types, which
    a PUT and a 210 share, so each patch format works in both directions.
@@ -399,26 +399,26 @@ Table of Contents
 
    When a 206 is an update, it differs from the 206 of [RFC9110] in two
    ways: its range is a range of the prior snapshot, and its content can
-   have a different length.  A server sends it with Parents, which tells
-   a recipient that it is an update.  Its ETag, if any, identifies the
-   representation after the patch applies.  That representation differs
-   from any that a cache has stored, so a cache does not combine the 206
-   with a stored response under Section 3.4 of [RFC9111].  A server
-   sends a 206 update with "Vary: Version, Parents", so that a cache
-   keys it by the version it applies to ([VERSIONS], Section 2.7).  If a
-   cache does not implement this document, it does not use the 206 to
-   answer a GET without a Range header (Section 3.3 of [RFC9111]).  If
-   it does, it can store the 206 as an update.
+   have a different length.  A server sends it with Parents, so that a
+   recipient knows that it is an update.  Its ETag, if any, identifies
+   the representation after the patch applies.  That representation
+   differs from any that a cache has stored, so a cache does not combine
+   the 206 with a stored response under Section 3.4 of [RFC9111].  A
+   server sends a 206 update with "Vary: Version, Parents", so that a
+   cache keys it by the version it applies to ([VERSIONS], Section 2.7).
+   If a cache does not implement this document, it does not use the 206
+   to answer a GET without a Range header (Section 3.3 of [RFC9111]).
+   If it does, it can store the 206 as an update.
 
 
 4.2.1.  This document extends the syntax of Content-Range
 
-   RFC 9110 lets a range unit define its own syntax in the Range header,
-   with other-range (Section 14.1.1 of [RFC9110]).  This document
-   extends Content-Range the same way, and so updates Section 14.4 of
-   [RFC9110].  For a range unit other than "bytes", a Content-Range
-   value is the unit, a space, and a range in the unit's own syntax,
-   which need not end with a length:
+   In RFC 9110, a range unit can define its own syntax in the Range
+   header, with other-range (Section 14.1.1 of [RFC9110]).  This
+   document extends Content-Range the same way, and so updates Section
+   14.4 of [RFC9110].  For a range unit other than "bytes", a
+   Content-Range value is the unit, a space, and a range in the unit's
+   own syntax, which need not end with a length:
 
 
      Content-Range       =/ other-content-range
@@ -456,8 +456,8 @@ Table of Contents
 
 4.3.  An update can contain several patches
 
-   An update can contain several patches.  It says how many in a Patches
-   header, and its content is that many patches, one after another, each
+   An update can contain several patches.  Its Patches header says how
+   many, and its content is that many patches, one after another, each
    with its own header fields and content:
 
 
@@ -550,8 +550,8 @@ Table of Contents
    ([VERSIONS], Section 2.1).  Merge Types [MERGE-TYPES] specify how a
    peer merges them, so that every peer reaches the same state.
 
-   If a peer cannot apply an update, it stops replaying, since every
-   later state depends on it, and raises an error.
+   If a peer cannot apply an update, it stops replaying and raises an
+   error, since every later state depends on that update.
 
    A peer can send updates one at a time, in requests and responses.  A
    server can also send many in one multiresponse [MULTIRESPONSE], for a
@@ -587,10 +587,12 @@ Table of Contents
 
 8.  Security Considerations
 
-   A server that does not implement this document ignores Patch-Type,
-   Patches, and the Content-Range of a unit it does not know, and stores
-   the patch as the whole resource.  So a client sends patches only to
-   servers that it knows implement this document.
+   If a server does not implement this document, it can ignore
+   Patch-Type and Patches, and store the patch as the whole resource.
+   It might do the same with a Content-Range that it does not support,
+   although Section 14.5 of [RFC9110] tells it to respond with a 400
+   (Bad Request).  So a client sends patches only to servers that it
+   knows implement this document.
 
    Each patch format has its own security considerations, which apply to
    its patches when they are updates.
