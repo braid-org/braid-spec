@@ -69,10 +69,10 @@ Table of Contents
    1.1.  Terminology ..................................................5
    1.2.  Conventions ..................................................5
    2.  The 209 Multiresponse Status Code ..............................6
-   2.1.  A client asks for a multiresponse ............................6
+   2.1.  Clients can ask for a multiresponse ..........................6
    2.2.  Each sub-response responds to a request ......................6
    2.3.  Caches store a multiresponse in pieces .......................7
-   2.4.  Intermediaries pass a multiresponse on .......................7
+   2.4.  Intermediaries can modify multiresponses, or not .............7
    3.  The application/http-history Media Type ........................8
    3.1.  Syntax .......................................................8
    4.  The Responds-To Header .........................................9
@@ -195,7 +195,7 @@ Table of Contents
    3).
 
 
-2.1.  A client asks for a multiresponse
+2.1.  Clients can ask for a multiresponse
 
    If a client doesn't know the 209, it treats it as a 200, and gives
    the sub-responses to its application as if they were the resource.
@@ -252,7 +252,7 @@ Table of Contents
    would any unexpected 1xx response (Section 15.2 of [RFC9110]).
 
 
-2.4.  Intermediaries pass a multiresponse on
+2.4.  Intermediaries can modify multiresponses, or not
 
    When a proxy relays a multiresponse byte for byte, it passes these
    sub-responses on with the rest.  But consider a cache that builds its
