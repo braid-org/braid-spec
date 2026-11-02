@@ -201,18 +201,18 @@ Table of Contents
    every client that subscribes through it [SUBSCRIPTIONS-CACHING]:
 
 
-                           +--------+
-                           | origin |
-                           +--------+
-                               |
-                        one subscription
-                               |
+                          +--------+
+                          | origin |
+                          +--------+
+                              |
+                       one subscription
+                              |
                          +----------+
                          | CDN edge |
                          +----------+
                          /    |     \
                         /     |      \
-                   client  client  client
+                   client   client   client
 
 
    While that subscription is open, the origin pushes each change into

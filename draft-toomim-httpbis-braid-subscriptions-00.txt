@@ -80,10 +80,10 @@ Table of Contents
 
    1.  Introduction ...................................................3
    1.1.  Terminology ..................................................5
-   2.  Subscription messages are responses to implied requests ........6
+   2.  Subscriptions give sub-responses to "implied requests" .........6
    3.  The Subscribe Header ...........................................7
    3.1.  Resuming a subscription with Parents .........................8
-   3.2.  Subscribing to headers only, with Method-Override ............9
+   3.2.  Subscribing to headers only, with Method-Override: HEAD ......9
    3.3.  Servers ignore If-None-Match on subscriptions ................9
    4.  The "Subscribe: stream" mode creates a 209 Multiresponse ......10
    5.  Subscriptions create continuous cache validation ..............11
@@ -221,15 +221,19 @@ Table of Contents
       time (Section 5).
 
 
-2.  Subscription messages are responses to implied requests
+2.  Subscriptions give sub-responses to "implied requests"
 
-   Each response in a subscription is one that the client could have
-   gotten on its own, by sending the same GET at another time.  It is
-   the response that the server would have sent to the same GET, without
-   the Subscribe and Heartbeats headers, just after the change that the
-   response describes.  When the client knows its current version
-   ([VERSIONS], Section 2.2.3), that GET has a Parents header naming the
-   version that the client held just before the change.
+   Each sub-response in a subscription is one that the client could have
+   gotten on its own, by sending the same GET at another time.
+   Specifically, it is the response that the server would have sent:
+
+     - to the same GET
+     - without the Subscribe and Heartbeats headers
+     - just after the change that the response describes.
+
+   When the client knows its current version ([VERSIONS], Section
+   2.2.3), that GET has a Parents header naming the version that the
+   client held just before the change.
 
    These GETs are the subscription's implied requests [MULTIRESPONSE].
    In the example in Section 1, the first response responds to an
@@ -366,7 +370,7 @@ Table of Contents
    to send more of a version's state as the server receives it.
 
 
-3.2.  Subscribing to headers only, with Method-Override
+3.2.  Subscribing to headers only, with Method-Override: HEAD
 
    Some subscribers need to know only when the resource changes, and to
    which version.  For example, the paper's notification server alerts
@@ -480,12 +484,12 @@ Table of Contents
 
 
          catch-up                          unvalidated
-         105, Origin-Status: up       --+
+         105, Origin-Status: up       --\
          each change, as it happens     |  continuously
          heartbeats                     |  validating
-         105, Origin-Status: down     --+
+         105, Origin-Status: down     --/
          catch-up                          unvalidated
-         105, Origin-Status: up       --+
+         105, Origin-Status: up       --\
          ...                            |
 
 
