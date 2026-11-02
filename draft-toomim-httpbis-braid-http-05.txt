@@ -227,8 +227,7 @@ Table of Contents
 
 2.  The extensions are modular and composable
 
-   Each one addresses one limitation of HTTP, in a separate
-   specification:
+   Each extension addresses an independent limitation of HTTP:
 
    Versions [VERSIONS]:  HTTP has no way to name a point in a resource's
       history.  Versions gives HTTP a sense of time.  Each message can
@@ -276,7 +275,8 @@ Table of Contents
 
 3.  The extensions combine to support replay, resume, and merge
 
-   Used together, the extensions add more:
+   Various combinations of these extensions produce useful emergent
+   properties.  Here are some interesting combinations:
 
    Updates and Versions:  Each update applies to the state at its
       Parents, even when updates arrive out of order.
