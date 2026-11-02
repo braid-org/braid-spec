@@ -8,17 +8,18 @@ Intended status: Proposed Standard                       2 November 2026
 
 Abstract
 
-   In the stream mode, the server holds one response open, and sends
-   each change in it.  Some origin servers can't hold a response open,
-   such as serverless functions and shared hosting.  And on some paths,
-   a proxy buffers each response until it ends.  This document defines
-   two subscription modes in which nothing stays open for long.  In the
-   long-poll mode, the client sends a GET for each change, and the
-   server answers it when the change happens.  In the webhook mode, the
-   origin server pushes each change to a subscription gateway as a PUT
-   or a DELETE, and the gateway serves the subscription to its clients.
-   In both, each message says which version it builds on, so no message
-   depends on a connection, and each can take its own path.
+   In the stream mode of Braid-HTTP subscriptions, the server holds one
+   response open, and sends each change in it.  Some origin servers
+   can't hold a response open, such as those that run as serverless
+   functions or on shared hosting.  And on some paths, a proxy buffers
+   each response until it ends.  This document defines two subscription
+   modes in which nothing stays open for long.  In the long-poll mode,
+   the client sends a GET for each change, and the server responds to it
+   when the change happens.  In the webhook mode, the origin server
+   pushes each change to a subscription gateway as a PUT or a DELETE,
+   and the gateway serves the subscription to its clients.  In both,
+   each message says which version it builds on, so no message depends
+   on a connection, and each can take its own path.
 
    This document is one of the Braid-HTTP extensions, which work alone
    or together; together they make HTTP a state synchronization
@@ -76,18 +77,18 @@ Table of Contents
    2.1.  Each answer to a poll is a heartbeat .........................6
    2.2.  Each answer has an Origin-Status header ......................6
    2.3.  Either side can end a long-poll subscription .................7
-   3.  Subscribe: webhook pushes each change as a request .............7
+   3.  Subscribe: webhook pushes each change as a request .............8
    3.1.  The gateway asks the origin server to push to it .............8
    3.2.  The gateway re-sends its subscription request ................9
-   3.3.  Either side can end a push subscription ......................9
-   3.4.  A handoff sends subscribers to a gateway ....................10
-   3.5.  An origin server checks where it pushes .....................11
-   4.  Implementation Status .........................................11
-   5.  Security Considerations .......................................12
-   6.  IANA Considerations ...........................................12
-   7.  References ....................................................12
-   7.1.  Normative References ........................................12
-   7.2.  Informative References ......................................13
+   3.3.  Either side can end a push subscription .....................10
+   3.4.  A handoff sends subscribers to a gateway ....................11
+   3.5.  An origin server checks where it pushes .....................12
+   4.  Implementation Status .........................................12
+   5.  Security Considerations .......................................13
+   6.  IANA Considerations ...........................................13
+   7.  References ....................................................13
+   7.1.  Normative References ........................................13
+   7.2.  Informative References ......................................14
 
 
 1.  Introduction
@@ -109,14 +110,14 @@ Table of Contents
    subscription gateway, as a request, and the gateway serves the
    subscription to its own clients.
 
-   In both modes, the server keeps everything that a subscription
-   promises.  The client gets a catch-up, and then each change
-   ([SUBSCRIPTIONS], Section 2), and it learns from heartbeats and
-   origin status whether it is caught up ([SUBSCRIPTIONS], Section 5).
-   Each exchange picks up the subscription from the client's version,
-   named in a Parents header [VERSIONS].  So no exchange depends on a
-   connection staying open, and each one can take its own path, as
-   HTTP's statelessness allows (Section 3.3 of [RFC9110]).
+   In both modes, the server keeps every promise that it makes when it
+   grants a subscription.  The client gets a catch-up, and then each
+   change ([SUBSCRIPTIONS], Section 2), and it learns from heartbeats
+   and origin status whether it is caught up ([SUBSCRIPTIONS], Section
+   5).  Each exchange picks up the subscription from the client's
+   version, named in a Parents header [VERSIONS].  So no exchange
+   depends on a connection staying open, and since HTTP is stateless
+   (Section 3.3 of [RFC9110]), each one can take its own path.
 
    The webhook mode generalizes three existing designs.  In GRIP [GRIP],
    a proxy at the resource's own URL holds the subscriptions for its
@@ -126,9 +127,9 @@ Table of Contents
    subscription gateway can sit in any of these places (Section 3).
 
 
-   This document extends Subscriptions [SUBSCRIPTIONS], which lists
-   these modes.  The long-poll mode needs Versions [VERSIONS], to name
-   the version that each poll resumes from, and the webhook mode needs
+   This document extends Subscriptions [SUBSCRIPTIONS] with these two
+   modes.  The long-poll mode needs Versions [VERSIONS], to name the
+   version that each poll resumes from, and the webhook mode needs
    Updates [UPDATES], since each push is an update.
 
 
@@ -141,9 +142,8 @@ Table of Contents
    capitals, as shown here.
 
    This document uses these terms from Subscriptions [SUBSCRIPTIONS]:
-   subscription, catch-up, caught up, hop, origin status, and
-   continuously validating.  It uses subscription key and upstream
-   subscription from Subscriptions Caching [SUBSCRIPTIONS-CACHING],
+   subscription, catch-up, caught up, hop, and origin status.  It uses
+   subscription key from Subscriptions Caching [SUBSCRIPTIONS-CACHING],
    Version, Parents, and current version from Versions [VERSIONS], and
    update, snapshot, patch, and deletion from Updates [UPDATES].  It
    also uses these terms:
@@ -157,8 +157,8 @@ Table of Contents
    Push subscription:  A subscription in the webhook mode, from a
       subscription gateway to an origin server.
 
-   Push:  A request that sends one change of a push subscription to the
-      gateway.
+   Push:  A request in which the origin server sends one change of a
+      push subscription to the gateway.
 
    Push URL:  The URL that an origin server sends a push subscription's
       pushes to.
@@ -191,11 +191,11 @@ Table of Contents
          Bob leads, 51% to 49%
 
 
-   The server answers the first poll at once, with the catch-up, as it
-   would an ordinary GET.  With "Subscribe: long-poll" in its response,
-   the server grants the subscription.  Then the browser sends its next
-   poll, with Parents set to the version it now holds, and the server
-   holds that poll until the results change:
+   The server responds to the first poll at once, with the catch-up, as
+   it would to an ordinary GET.  With "Subscribe: long-poll" in its
+   response, the server grants the subscription.  Then the browser sends
+   its next poll, with Parents set to the version it now holds, and the
+   server holds that poll until the results change:
 
 
       Request:
@@ -220,53 +220,55 @@ Table of Contents
 
    Then the browser polls again, from version 3.  Once a client knows
    its current version ([VERSIONS], Section 2.2.3), each of its polls
-   MUST have a Parents header naming it, since the server answers each
-   poll with what changed since then.  Parents names the client's whole
-   current version, so a change on another branch of the history reaches
-   the client too.
+   MUST have a Parents header naming it, since the server responds to
+   each poll with what changed since that version.  Parents names the
+   client's whole current version, so a change on another branch of the
+   history reaches the client too.
 
-   The server answers each poll as it would an ordinary GET with the
-   same headers, with the response's own Cache-Control.  A cache stores
-   the answers as it would any response.  If several changes have
-   happened since the poll's version, the server can answer with one
-   snapshot, or with a multiresponse [MULTIRESPONSE] that holds each
-   change, since a poll's Subscribe header says that the client can read
-   one.
+   The server responds to each poll as it would to an ordinary GET with
+   the same headers, with the response's own Cache-Control.  A cache
+   stores the responses to polls as it would any response.  If several
+   changes have happened since the poll's version, the server can
+   respond with one snapshot, or with a multiresponse [MULTIRESPONSE]
+   that holds each change, since a poll's Subscribe header says that the
+   client can read one.
 
 
 2.1.  Each answer to a poll is a heartbeat
 
    A client asks for heartbeats with the Heartbeats header, as in the
-   stream mode ([SUBSCRIPTIONS], Section 5.1), and the server's response
-   gives the interval that it will use.  In the long-poll mode, the
-   server answers each poll within that interval.  If nothing has
-   changed by the time the interval runs out, it answers with a 304 (Not
-   Modified), as it would any GET whose Parents is the current version
-   ([VERSIONS], Section 2.3.5).  For an ordinary GET, the server sends
-   that 304 at once.  For a poll, it holds the 304 until the interval
-   runs out, and answers sooner with the change, if one happens.
+   stream mode ([SUBSCRIPTIONS], Section 5.1), and in its response, the
+   server gives the interval that it will use.  In the long-poll mode,
+   the server responds to each poll within that interval.  If nothing
+   has changed by the time the interval runs out, it responds with a 304
+   (Not Modified), as it would to any GET whose Parents is the current
+   version ([VERSIONS], Section 2.3.5).  For an ordinary GET, the server
+   sends that 304 at once.  For a poll, it holds the 304 until the
+   interval runs out, and responds sooner with the change, if one
+   happens.
 
-   So each answer is a heartbeat.  If no answer comes within the
+   So each response is a heartbeat.  If no response comes within the
    interval, plus an allowance for network delay, the client treats the
    hop as dead, as in the stream mode, and polls again from its current
    version.
 
    A server ignores If-None-Match and If-Modified-Since on a poll, as on
-   any subscription ([SUBSCRIPTIONS], Section 3.3), since Parents
-   already tells the server what the client holds.
+   any subscription ([SUBSCRIPTIONS], Section 3.3), since the client
+   already names the version it holds, in its Parents header.
 
 
 2.2.  Each answer has an Origin-Status header
 
-   In the stream mode, origin status arrives in 105 (Origin Status)
-   sub-responses ([SUBSCRIPTIONS], Section 5.2).  In the long-poll mode,
-   it arrives in the headers of each answer: an Origin-Status header,
-   with its age on a down, and a Proxy-Status header on a down.  For
-   example, at 03:20:30 the paper's CDN loses its connection to the
-   origin server while the reader's poll waits, and it answers the poll
-   at once:
+   In the stream mode, the server sends origin status in 105 (Origin
+   Status) sub-responses ([SUBSCRIPTIONS], Section 5.2).  In the
+   long-poll mode, it sends origin status in the headers of each
+   response: an Origin-Status header, with its age on a down, and a
+   Proxy-Status header on a down.  For example, while the reader's poll
+   from version 2 waits, the paper's CDN stops hearing from the origin
+   server at 03:20, and its own subscription times out at 03:20:30.  The
+   CDN responds to the poll at once:
 
-
+
          HTTP/1.1 304 Not Modified
          Subscribe: long-poll
          Heartbeats: 30
@@ -275,17 +277,17 @@ Table of Contents
          Proxy-Status: ExampleCDN; error=connection_read_timeout
          Cache-Control: no-cache="Origin-Status"
 
-
+
    In each poll, the client says which status it last heard, with an
    Origin-Status header of its own.  When the status changes, the server
-   answers the poll at once, with a 304 if nothing else has changed, so
-   the client hears of the change without waiting for the interval to
+   responds to the poll at once, with a 304 if nothing else has changed,
+   so the client hears of the change without waiting for the interval to
    run out.  The client needs only the current status, so it may not
    hear of a down and an up that both happen between two of its polls.
 
-   Each hop sets the Origin-Status of what it sends, as caches set the
-   Age header (Section 5.1 of [RFC9111]).  So each answer, 304s
-   included, has a Cache-Control header with the directive
+   Each server sets the Origin-Status of what it sends, as caches set
+   the Age header (Section 5.1 of [RFC9111]).  So each response to a
+   poll, 304s included, has a Cache-Control header with the directive
    no-cache="Origin-Status" (Section 5.2.2.4 of [RFC9111]), so that a
    cache doesn't send a stored Origin-Status to a later client.  As in
    the stream mode, a server sends origin status only on a subscription
@@ -299,25 +301,25 @@ Table of Contents
    subscribers, it treats one that stops polling as one that has left
    ([SUBSCRIPTIONS-CACHING], Section 5.3).
 
-   The server ends the subscription by answering a poll without a
-   Subscribe header, as it would any GET for which it grants no
-   subscription.  It can say why in that answer, as with a 503 (Service
-   Unavailable) and a Retry-After header.
+   The server ends the subscription by responding to a poll without a
+   Subscribe header, as it would to any GET for which it grants no
+   subscription.  It can say why in that response, as with a 503
+   (Service Unavailable) and a Retry-After header.
 
-
+
 3.  Subscribe: webhook pushes each change as a request
 
    In the webhook mode, the origin server sends each change as a request
    of its own, to a push URL.  Each push is an update, sent as a request
    ([UPDATES], Section 2): a PUT for a snapshot, a PUT with Patch-Type
    or Content-Range for a patch, and a DELETE for a deletion.  So the
-   origin server pushes only updates.  Responses that have no matching
-   request, such as a 403 (Forbidden), reach the gateway in the answers
-   to its subscription requests (Section 3.2).
+   origin server pushes only updates.  If a response has no matching
+   request, such as a 403 (Forbidden), the origin server sends it in
+   response to one of the gateway's subscription requests (Section 3.2).
 
-   The pushes go to a subscription gateway, which holds subscriptions
-   for an origin server, and serves each change to its own clients, in
-   the stream or long-poll mode, as a cache does
+   The origin server sends the pushes to a subscription gateway, which
+   holds subscriptions for the origin server, and serves each change to
+   its own clients, in the stream or long-poll mode, as a cache does
    ([SUBSCRIPTIONS-CACHING], Section 5).  A gateway can sit in any of
    three places:
 
@@ -331,7 +333,6 @@ Table of Contents
      - At the requester itself, as a WebSub subscriber does [WEBSUB],
        when the requester can receive requests.
 
-
    A gateway sees the content of the responses it serves, and holds the
    credentials it forwards, so its clients and the origin server trust
    it as they would any proxy (Section 5).
@@ -361,7 +362,7 @@ Table of Contents
 
          Bob leads, 51% to 49%
 
-
+
    The origin server grants the push subscription by echoing the
    Subscribe header, and its response holds the catch-up.  Then it
    pushes each later change to the push URL:
@@ -377,8 +378,8 @@ Table of Contents
          Bob wins, 51% to 49%
 
 
-   The gateway answers each push with a 200 (OK) or a 204 (No Content),
-   and serves the change to its clients.  It gives each push
+   The gateway responds to each push with a 200 (OK) or a 204 (No
+   Content), and serves the change to its clients.  It gives each push
    subscription a push URL of its own, so each push's URL identifies its
    subscription.  The origin server identifies a push subscription by
    its subscription key and its push URL, so that it can tell a re-sent
@@ -386,39 +387,41 @@ Table of Contents
 
    The webhook mode has one parameter, "to", a String that holds the
    push URL.  A server ignores a webhook mode that has no "to"
-   parameter, since it names nowhere to push.
+   parameter, since the server has nowhere to push.
 
-
+
 3.2.  The gateway re-sends its subscription request
 
    Between pushes, nothing connects the gateway to the origin server.
    So the gateway re-sends its subscription request from time to time,
    at a rate it picks, with Parents set to its current version.  The
-   origin server answers each one as it answered the first, and each
-   answer gives the gateway three things:
+   origin server responds to each one as it responded to the first, and
+   with each response, the gateway gets three things:
 
-     - A heartbeat for the hop.  The answer shows that the origin server
-       is up, and its Origin-Status header gives the origin status, as
-       in the long-poll mode (Section 2.2), so the gateway can tell its
-       clients whether they are caught up.  If no answer comes within
-       the interval the gateway picked, plus an allowance for delay, the
-       gateway sends origin status down to its clients, and subscribes
-       again.
+     - A heartbeat for the hop.  When a response arrives, the gateway
+       knows that the origin server is still serving the push
+       subscription.  It reads the origin status from the response's
+       Origin-Status header, as in the long-poll mode (Section 2.2), to
+       tell its clients whether they are caught up.  If no response
+       comes within the interval the gateway picked, plus an allowance
+       for network delay, the gateway sends an origin status of "down"
+       to its clients, and subscribes again.
 
      - Any changes that it missed.  If the gateway missed a push, the
-       answer holds the changes it missed, and otherwise the answer is a
-       304 (Not Modified).
+       response holds the changes it missed, and otherwise the response
+       is a 304 (Not Modified).
 
-     - A new check of its subscribers' authorization.  The gateway sends
-       one request for each set of credentials that its clients use,
-       with those credentials, and a 403 (Forbidden) ends the
-       subscriptions of the clients that use them.  The gateway passes
-       the 403 on to each of those clients, with
-       "Responds-To: container-request" in a stream ([MULTIRESPONSE],
-       Section 4).
+     - A new check of its clients' authorization.  The gateway sends one
+       request for each set of credentials that its clients use, with
+       those credentials.  If the origin server responds with a 403
+       (Forbidden), the gateway ends the subscriptions of the clients
+       that use those credentials.  The gateway passes the 403 on to
+       each of those clients, with "Responds-To: container-request" in a
+       stream ([MULTIRESPONSE], Section 4).
 
+
    If a gateway re-sends its requests more often than the origin server
-   wants, the origin server can answer them with a 429 (Too Many
+   wants, the origin server can respond to them with a 429 (Too Many
    Requests) and a Retry-After header.
 
 
@@ -426,18 +429,18 @@ Table of Contents
 
    A client ends its subscription at the gateway, as it would any
    subscription.  Once the gateway has no clients left for a resource,
-   it answers the next push for it with a 410 (Gone), which ends the
-   push subscription.  The origin server ignores a 410 to a push that it
-   sent before the gateway's latest subscription request for that push
-   URL, since that request shows that the gateway wants the pushes
-   again.
+   it responds to the next push for that resource with a 410 (Gone), to
+   end the push subscription.  The origin server ignores a 410 to a push
+   that it sent before the gateway's latest subscription request for
+   that push URL, since with that request, the gateway asked for the
+   pushes again.
 
-   The origin server ends a push subscription by answering a re-sent
-   request without "Subscribe: webhook".  A push to a gateway that has
-   gone away fails, and a gateway that restarts answers the pushes it
-   doesn't know with a 410, so neither side needs a lease.
+   The origin server ends a push subscription by responding to a re-sent
+   request without "Subscribe: webhook".  If a gateway has gone away, a
+   push to it fails, and if a gateway restarts, it responds to the
+   pushes it doesn't know with a 410, so neither side needs a lease.
 
-   If pushes come faster than the gateway can serve them, it answers
+   If pushes come faster than the gateway can serve them, it responds to
    them with a 503 (Service Unavailable) or a 429 (Too Many Requests),
    and a Retry-After header.  The origin server then retries the push,
    or replaces the changes it hasn't pushed yet with one snapshot.
@@ -446,7 +449,7 @@ Table of Contents
 3.4.  A handoff sends subscribers to a gateway
 
    A gateway at its own URL needs the origin server to send clients to
-   it.  The origin server does this with a handoff: it answers a
+   it.  The origin server does this with a handoff: it responds to a
    subscription request with the catch-up, and then a 307 (Temporary
    Redirect) sub-response that names the gateway.  For example, the
    county's site can hand each reader to a gateway at gateway.example:
@@ -497,17 +500,17 @@ Table of Contents
 
    If the gateway has no push subscription for the resource yet, it asks
    the origin server for one, as in Section 3.1.  The gateway proposes
-   the form of its URLs, and the origin server writes the Location.  For
-   clients that can't read a multiresponse, an origin server can also
-   hand off with a plain 307 response and no catch-up, which fetch()
-   [FETCH] follows on its own.
+   the pattern of its URLs, and the origin server writes the Location.
+   For clients that can't read a multiresponse, an origin server can
+   also hand off with a plain 307 response and no catch-up, which
+   fetch() [FETCH] follows on its own.
 
 
 3.5.  An origin server checks where it pushes
 
-   A subscription request in the webhook mode names a URL for the origin
-   server to send requests to, so the origin server checks that URL
-   before it pushes to it:
+   In the webhook mode, the requester names a URL for the origin server
+   to send requests to, so the origin server checks that URL before it
+   pushes to it:
 
      - A push URL with the same origin [RFC6454] as the resource is
        safe.  A gateway on the path, such as a CDN, already serves that
@@ -517,14 +520,14 @@ Table of Contents
        subscription request is signed with HTTP Message Signatures
        [RFC9421], with a signature that covers the @method and
        @target-uri components and the Subscribe header, by a key that
-       the push URL's host publishes.  The signature shows that the
-       requester controls the host.  A future revision of this document
-       will say how a host publishes its keys.
+       the push URL's host publishes.  With the signature, the requester
+       proves that it controls the host.  A future revision of this
+       document will say how a host publishes its keys.
 
    A gateway at its own URL serves subscriptions only for the origin
    servers that have chosen it, by its configuration, so that it doesn't
-   act as an open proxy.  A future revision may let an origin server
-   publish its list of gateways.
+   act as an open proxy.  A future revision may define how an origin
+   server publishes its list of gateways.
 
 
 4.  Implementation Status
@@ -550,8 +553,8 @@ Table of Contents
    So its clients and the origin server trust it as they would any
    proxy, and it follows the rules for credentials of a cache that
    serves subscriptions ([SUBSCRIPTIONS-CACHING], Section 5.1).  A
-   future revision may let an origin server give a gateway a credential
-   that is good for one subscription only, to limit what a breach of the
+   future revision may define a credential that an origin server gives a
+   gateway for one subscription only, to limit what a breach of the
    gateway exposes.
 
    If a gateway at its own URL served subscriptions for any origin
@@ -559,8 +562,8 @@ Table of Contents
    servers that chose it (Section 3.5).
 
    Each re-sent subscription request costs the origin server a response,
-   so an origin server can limit how often it answers them, with a 429
-   (Too Many Requests) (Section 3.2).
+   so an origin server can limit how often it responds to them, with a
+   429 (Too Many Requests) (Section 3.2).
 
 
 6.  IANA Considerations

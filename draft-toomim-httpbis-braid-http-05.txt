@@ -16,13 +16,15 @@ Intended status: Informational                                 G. Little
 
 Abstract
 
-   HTTP transfers the state of a resource, but leaves programmers to
-   keep that state up to date as it changes.  Braid-HTTP is a set of
-   independent extensions to HTTP.  Each one addresses one limitation of
-   HTTP on its own, and together they generalize HTTP from a state
-   *transfer* protocol into a state *synchronization* protocol.  This
-   document introduces the extensions, shows how they function alone and
-   together, and points to the documents that define them.
+   HTTP transfers the state of a resource once, and leaves programmers
+   to keep it up to date as it changes.  Braid-HTTP extends HTTP from
+   *transferring* state to *synchronizing* it, with a set of independent
+   extensions, each of which addresses a limitation of HTTP on its own.
+   When used together, a website can synchronize with any other
+   website's state by its URL, just as a page on today's web can link to
+   any other page.  This document introduces the extensions, shows how
+   they work alone and together, and points to the documents that define
+   them.
 
 
 About This Document
@@ -229,37 +231,43 @@ Table of Contents
    specification:
 
    Versions [VERSIONS]:  HTTP has no way to name a point in a resource's
-      history.  Versions names points in time, with the events of a DAG.
-      A client can GET the state at a version, and say which version its
-      PUT builds on.
+      history.  Versions gives HTTP a sense of time.  Each message can
+      name the version that it creates, and the version just before it,
+      as events in a DAG, so a client can GET the state at a version,
+      and say which version its PUT builds on.
 
    Updates [UPDATES]:  HTTP has no way to express a change that means
       the same in a request and in a response.  PATCH has no matching
       response, and a 206 does not say that the rest of the
-      representation is unchanged.  Updates defines snapshots, patches,
-      and deletions that mean the same thing in a request and in a
+      representation is unchanged.  Updates makes each change mean the
+      same thing in both directions.  It defines snapshots, patches, and
+      deletions that a client can send in a request, and a server in a
       response, and every peer replays each one the same way.
 
-   Multiresponse [MULTIRESPONSE]:  Each HTTP request gets one response.
-      Multiresponse defines the 209 Multiresponse status code, whose
-      content holds several responses.  It also defines
-      application/http-history, a format for a resource's responses over
-      time.
+   Multiresponse [MULTIRESPONSE]:  Each HTTP request has one response.
+      Multiresponse fits many responses into one.  It defines the 209
+      Multiresponse status code, whose content holds several responses,
+      and application/http-history, a format for a resource's responses
+      over time.
 
 
    Subscriptions [SUBSCRIPTIONS]:  An ordinary GET gets one response,
       and the client does not hear when its resource changes later.
-      With a subscription, the server sends each change as it happens,
-      in a multiresponse.  Two documents extend it.  Subscriptions
+      Subscriptions turn a GET into a stream of changes.  The server
+      sends the current state, and then each change as it happens, in a
+      multiresponse.  Two documents extend Subscriptions.  Subscriptions
       Caching [SUBSCRIPTIONS-CACHING] defines how a cache serves one
       upstream subscription to many subscribers, and Poll and Push
       [POLL-AND-PUSH] defines modes for origins, and paths, that cannot
       hold a response open.
 
    Merge Types [MERGE-TYPES]:  HTTP does not say how to merge changes
-      that peers make in parallel.  A Merge Type says how to merge them,
-      so that every peer reaches the same state.  It builds on Versions
-      and Updates.
+      that peers make in parallel.  With Merge Types, many peers can
+      edit one resource at once, and still agree.  Every peer merges
+      parallel edits with the same algorithm, OT or CRDT, so every peer
+      reaches the same state.  Merge Types builds on Versions, to tell
+      which edits were parallel, and on Updates, to know what each one
+      changed.
 
    The new header fields of these extensions share one syntax, Simpler
    Fields [SIMPLER-FIELDS], a profile of Structured Fields that a light
@@ -369,29 +377,25 @@ Table of Contents
 
 6.1.  SSE and WebSocket
 
-   Server-Sent Events [SSE] (1) doesn't support binary data, (2) assumes
-   versioning is linear (which doesn't work in a distributed system),
-   (3) doesn't provide any way to add new headers to each response, and
-   (4) doesn't specify semantics of updating a resource.
+   Server-Sent Events [SSE] streams events from a server to a client, in
+   one HTTP response.  But its events are text only, with no headers of
+   their own, and SSE numbers them in one linear sequence, which a
+   distributed history can't follow.  Nor does SSE say how an event
+   changes the state of a resource, so each application defines that
+   itself, inside its events.
 
-   SSE is a way to tunnel a specific, limited, use-case of centralized,
-   text-only, server-to-client-only event streaming over an HTTP
-   response, without specifying how those events change the state of an
-   HTTP resource.
-
-   WebSocket doesn't provide semantics of state change.  Users have to
-   roll their own.
+   WebSocket gives a page a two-way channel, with no semantics of state
+   at all, so each application defines its own protocol over it.
 
 
 6.2.  Transfer-Encoding: chunked
 
-   Some people have suggested using chunked boundaries as a way to
-   encode multiple responses to a subscription.  However, chunk
-   boundaries cannot be relied upon to remain intact; they can be
-   changed by intermediaries.  The chunks are only an encoding of the
-   transfer.  They are not supposed to contain any semantic information.
-   Chunked transfer coding is also disallowed in HTTP/2, so its chunk
-   boundaries disappear over any HTTP/2 hop.
+   A server could send each response of a subscription as a chunk, in
+   chunked transfer coding.  But chunks are only an encoding of the
+   transfer, with no meaning of their own, and any intermediary can
+   re-chunk a response as it forwards it.  And HTTP/2 has no chunked
+   transfer coding at all, so the chunk boundaries disappear over any
+   HTTP/2 hop.
 
 
 6.3.  IETF work in progress
