@@ -700,11 +700,11 @@ Table of Contents
 
 2.3.6.  Interaction with Conditional Request Headers
 
-   The Version and Parents headers operate independently of the
-   conditional request headers (If-Match, If-None-Match,
-   If-Modified-Since, If-Unmodified-Since) defined in [RFC9110] Section
-   13.  Conditional headers contain entity-tags (ETags) or modification
-   dates, while Version and Parents contain versions.
+   The Version and Parents headers work alongside the conditional
+   request headers (If-Match, If-None-Match, If-Modified-Since,
+   If-Unmodified-Since) defined in [RFC9110] Section 13.  Conditional
+   headers contain entity-tags (ETags) or modification dates, while
+   Version and Parents contain versions.
 
    An ETag identifies a representation, which is a variant at a version.
    A version is a point in time, across all of a resource's variants.
@@ -1148,7 +1148,9 @@ Table of Contents
 
 3.4.  Feature table of existing approaches
 
-   This table shows which requirements each existing approach meets:
+   This table shows which requirements each existing approach meets.  An
+   X marks a requirement that the approach meets, a ~ one that it partly
+   meets, and a - one that it does not:
 
 
                          | 1a | 1b | 1c | 2a | 2b | 2c | 3a | 3b |
@@ -1331,9 +1333,9 @@ Table of Contents
 
    In fact, git itself already supports two HTTP protocols: a "dumb" and
    a "smart" protocol.  The dumb protocol uses plain HTTP, but doesn't
-   support incremental updates, so each pull re-downloads the entire
-   pack file.  With the smart protocol, the client specifies the version
-   it has, and the version it wants:
+   support incremental updates, so each pull can re-download whole pack
+   files.  With the smart protocol, the client specifies the version it
+   has, and the version it wants:
 
 
       0054want 31f1c37dfa1bf983e4d67e06fac28e8e6f
@@ -1526,7 +1528,7 @@ Table of Contents
 
    A header compression scheme can use the patterns of a Version Type to
    compress messages significantly.  For example, suppose a peer inserts
-   4 characters in a collaborative editor, with four PUTs that take 495
+   4 characters in a collaborative editor, with four PUTs that take 480
    bytes uncompressed:
 
 
@@ -1534,7 +1536,7 @@ Table of Contents
            Version: ("3f84786c-57")
            Parents: ("3f84786c-56")
            Content-Length: 1
-           Content-Range: text 471:471
+           Content-Range: text [471:471]
 
            a
 
@@ -1542,7 +1544,7 @@ Table of Contents
            Version: ("3f84786c-58")
            Parents: ("3f84786c-57")
            Content-Length: 1
-           Content-Range: text 472:472
+           Content-Range: text [472:472]
 
            s
 
@@ -1550,7 +1552,7 @@ Table of Contents
            Version: ("3f84786c-59")
            Parents: ("3f84786c-58")
            Content-Length: 1
-           Content-Range: text 473:473
+           Content-Range: text [473:473]
 
            d
 
@@ -1558,7 +1560,7 @@ Table of Contents
            Version: ("3f84786c-60")
            Parents: ("3f84786c-59")
            Content-Length: 1
-           Content-Range: text 474:474
+           Content-Range: text [474:474]
 
            f
 
@@ -1571,7 +1573,7 @@ Table of Contents
            W = "Version: (\"3f84786c-{ }\")"
            X = "Parents: (\"3f84786c-{ }\")"
            Y = "Content-Length: 1"
-           Z = "Content-Range: text { }"
+           Z = "Content-Range: text [{ }]"
 
 
    This compression reduces the messages to:
@@ -1610,8 +1612,7 @@ Table of Contents
            f
 
 
-   This initial compression reduces the 495 bytes to approximately 123
-   bytes.
+   This initial compression reduces the 480 bytes to about 140 bytes.
 
 
    We can compress further, since the numbers in each message's headers
@@ -1642,7 +1643,7 @@ Table of Contents
       insertions: String of characters to be inserted
 
 
-   We could then compress the 495 bytes down to a single 20-byte
+   We could then compress the 480 bytes down to a single 20-byte
    message:
 
            RUN(57, 471, 'asdf')
@@ -1676,7 +1677,7 @@ Table of Contents
            Version: ("3f84786c-60");type=peer-counter;text-runs
            Parents: ("3f84786c-56")
            Content-Length: 4
-           Content-Range: text 471:474
+           Content-Range: text [471:471]
 
            asdf
 
@@ -1804,8 +1805,8 @@ Table of Contents
 
 7.2.2.  Version Type Registrations
 
-   The "peer-counter" Version Type specifies that each Event ID is a
-   Lamport timestamp, with this syntax:
+   The "peer-counter" Version Type specifies that each Event ID names a
+   peer, and a counter that only increases, with this syntax:
 
       Version: ("<peer>-<counter>");type=peer-counter
 
@@ -1822,11 +1823,12 @@ Table of Contents
 
 
    The modifier "text-runs" further constrains the behavior of the
-   counter to enable run-length encoding.  Specifically, for each
-   inserted set of characters, the counter is constrained to be set to
-   the number of unicode codepoints that have been inserted; and for
-   every deleted set of characters, the counter is constrained to
-   represent the number of unicode codepoints that have been deleted.
+   counter to enable run-length encoding.  Specifically, each Unicode
+   code point that a peer inserts or deletes takes the next value of
+   that peer's counter, counting from zero, and an update's Event ID has
+   the counter of the last code point that it inserts or deletes.  So if
+   a peer's last Event ID was "3f84786c-56", and it then inserts 4 code
+   points, its new Event ID is "3f84786c-60".
 
    With "text-runs", a recipient can also infer the intermediate
    versions between any two versions sent explicitly, by assuming that
@@ -1843,8 +1845,8 @@ Table of Contents
    At the version <peer>-<counter>, the resource then has <counter>
    bytes.
 
-   For example, "x82ha-344" indicates "the resource state after peer
-   `x82ha` appended 344 bytes".
+   For example, "x82ha-344" names the state of the resource when it held
+   344 bytes, a state that peer x82ha created.
 
    This approach creates a direct correspondence between time and
    space: each version increment represents one additional byte in the
@@ -1952,8 +1954,10 @@ Table of Contents
    If a client requests a long span of history, the server could need
    significant resources to assemble and send it.  A server SHOULD
    impose limits on the size of its version history responses, and MAY
-   respond with 413 Content Too Large if a request would exceed those
-   limits.  A server MAY also rate-limit version history requests.
+   refuse a request that would exceed them: with a 403 (Forbidden), when
+   it won't fulfill the request, or with a 503 (Service Unavailable) and
+   a Retry-After header, when the limit depends on its current load.  A
+   server MAY also rate-limit version history requests.
 
    As described in Section 2.7.1, a versioning-unaware intermediary may
    store a response at a historical version, and serve it in response to
