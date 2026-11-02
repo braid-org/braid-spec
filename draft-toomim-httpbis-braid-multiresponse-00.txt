@@ -76,15 +76,16 @@ Table of Contents
    3.  The application/http-history Media Type ........................8
    3.1.  Syntax .......................................................8
    4.  The Responds-To Header .........................................9
-   5.  Implementation Status ..........................................9
-   6.  Security Considerations ........................................9
-   7.  IANA Considerations ...........................................10
-   7.1.  Status Code Registration ....................................10
-   7.2.  Media Type Registration .....................................11
-   7.3.  Field Registration ..........................................12
-   8.  References ....................................................12
-   8.1.  Normative References ........................................12
-   8.2.  Informative References ......................................12
+   5.  The Method-Override Header .....................................9
+   6.  Implementation Status .........................................10
+   7.  Security Considerations .......................................11
+   8.  IANA Considerations ...........................................11
+   8.1.  Status Code Registration ....................................11
+   8.2.  Media Type Registration .....................................12
+   8.3.  Field Registration ..........................................13
+   9.  References ....................................................13
+   9.1.  Normative References ........................................13
+   9.2.  Informative References ......................................14
 
 
 1.  Introduction
@@ -220,7 +221,7 @@ Table of Contents
    credentials, as the client's own request.  To respond to a request
    for some other resource, a sub-response names that request with a
    Responds-To key, whose specification says how to keep it safe
-   (Section 6).
+   (Section 7).
 
    Sometimes a server needs to respond to the client's own request: to
    say that the subscription has ended, for instance, or that it
@@ -305,9 +306,8 @@ Table of Contents
      - Every other response carries a Content-Length header, which gives
        the length of its content.  No response uses Transfer-Encoding.
 
-   Every sub-response responds to a HEAD request when the client's own
-   request was a HEAD.  Otherwise, the specification that defines the
-   implied requests says which ones do.
+   Every sub-response responds to a HEAD request when the multiresponse
+   has "Method-Override: HEAD" (Section 5).
 
    If a response lacks the Content-Length it needs, the recipient can't
    tell where the next one begins, so it MUST stop reading the
@@ -339,7 +339,77 @@ Table of Contents
    to, so it MUST ignore the sub-response.
 
 
-5.  Implementation Status
+5.  The Method-Override Header
+
+   Sometimes a client wants just the headers of each response in a
+   multiresponse, such as the versions in a span of history.  It can't
+   send a HEAD request for them, because a response to a HEAD has no
+   content (Section 9.3.2 of [RFC9110]), so it can't hold any
+   sub-responses.  So the client sends a GET, with the Method-Override
+   header:
+
+
+      Request:
+
+         GET /chat
+         Parents: ("1")
+         Version: ("3")
+         Method-Override: HEAD
+
+      Response:
+
+         HTTP/1.1 209 Multiresponse
+         Content-Type: application/http-history
+         Cache-Control: no-store
+         Method-Override: HEAD
+
+         HTTP/1.1 200 OK                                  | Sub-response
+         Version: ("2")                                   |
+         Parents: ("1")                                   |
+         Content-Type: text/plain                         |
+         Content-Length: 5                                |
+                                                          |
+
+         HTTP/1.1 200 OK                                  | Sub-response
+         Version: ("3")                                   |
+         Parents: ("2")                                   |
+         Content-Type: text/plain                         |
+         Content-Length: 11                               |
+                                                          |
+
+
+   "Method-Override: HEAD" makes each implied request a HEAD.  So each
+   sub-response has the header section that the response to a GET
+   would have, and ends at the empty line after it (Section 3.1).  Its
+   Content-Length gives the length that its content would have, as in
+   any response to a HEAD (Section 8.6 of [RFC9110]).  The
+   multiresponse itself responds to the GET, so its content holds the
+   sub-responses.
+
+   Method-Override is a Simpler Field [SIMPLER-FIELDS], whose value is
+   a Token that names a method.  This document defines one value,
+   HEAD.  A recipient ignores any value it doesn't know, and other
+   specifications can define more.
+
+   If a server responds with a multiresponse, it MUST send each
+   sub-response as a response to a HEAD, and include
+   "Method-Override: HEAD" in the header section of the multiresponse
+   itself.  A recipient needs that header to find where each
+   sub-response ends, since a response to a HEAD can have a
+   Content-Length with no content after it.
+
+   If a server responds with a non-multiresponse, it MUST ignore
+   Method-Override, and send that response with its content.
+   Otherwise, a cache that doesn't know Method-Override could store the
+   response without its content, and serve it to other clients' GETs.
+   A client that wants just the headers of a response sends a HEAD.
+
+   If a server doesn't know Method-Override, it sends each sub-response
+   with its content, and no Method-Override header, so the client reads
+   them as usual.
+
+
+6.  Implementation Status
 
    This section is to be removed before publishing as an RFC.  It
    records known implementations at the time of posting, as described
@@ -348,6 +418,10 @@ Table of Contents
    The reference JavaScript library [BRAID-HTTP-JS], for clients and
    servers, sends and parses multiresponses, for subscriptions.
 
+   braid-text [BRAID-TEXT], a library for synchronizing text, accepts
+   "Method-Override: HEAD" on a subscription, and sends each update
+   without its content.
+
    In September 2026 we tested 209 Multiresponses through Cloudflare's
    network with the HTTP cache-tests suite [CACHE-TESTS].  Cloudflare
    passed them through unchanged, streaming each sub-response as it was
@@ -355,8 +429,8 @@ Table of Contents
    [RFC9111] allows, which is why every 209 carries no-store (Section
    2.3).
 
-
-6.  Security Considerations
+
+7.  Security Considerations
 
    Every implied request has the same target URI as the client's own
    request (Section 2.2), so a multiresponse can put responses into a
@@ -375,16 +449,20 @@ Table of Contents
    splitting.  Requiring a Content-Length, and stopping when it's
    missing (Section 3.1), keeps each response's boundaries clear.
 
-
    Assembling and sending a long history costs a server resources, so a
    server can limit how large a multiresponse it sends, and how often it
    responds to requests for them.
 
+   If Method-Override could name any method, a GET could act as a
+   DELETE, past any filter that allows GETs.  So this document defines
+   only HEAD, which is safe, as GET is (Section 9.2.1 of [RFC9110]),
+   and Method-Override changes only the implied requests.
 
-7.  IANA Considerations
+
+8.  IANA Considerations
 
 
-7.1.  Status Code Registration
+8.1.  Status Code Registration
 
    This document registers the following status code in the "Hypertext
    Transfer Protocol (HTTP) Status Code Registry", maintained at
@@ -397,7 +475,7 @@ Table of Contents
       Reference: Section 2 of this document
 
 
-7.2.  Media Type Registration
+8.2.  Media Type Registration
 
    This document registers the application/http-history media type, in
    the "Media Types" registry maintained at
@@ -418,7 +496,7 @@ Table of Contents
 
       Encoding considerations: binary, as for application/http.
 
-      Security considerations: see Section 6 of this document.
+      Security considerations: see Section 7 of this document.
 
       Interoperability considerations: an HTTP/1.1 parser reads it,
       given the framing rules of Section 3.1.
@@ -446,9 +524,9 @@ Table of Contents
       Change controller: IETF
 
 
-7.3.  Field Registration
+8.3.  Field Registration
 
-   This document registers the following field in the "Hypertext
+   This document registers the following fields in the "Hypertext
    Transfer Protocol (HTTP) Field Name Registry", maintained at
    <https://www.iana.org/assignments/http-fields>, as described in
    Section 16.3.1 of [RFC9110]:
@@ -459,11 +537,16 @@ Table of Contents
       Structured Type: Dictionary
       Reference: Section 4 of this document
 
+      Field Name: Method-Override
+      Status: permanent
+      Structured Type: Item
+      Reference: Section 5 of this document
 
-8.  References
+
+9.  References
 
 
-8.1.  Normative References
+9.1.  Normative References
 
    [RFC2119]  Bradner, S., "Key words for use in RFCs to Indicate
               Requirement Levels", BCP 14, RFC 2119, March 1997.
@@ -488,12 +571,16 @@ Table of Contents
               draft-toomim-httpbis-simpler-fields-00, work in progress,
               November 2026.
 
-
-8.2.  Informative References
+
+9.2.  Informative References
 
    [BRAID-HTTP-JS]
               braid.org, "braid-http",
               <https://github.com/braid-org/braid-http>.
+
+   [BRAID-TEXT]
+              braid.org, "braid-text",
+              <https://github.com/braid-org/braid-text>.
 
    [CACHE-TESTS]
               Nottingham, M., "HTTP Caching Tests",
@@ -503,7 +590,6 @@ Table of Contents
               Specifications and Registration Procedures", BCP 13,
               RFC 6838, January 2013.
 
-
    [RFC7942]  Sheffer, Y. and A. Farrel, "Improving Awareness of Running
               Code: The Implementation Status Section", BCP 205,
               RFC 7942, July 2016.

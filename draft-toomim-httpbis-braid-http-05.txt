@@ -213,7 +213,7 @@ Table of Contents
                    client  client  client
 
 
-   While that subscription is live, the origin pushes each change into
+   While that subscription is open, the origin pushes each change into
    the cache in half a round trip, so the cache serves the new state
    even to plain GETs of /chat.
 

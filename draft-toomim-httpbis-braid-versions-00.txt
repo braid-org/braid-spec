@@ -594,6 +594,7 @@ Table of Contents
 
          HTTP/1.1 209 Multiresponse
          Content-Type: application/http-history
+         Cache-Control: no-store
          Current-Version: ("3")
 
          HTTP/1.1 200 OK
@@ -631,19 +632,24 @@ Table of Contents
 
 
    If the client just wants the version identifiers for a span of
-   history, it can use a HEAD request:
+   history, it can send its GET with "Method-Override: HEAD".  Then the
+   server sends each response in the span as a response to a HEAD, with
+   no content, and sends the same header in its 209 [Multiresponse]:
 
 
       Request:
 
-         HEAD /chat
+         GET /chat
          Parents: ("ej4lhb9z78")
          Version: ("oakwn5b8qh")
+         Method-Override: HEAD
 
       Response:
 
          HTTP/1.1 209 Multiresponse
          Content-Type: application/http-history
+         Cache-Control: no-store
+         Method-Override: HEAD
 
          HTTP/1.1 200 OK
          Parents: ("ej4lhb9z78")
@@ -679,12 +685,12 @@ Table of Contents
        Parents to the specified Version.  If no Version is specified,
        then it should update the client to the server's current version.
 
+
      - If every event in the requested Version, or in the server's
        current version when no Version is specified, is among the
        Parents or their ancestors, then the server responds with 304 Not
        Modified, with a Version header naming that version.
 
-
      - If the server does not support historical versions, then it MAY
        ignore the Parents header, but MUST NOT include the Parents
        header in its response.
@@ -1317,6 +1323,8 @@ Table of Contents
       Response:
 
          HTTP/1.1 209 Multiresponse
+         Content-Type: application/http-history
+         Cache-Control: no-store
 
          HTTP/1.1 200 OK
          Content-Type: text/markdown
@@ -1357,10 +1365,10 @@ Table of Contents
          Version: ("31f1c37dfa1bf983e4d67e06fac28e8e6f")
          Parents: ("e68fe437718c37155c7e3e5f4a3ff17c4f476940")
 
-
+
    This expresses aspects of the "smart" git protocol over plain HTTP.
 
-
+
 4.3.  Resumable uploads protocol
 
    Resource Versioning semantics enable efficient implementation of
@@ -1474,6 +1482,10 @@ Table of Contents
       Response:
 
          HTTP/1.1 209 Multiresponse
+         Subscribe: stream
+         Content-Type: application/http-history
+         Cache-Control: no-store
+         Incremental: ?1
 
          HTTP/1.1 200 OK
          Version: ("2agvvzgccrq-5");type=peer-counter;text-runs
@@ -1507,17 +1519,21 @@ Table of Contents
 
    This versioning system supports multiple [Merge-Types], and they can
    even co-exist simultaneously for the same resource.  For instance,
-   braid-text supports two merge-types simultaneously:
+   braid-text supports three merge-types simultaneously:
 
      - The "simpleton" merge-type requires the server to rebase all
        edits for the client
 
+
      - The "dt" merge-type uses a fully peer-to-peer merge algorithm
        called Diamond-Types
 
-
-   Clients can connect with either merge-type, and can even change
-   merge-type on-the-fly -- the version history itself can be re-used.
+     - The "yjs" merge-type uses Yjs, another peer-to-peer merge
+       algorithm
+
+   Clients can connect with any of these merge-types, and can even
+   change merge-type on-the-fly -- the version history itself can be
+   re-used.
 
 
 4.5.  Improved Header Compression with runs
@@ -1560,7 +1576,7 @@ Table of Contents
 
            f
 
-
+
    Huffman Encoding (e.g. in HTTP's HPACK and QPACK) can compress these
    headers by identifying repeated strings and assigning them codes:
 
@@ -1571,7 +1587,7 @@ Table of Contents
            Y = "Content-Length: 1"
            Z = "Content-Range: text { }"
 
-
+
    This compression reduces the messages to:
 
 

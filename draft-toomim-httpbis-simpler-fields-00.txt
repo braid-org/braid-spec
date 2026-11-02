@@ -128,7 +128,7 @@ Table of Contents
 
    Several fields are Simpler Fields, including Version, Parents, and
    Current-Version [VERSIONS], Subscribe, Heartbeats, and Origin-Status
-   [SUBSCRIPTIONS], and Responds-To [MULTIRESPONSE].
+   [SUBSCRIPTIONS], and Responds-To and Method-Override [MULTIRESPONSE].
 
 
 1.1.  Conventions
