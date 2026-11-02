@@ -102,7 +102,7 @@ Table of Contents
 
 1.  Introduction
 
-   A server responds to each GET once.  If the resource changes
+   A server responds to an ordinary GET once.  If the resource changes
    afterward, the client does not hear about it, unless it asks again.
    For example, imagine a newspaper's website on election night, with a
    results page at /election that changes all evening.  Every reader

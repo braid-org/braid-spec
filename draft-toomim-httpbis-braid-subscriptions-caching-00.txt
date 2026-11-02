@@ -9,17 +9,18 @@ Expires: 6 May 2027
 
 Abstract
 
-   A cache can serve a stored response only while the response is fresh,
-   and then has to ask the origin server whether the resource has
-   changed.  So a cache serves a resource that changes often either
-   stale, or with a request to the origin server each time.  This
-   document defines how a cache subscribes to the resource, as any HTTP
-   client can.  The cache stores each response in the subscription as
-   the response to a GET.  While the subscription is continuously
-   validating, the cache knows at every moment that its copy is current,
-   so it can answer requests from the copy without asking the origin
-   server, even for responses marked no-cache.  When validation stops,
-   the copy ages, and HTTP's rules for stale responses apply.
+   Without a subscription, a cache can serve a stored response only
+   while the response is fresh, and then has to ask the origin server
+   whether the resource has changed.  So a cache serves a resource that
+   changes often either stale, or with a request to the origin server
+   each time.  This document defines how a cache subscribes to the
+   resource, as any HTTP client can.  The cache stores each response in
+   the subscription as the response to a GET.  While the subscription is
+   continuously validating, the cache knows at every moment that its
+   copy is current, so it can answer requests from the copy without
+   asking the origin server, even for responses marked no-cache.  When
+   validation stops, the copy ages, and HTTP's rules for stale responses
+   apply.
 
    A cache can also serve many subscribers of its own from one
    subscription to the origin server, and keep private responses
@@ -95,12 +96,12 @@ Table of Contents
 
 1.  Introduction
 
-   HTTP caches serve a stored response only while it is fresh (Section
-   4.2 of [RFC9111]), and then ask the origin server whether the
-   resource has changed.  For example, imagine a newspaper's website on
-   election night, as in [SUBSCRIPTIONS], with a results page at
-   /election that changes all evening.  The results change too often for
-   any freshness lifetime to suit them.  With
+   Without a subscription, an HTTP cache serves a stored response only
+   while it is fresh (Section 4.2 of [RFC9111]), and then asks the
+   origin server whether the resource has changed.  For example, imagine
+   a newspaper's website on election night, as in [SUBSCRIPTIONS], with
+   a results page at /election that changes all evening.  The results
+   change too often for any freshness lifetime to suit them.  With
    "Cache-Control: max-age=0", the CDN has to validate its copy with the
    origin server for every reader's reload.  With a longer lifetime,
    readers see stale results, unless the paper purges the CDN's copy at

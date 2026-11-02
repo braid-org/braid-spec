@@ -16,29 +16,10 @@ becomes a HyperState Synchronization Protocol.  Start here.
 
 ## The extensions
 
-### Versions: [`draft-toomim-httpbis-braid-versions-00.txt`](https://raw.githubusercontent.com/braid-org/braid-spec/master/draft-toomim-httpbis-braid-versions-00.txt)
-
-HTTP can't name a point in a resource's history.  Versions names points in
-time, with the events of a DAG, so that a client can GET the state at a
-version, and say which version its PUT builds on.
-
-### Updates: [`draft-toomim-httpbis-braid-updates-00.txt`](https://raw.githubusercontent.com/braid-org/braid-spec/master/draft-toomim-httpbis-braid-updates-00.txt)
-
-HTTP can't express a change the same way from client to server and from
-server to client.  Updates defines snapshots, patches, and deletions that mean
-the same thing in a request and in a response, so every peer that replays
-them reaches the same state.
-
-### Multiresponse: [`draft-toomim-httpbis-braid-multiresponse-00.txt`](https://raw.githubusercontent.com/braid-org/braid-spec/master/draft-toomim-httpbis-braid-multiresponse-00.txt)
-
-Each HTTP request gets one response.  Multiresponse defines the 209
-Multiresponse status code, whose content holds several responses, and
-application/http-history, a format for a resource's responses over time.
-
 ### Subscriptions: [`draft-toomim-httpbis-braid-subscriptions-00.txt`](https://raw.githubusercontent.com/braid-org/braid-spec/master/draft-toomim-httpbis-braid-subscriptions-00.txt)
 
-A server responds to a GET once, so the client doesn't hear when the resource
-changes later.  With a subscription, the server sends the current state, and
+An ordinary GET gets one response, so the client doesn't hear when the
+resource changes later.  With a subscription, the server sends the current state, and
 then each change as it happens.  Each response is the one that the server
 would have sent to the same GET just after the change, so a cache can store
 it, and can answer requests from its copy for as long as the subscription
@@ -61,11 +42,30 @@ more subscription modes: long polling, in which the client sends a GET for
 each change, and webhooks, in which the origin server pushes each change to a
 subscription gateway.
 
+### Updates: [`draft-toomim-httpbis-braid-updates-00.txt`](https://raw.githubusercontent.com/braid-org/braid-spec/master/draft-toomim-httpbis-braid-updates-00.txt)
+
+HTTP has no way to express a change that means the same from client to
+server and from server to client.  Updates defines snapshots, patches, and deletions that mean
+the same thing in a request and in a response, so every peer that replays
+them reaches the same state.
+
+### Versions: [`draft-toomim-httpbis-braid-versions-00.txt`](https://raw.githubusercontent.com/braid-org/braid-spec/master/draft-toomim-httpbis-braid-versions-00.txt)
+
+HTTP has no way to name a point in a resource's history.  Versions names
+points in time, with the events of a DAG, so that a client can GET the state at a
+version, and say which version its PUT builds on.
+
 ### Merge Types: [`draft-toomim-httpbis-braid-merge-types-00.txt`](https://raw.githubusercontent.com/braid-org/braid-spec/master/draft-toomim-httpbis-braid-merge-types-00.txt)
 
 HTTP doesn't say how to merge changes that peers make in parallel.  A Merge
 Type says how to merge them, so that every peer reaches the same state.  It
 builds on Versions and Updates.
+
+### Multiresponse: [`draft-toomim-httpbis-braid-multiresponse-00.txt`](https://raw.githubusercontent.com/braid-org/braid-spec/master/draft-toomim-httpbis-braid-multiresponse-00.txt)
+
+Each HTTP request gets one response.  Multiresponse defines the 209
+Multiresponse status code, whose content holds several responses, and
+application/http-history, a format for a resource's responses over time.
 
 ## The syntax they share
 

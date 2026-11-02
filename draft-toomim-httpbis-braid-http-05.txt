@@ -71,7 +71,7 @@ Copyright Notice
 Table of Contents
 
    1.  Introduction ...................................................4
-   1.1.  HTTP sends one snapshot per request ..........................4
+   1.1.  HTTP alone sends one snapshot per request ....................4
    1.2.  HTTP gains versions, updates, and subscriptions ..............4
    2.  The extensions are modular and composable ......................6
    3.  Combined, the extensions let peers resume, replay, and merge ...7
@@ -97,7 +97,7 @@ Table of Contents
 1.  Introduction
 
 
-1.1.  HTTP sends one snapshot per request
+1.1.  HTTP alone sends one snapshot per request
 
    HTTP [RFC9110] transfers a snapshot of state within a single request
    and response.  If the state changes, HTTP does not automatically
@@ -134,13 +134,13 @@ Table of Contents
 1.2.  HTTP gains versions, updates, and subscriptions
 
    Each of these workarounds exists because HTTP is missing a piece.
-   HTTP cannot name a point in a resource's history, cannot express a
+   HTTP has no way to name a point in a resource's history, to express a
    change the same way from client to server and from server to client,
-   cannot send several 200 responses per request, and cannot keep
-   responding to a GET as its resource changes.  Braid-HTTP adds each
-   missing piece as a separate extension, which is useful by itself.
-   Together, they generalize HTTP into a synchronization protocol, and
-   ReST into a synchronization architecture:
+   to send several 200 responses per request, or to keep responding to a
+   GET as its resource changes.  Braid-HTTP adds each missing piece as a
+   separate extension, which is useful by itself.  Together, they
+   generalize HTTP into a synchronization protocol, and ReST into a
+   synchronization architecture:
 
 
          HTTP:         HyperText  *Transfer* Protocol
@@ -228,7 +228,7 @@ Table of Contents
    Each one addresses one limitation of HTTP, in a separate
    specification:
 
-   Versions [VERSIONS]:  HTTP cannot name a point in a resource's
+   Versions [VERSIONS]:  HTTP has no way to name a point in a resource's
       history.  Versions names points in time, with the events of a DAG.
       A client can GET the state at a version, and say which version its
       PUT builds on.
@@ -240,21 +240,21 @@ Table of Contents
       both requests and responses.  Each one replays the same way at
       every peer.
 
-   Multiresponse [MULTIRESPONSE]:  HTTP sends one response to each
-      request.  Multiresponse defines the 209 Multiresponse status code,
-      whose content holds several responses.  It also defines
+   Multiresponse [MULTIRESPONSE]:  Each HTTP request gets one response.
+      Multiresponse defines the 209 Multiresponse status code, whose
+      content holds several responses.  It also defines
       application/http-history, a format for a resource's responses over
       time.
 
 
-   Subscriptions [SUBSCRIPTIONS]:  HTTP responds to a GET once, and the
-      client does not hear when its resource changes later.  With a
-      subscription, the server sends each change as it happens, in a
-      multiresponse.  Two documents extend it: Subscriptions Caching
-      [SUBSCRIPTIONS-CACHING] lets caches fan one upstream subscription
-      out to many subscribers, and Poll and Push [POLL-AND-PUSH] serves
-      subscriptions from origins, and through paths, that cannot hold a
-      response open.
+   Subscriptions [SUBSCRIPTIONS]:  An ordinary GET gets one response,
+      and the client does not hear when its resource changes later.
+      With a subscription, the server sends each change as it happens,
+      in a multiresponse.  Two documents extend it: Subscriptions
+      Caching [SUBSCRIPTIONS-CACHING] lets caches fan one upstream
+      subscription out to many subscribers, and Poll and Push
+      [POLL-AND-PUSH] serves subscriptions from origins, and through
+      paths, that cannot hold a response open.
 
    Merge Types [MERGE-TYPES]:  HTTP does not say how to merge changes
       that peers make in parallel.  A Merge Type says how to merge them,
