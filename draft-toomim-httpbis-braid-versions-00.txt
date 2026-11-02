@@ -121,9 +121,9 @@ Table of Contents
    7.2.3.  Comments on Version Type Registrations ..................40
    7.2.4.  Change Procedures .......................................40
    8.  Implementation Status .......................................41
-   9.  Security Considerations .....................................41
-   10.  References .................................................42
-   10.1.  Normative References .....................................42
+   9.  Security Considerations .....................................42
+   10.  References .................................................43
+   10.1.  Normative References .....................................43
    10.2.  Informative References ...................................43
 
 
@@ -1935,11 +1935,15 @@ Table of Contents
        Firefox, lets a developer view and navigate the version history
        of a resource.
 
+     - Editor plugins for Emacs [Braid-Emacs], Neovim [Braid-Neovim],
+       and VS Code [Braid-VSCode] send Version and Parents with each
+       PUT.
+
      - The Braid-HTTP polyfill for Cloudflare [CDN-Polyfills] serves a
        cached copy to a request that names a version only when the copy
        is at exactly that version (Section 2.7).
 
-
+
 9.  Security Considerations
 
    Version IDs may reveal information about the structure and activity
@@ -1960,7 +1964,6 @@ Table of Contents
    Not Found if acknowledging the existence of a version would itself
    constitute an information leak.
 
-
    Requesting a long span of history could require significant server
    resources to assemble and transmit.  Servers SHOULD impose limits on
    the size of version history responses and MAY respond with 413
@@ -1986,7 +1989,7 @@ Table of Contents
    clients as opaque, unverified claims rather than trusted
    identifiers.
 
-
+
 10.  References
 
 
@@ -2015,7 +2018,6 @@ Table of Contents
    [RFC9651]  Nottingham, M. and P-H. Kamp, "Structured Field Values for
               HTTP", RFC 9651, September 2024.
 
-
    [Multiresponse]
               Toomim, M., "Multiresponses for HTTP",
               draft-toomim-httpbis-braid-multiresponse-00, work in
@@ -2045,6 +2047,7 @@ Table of Contents
               draft-toomim-httpbis-braid-updates-00, work in progress,
               November 2026.
 
+
    [Range-Patch]
               Milutinovic, M., Toomim, M., and B. Bellomy, "Range
               Patch", draft-toomim-httpbis-range-patch-00, work in
@@ -2072,7 +2075,6 @@ Table of Contents
               Types for Simple Version Navigation between Web
               Resources", RFC 5829, April 2010.
 
-
    [RFC8246]  McManus, P., "HTTP Immutable Responses", RFC 8246,
               September 2017.
 
@@ -2098,6 +2100,19 @@ Table of Contents
    [Braid-Chrome]
               braid.org, "braid-chrome",
               <https://github.com/braid-org/braid-chrome>.
+
+   [Braid-Emacs]
+              braid.org, "braid-emacs",
+              <https://github.com/braid-org/braid-emacs>.
+
+
+   [Braid-Neovim]
+              braid.org, "braid-neovim",
+              <https://github.com/braid-org/braid-neovim>.
+
+   [Braid-VSCode]
+              braid.org, "braid-vscode",
+              <https://github.com/braid-org/braid-vscode>.
 
 
 Authors' Addresses

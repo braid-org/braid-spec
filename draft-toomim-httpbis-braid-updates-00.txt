@@ -577,6 +577,10 @@ Table of Contents
        this document keeps Content-Type for the media type of the
        resource.
 
+     - Editor plugins for Emacs [BRAID-EMACS] and Neovim [BRAID-NEOVIM]
+       send versioned PUTs with patches, from HTTP clients of their own,
+       written in Emacs Lisp and Lua.
+
      - No implementation yet sends Patch-Type, 210 (Patch), or
        Accept-Patch and Accept-Ranges in requests.
 
@@ -697,6 +701,10 @@ Table of Contents
 
 10.2.  Informative References
 
+   [BRAID-EMACS]
+              braid.org, "braid-emacs",
+              <https://github.com/braid-org/braid-emacs>.
+
    [BRAID-HTTP]
               Toomim, M., Little, G., Walker, R., Bellomy, B., and J.
               Gentle, "Braid-HTTP: State Synchronization for HTTP",
@@ -706,6 +714,10 @@ Table of Contents
    [BRAID-HTTP-JS]
               braid.org, "braid-http",
               <https://github.com/braid-org/braid-http>.
+
+   [BRAID-NEOVIM]
+              braid.org, "braid-neovim",
+              <https://github.com/braid-org/braid-neovim>.
 
    [BRAID-TEXT]
               braid.org, "braid-text",
@@ -738,14 +750,14 @@ Table of Contents
               draft-toomim-httpbis-braid-subscriptions-00, work in
               progress, November 2026.
 
-
+
 Acknowledgements
 
    Range Patch (draft-toomim-httpbis-range-patch), by Mitar Milutinovic,
    Michael Toomim, and Bryn Bellomy, is the basis for the range patches
    in this document.
 
-
+
 Author's Address
 
    Michael Toomim

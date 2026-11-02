@@ -422,6 +422,10 @@ Table of Contents
    "Method-Override: HEAD" on a subscription, and sends each update
    without its content.
 
+   Editor plugins for Emacs [BRAID-EMACS] and Neovim [BRAID-NEOVIM]
+   parse multiresponses, for subscriptions, with HTTP clients of their
+   own.
+
    In September 2026 we tested 209 Multiresponses through Cloudflare's
    network with the HTTP cache-tests suite [CACHE-TESTS].  Cloudflare
    passed them through unchanged, streaming each sub-response as it was
@@ -574,9 +578,17 @@ Table of Contents
 
 9.2.  Informative References
 
+   [BRAID-EMACS]
+              braid.org, "braid-emacs",
+              <https://github.com/braid-org/braid-emacs>.
+
    [BRAID-HTTP-JS]
               braid.org, "braid-http",
               <https://github.com/braid-org/braid-http>.
+
+   [BRAID-NEOVIM]
+              braid.org, "braid-neovim",
+              <https://github.com/braid-org/braid-neovim>.
 
    [BRAID-TEXT]
               braid.org, "braid-text",
