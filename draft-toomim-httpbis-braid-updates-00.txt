@@ -1,5 +1,5 @@
 Internet-Draft                                                 M. Toomim
-Updates: 9110 (if approved)                            Invisible College
+Updates: 5789, 9110 (if approved)                      Invisible College
 Intended status: Proposed Standard                       2 November 2026
 Expires: 6 May 2027
 
@@ -84,20 +84,22 @@ Table of Contents
    3.  A snapshot is a PUT request, or a 200 response .................7
    4.  Patch formats specify deterministic changes ....................8
    4.1.  Patch-Type allows any patch format, in both directions .......8
-   4.2.  Range patches are enough for most changes ....................9
+   4.2.  Range patches are enough for most changes ...................10
    4.2.1.  This document extends the syntax of Content-Range .........10
-   4.2.2.  This document defines the text range unit .................10
+   4.2.2.  This document defines the text range unit .................11
    4.3.  An update can contain several patches .......................11
    5.  A deletion is a DELETE request, or a 410 response .............12
-   6.  Peers replay updates to reproduce the same state ..............12
-   7.  Security Considerations .......................................13
-   8.  IANA Considerations ...........................................13
-   8.1.  HTTP Status Code ............................................13
-   8.2.  HTTP Field Names ............................................13
-   8.3.  HTTP Range Unit .............................................14
-   9.  References ....................................................14
-   9.1.  Normative References ........................................14
-   9.2.  Informative References ......................................15
+   6.  Peers replay updates to reproduce the same state ..............13
+   7.  Implementation Status .........................................13
+   8.  Security Considerations .......................................14
+   9.  IANA Considerations ...........................................14
+   9.1.  HTTP Status Code ............................................14
+   9.2.  HTTP Field Names ............................................14
+   9.3.  HTTP Range Unit .............................................15
+   9.4.  Accept-Patch and Accept-Ranges ..............................15
+   10.  References ...................................................15
+   10.1.  Normative References .......................................15
+   10.2.  Informative References .....................................16
 
 
 1.  Introduction
@@ -158,9 +160,8 @@ Table of Contents
    "Hello everyone".
 
 
-   We call updates with both properties "replayable".  A sequence of
-   them is a history that any peer can replay, to reproduce the same
-   states.
+   A sequence of updates is a history that any peer can replay, to
+   reproduce the same states, so we call them "replayable".
 
    This document defines three kinds of updates: snapshots, patches, and
    deletions.  Range patches, like the one above, are one class of
@@ -178,6 +179,9 @@ Table of Contents
    "OPTIONAL" in this document are to be interpreted as described in BCP
    14 [RFC2119] [RFC8174] when, and only when, they appear in all
    capitals, as shown here.
+
+   This document uses the Augmented Backus-Naur Form (ABNF) notation of
+   [RFC5234], and the rules range-unit and field-content of [RFC9110].
 
    This document uses these terms from Versions [VERSIONS]: Version,
    Parents, and current version.  It also uses these:
@@ -216,22 +220,24 @@ Table of Contents
    thing, on opposite sides of the client/server divide:
 
 
-   +-------------+-------------------------+----------------------+
-   | Update      | Request                 | Response             |
-   +-------------+-------------------------+----------------------+
-   | Snapshot    | PUT                     | 200 (OK)             |
-   | Patch       | PUT with Patch-Type     | 210 (Patch)          |
-   | Range patch | PUT with Content-Range  | 206 (Partial         |
-   |             |                         | Content)             |
-   | Deletion    | DELETE                  | 410 (Gone)           |
-   +-------------+-------------------------+----------------------+
+   +-------------+------------------------+-----------------------+
+   | Update      | Request                | Response              |
+   +-------------+------------------------+-----------------------+
+   | Snapshot    | PUT                    | 200 (OK)              |
+   | Patch       | PUT with Patch-Type    | 210 (Patch)           |
+   | Range patch | PUT with Content-Range | 206 (Partial Content) |
+   | Deletion    | DELETE                 | 410 (Gone)            |
+   +-------------+------------------------+-----------------------+
 
 
    A client sends an update to change the resource on a server.  A
    server sends one in response to a request for the resource's state:
    for instance, a GET with Parents, which asks for the updates since
    that version ([VERSIONS], Section 2.3.4), or a subscription
-   [SUBSCRIPTIONS].
+   [SUBSCRIPTIONS].  A response is an update only when it responds to a
+   GET, whether a client sent the GET or a multiresponse implies it
+   [MULTIRESPONSE].  So a 200 or 204 that acknowledges a client's PUT is
+   not an update.
 
    An update's Version header says which version it creates, and its
    Parents header says which version it applies to [VERSIONS].  If an
@@ -293,19 +299,23 @@ Table of Contents
    A patch changes part of the state, and its patch format specifies
    how.  A patch is a function of the prior snapshot: it produces the
    next snapshot from the prior one, and needs no other information.  So
-   a patch format has no merging, no locking, and no preconditions.
-   When peers make updates in parallel, Merge Types [MERGE-TYPES]
-   specify how to merge them.
+   a patch MUST NOT depend on anything but the prior snapshot: its patch
+   format has no merging, no locking, and no preconditions.  When peers
+   make updates in parallel, Merge Types [MERGE-TYPES] specify how to
+   merge them.
 
    For example, JSON Patch [RFC6902] has a "test" operation, which makes
    the whole patch fail if a value does not match.  That is a
    precondition, so a JSON Patch sent as an update MUST NOT contain a
    "test" operation.
 
-   If a patch cannot apply to the prior snapshot, the update is an
-   error.  A server responds to it with 422 (Unprocessable Content).  If
-   a client cannot apply one, it discards the update, and raises an
-   error.
+   If a server does not support a patch's format or range unit, it
+   responds with 415 (Unsupported Media Type), and lists the ones it
+   supports in Accept-Patch [RFC5789] or Accept-Ranges.  If the patch is
+   malformed, the server responds with 400 (Bad Request), and if it
+   cannot apply to the prior snapshot, with 422 (Unprocessable Content).
+   If a client cannot apply an update, it discards the update, and
+   raises an error.
 
 
 4.1.  Patch-Type allows any patch format, in both directions
@@ -326,7 +336,7 @@ Table of Contents
 
          [{"op": "replace", "path": "/name", "value": "Mike"}]
 
-
+
    Content-Type still says what kind of resource this is: a JSON
    document.  Patch-Type says how to read the content: as a JSON Patch
    to that document.  A server sends the same patch in a 210 (Patch):
@@ -344,13 +354,14 @@ Table of Contents
 
          [{"op": "replace", "path": "/name", "value": "Mike"}]
 
-
+
    The 210 (Patch) status code means that the content is a patch to the
-   state at its Parents, in the patch format of its Patch-Type.  If a
-   client does not know 210, it treats the response as a 200 (Section 15
-   of [RFC9110]), and takes the patch for the resource itself.  So a
-   server sends a 210 only in response to a request whose Accept-Patch
-   lists that patch format (Section 2).
+   state at its Parents, in the patch format of its Patch-Type, or, with
+   a Patches header, several patches (Section 4.3).  If a client does
+   not know 210, it treats the response as a 200 (Section 15 of
+   [RFC9110]), and takes the patch for the resource itself.  So a server
+   sends a 210 only in response to a request whose Accept-Patch lists
+   that patch format (Section 2).
 
    A 210 is not heuristically cacheable.  A server SHOULD send it with
    "Cache-Control: must-understand, no-store", so that only a cache that
@@ -372,14 +383,14 @@ Table of Contents
    its parameters, it cannot apply the patch, and treats the update as
    an error (Section 4).
 
-
+
 4.2.  Range patches are enough for most changes
 
    A range patch replaces one range of the prior snapshot with its
    content.  The content can be longer or shorter than the range, or
    empty: an empty range inserts, and empty content deletes.  So range
-   patches are enough for nearly every change, since any edit to text or
-   bytes is one or more replaced ranges.
+   patches are enough for most changes, since any edit to text or bytes
+   is one or more replaced ranges.
 
    Range patches are the class of patch that HTTP's Content-Range header
    already expresses, as a range unit and a range.  A client sends one
@@ -392,9 +403,14 @@ Table of Contents
    a recipient that it is an update.  Its ETag, if any, identifies the
    representation after the patch applies.  That representation differs
    from any that a cache has stored, so a cache does not combine the 206
-   with a stored response under Section 3.4 of [RFC9111].
+   with a stored response under Section 3.4 of [RFC9111].  A server
+   sends a 206 update with "Vary: Version, Parents", so that a cache
+   keys it by the version it applies to ([VERSIONS], Section 2.7).  If a
+   cache does not implement this document, it does not use the 206 to
+   answer a GET without a Range header (Section 3.3 of [RFC9111]).  If
+   it does, it can store the 206 as an update.
 
-
+
 4.2.1.  This document extends the syntax of Content-Range
 
    RFC 9110 lets a range unit define its own syntax in the Range header,
@@ -414,7 +430,7 @@ Table of Contents
    and what they mean.  The "bytes" unit keeps the syntax of Section
    14.4 of [RFC9110].
 
-
+
 4.2.2.  This document defines the text range unit
 
    The "text" range unit addresses the text of a representation by its
@@ -437,7 +453,7 @@ Table of Contents
    start, or either position is past the end of the text, the patch
    cannot apply (Section 4).
 
-
+
 4.3.  An update can contain several patches
 
    An update can contain several patches.  It says how many in a Patches
@@ -464,11 +480,15 @@ Table of Contents
                                                             |
          world                                              |
 
-
-   Each patch has a Content-Length, which tells the recipient where it
-   ends, and a Content-Range or a Patch-Type, which says how to apply
-   it.  The update's own Content-Length counts all of its content.  A
-   server sends several patches in a 210 (Patch), with a Patches header.
+
+   All the patches in one update have the same patch type.  Either every
+   patch is a range patch, with its own Content-Range, or every patch is
+   in the format of the update's Patch-Type.  Each patch has a
+   Content-Length, which tells the recipient where it ends.  A sender
+   SHOULD put at least one blank line between patches, and MAY put more,
+   and a recipient skips them.  The update's own Content-Length counts
+   all of its content, blank lines included.  A server sends several
+   patches in a 210 (Patch), with a Patches header.
 
    Every patch applies to the prior snapshot, in parallel, without
    knowledge of the others.  So in this example, the second range,
@@ -482,7 +502,7 @@ Table of Contents
    an Integer, the number of patches, which is at least 1.  A recipient
    ignores parameters that it does not know.
 
-
+
 5.  A deletion is a DELETE request, or a 410 response
 
    A deletion removes the resource.  A client sends one in a DELETE:
@@ -513,7 +533,7 @@ Table of Contents
    client.  If a server wants clients to replay a deletion, it responds
    with 410.  A later snapshot can create the resource again.
 
-
+
 6.  Peers replay updates to reproduce the same state
 
    A peer replays a sequence of updates by applying each one to the
@@ -538,8 +558,29 @@ Table of Contents
    span of history, or in a subscription [SUBSCRIPTIONS], as each one
    happens.
 
+
+7.  Implementation Status
+
+   This section records the known implementations of this document, as
+   [RFC7942] describes.  It is to be removed before publishing as an
+   RFC.
+
+     - braid-text [BRAID-TEXT], a library for synchronizing text,
+       implements range patches in the text range unit, including
+       positions that count back from the end, and several patches in
+       one update.
+
+     - braid-http-js [BRAID-HTTP-JS] sends and parses range patches,
+       alone or with a Patches header, in requests and in responses,
+       with a blank line between patches.  With a Patches header, it
+       sends Content-Type "application/http-patches", where this
+       document keeps Content-Type for the media type of the resource.
+
+     - No implementation yet sends Patch-Type, 210 (Patch), or
+       Accept-Patch and Accept-Ranges in requests.
+
 
-7.  Security Considerations
+8.  Security Considerations
 
    A server that does not implement this document ignores Patch-Type,
    Patches, and the Content-Range of a unit it does not know, and stores
@@ -562,10 +603,10 @@ Table of Contents
    If it does, the range patch cannot apply (Section 4).
 
 
-8.  IANA Considerations
+9.  IANA Considerations
 
 
-8.1.  HTTP Status Code
+9.1.  HTTP Status Code
 
    IANA is asked to register this status code in the "Hypertext Transfer
    Protocol (HTTP) Status Code Registry":
@@ -576,7 +617,7 @@ Table of Contents
       Reference:    Section 4.1 of this document
 
 
-8.2.  HTTP Field Names
+9.2.  HTTP Field Names
 
    IANA is asked to register these fields in the "Hypertext Transfer
    Protocol (HTTP) Field Name Registry":
@@ -593,7 +634,7 @@ Table of Contents
       Reference:        Section 4.3 of this document
 
 
-8.3.  HTTP Range Unit
+9.3.  HTTP Range Unit
 
    IANA is asked to register this range unit in the "HTTP Range Unit
    Registry":
@@ -605,16 +646,27 @@ Table of Contents
       Reference:    Section 4.2.2 of this document
 
 
-9.  References
+9.4.  Accept-Patch and Accept-Ranges
+
+   Section 2 defines the use of Accept-Patch and Accept-Ranges in
+   requests.  IANA is asked to add this document as a reference for both
+   fields in the "Hypertext Transfer Protocol (HTTP) Field Name
+   Registry".
 
 
-9.1.  Normative References
+10.  References
+
+
+10.1.  Normative References
 
    [RFC2119]  Bradner, S., "Key words for use in RFCs to Indicate
               Requirement Levels", BCP 14, RFC 2119, March 1997.
 
    [RFC3629]  Yergeau, F., "UTF-8, a transformation format of ISO
               10646", STD 63, RFC 3629, November 2003.
+
+   [RFC5234]  Crocker, D., Ed. and P. Overell, "Augmented BNF for Syntax
+              Specifications: ABNF", STD 68, RFC 5234, January 2008.
 
    [RFC5789]  Dusseault, L. and J. Snell, "PATCH Method for HTTP", RFC
               5789, March 2010.
@@ -636,18 +688,27 @@ Table of Contents
    [UNICODE]  The Unicode Consortium, "The Unicode Standard",
               <https://www.unicode.org/versions/latest/>.
 
+
    [VERSIONS] Toomim, M., "Resource Versioning for HTTP",
               draft-toomim-httpbis-braid-versions-00, work in progress,
               November 2026.
 
-
-9.2.  Informative References
+
+10.2.  Informative References
 
    [BRAID-HTTP]
               Toomim, M., Little, G., Walker, R., Bellomy, B., and J.
               Gentle, "Braid-HTTP: State Synchronization for HTTP",
               draft-toomim-httpbis-braid-http-05, work in progress,
               November 2026.
+
+   [BRAID-HTTP-JS]
+              braid.org, "braid-http-js",
+              <https://github.com/braid-org/braid-http>.
+
+   [BRAID-TEXT]
+              braid.org, "braid-text",
+              <https://github.com/braid-org/braid-text>.
 
    [MERGE-TYPES]
               Toomim, M., Milutinovic, M., and B. Bellomy, "Consistent
@@ -667,12 +728,23 @@ Table of Contents
    [RFC6902]  Bryan, P., Ed. and M. Nottingham, Ed., "JavaScript Object
               Notation (JSON) Patch", RFC 6902, April 2013.
 
+   [RFC7942]  Sheffer, Y. and A. Farrel, "Improving Awareness of Running
+              Code: The Implementation Status Section", BCP 205, RFC
+              7942, July 2016.
+
    [SUBSCRIPTIONS]
               Toomim, M., "Subscriptions for HTTP",
               draft-toomim-httpbis-braid-subscriptions-00, work in
               progress, November 2026.
 
 
+Acknowledgements
+
+   Range Patch (draft-toomim-httpbis-range-patch), by Mitar Milutinovic,
+   Michael Toomim, and Bryn Bellomy, is the basis for the range patches
+   in this document.
+
+
 Author's Address
 
    Michael Toomim
