@@ -74,16 +74,16 @@ Table of Contents
 
    1.  Introduction ...................................................3
    1.1.  Terminology ..................................................4
-   2.  Subscribe: long-poll sends one response to each poll ...........5
+   2.  Subscribe: long-poll ...........................................5
    2.1.  A poll response is a heartbeat ...............................7
    2.2.  A poll response has an Origin-Status header ..................7
    2.3.  Either side can end a long-poll subscription .................8
-   3.  Subscribe: webhook pushes each change as a request .............8
+   3.  Subscribe: webhook .............................................8
    3.1.  The gateway asks the origin server to push to it .............9
    3.2.  The gateway re-sends its subscription request ...............10
    3.3.  Either side can end a push subscription .....................10
-   3.4.  A handoff sends subscribers to a gateway ....................11
-   3.5.  An origin server checks where it pushes .....................12
+   3.4.  Short streams can redirect to gateways ......................11
+   3.5.  Verifying the subscription gateway ..........................12
    4.  Implementation Status .........................................12
    5.  Security Considerations .......................................13
    6.  IANA Considerations ...........................................13
@@ -165,7 +165,7 @@ Table of Contents
       pushes to.
 
 
-2.  Subscribe: long-poll sends one response to each poll
+2.  Subscribe: long-poll
 
    In the long-poll mode, the client sends a GET, which we call a poll,
    for each response, and the server holds each poll until it has
@@ -317,7 +317,7 @@ Table of Contents
    (Service Unavailable) and a Retry-After header.
 
 
-3.  Subscribe: webhook pushes each change as a request
+3.  Subscribe: webhook
 
    In the webhook mode, the origin server sends each change as a request
    of its own, to a push URL.  Each push is an update, sent as a request
@@ -462,7 +462,7 @@ Table of Contents
    or replaces the changes it hasn't pushed yet with one snapshot.
 
 
-3.4.  A handoff sends subscribers to a gateway
+3.4.  Short streams can redirect to gateways
 
    A gateway at its own URL needs the origin server to send clients to
    it.  The origin server does this with a handoff: it responds to a
@@ -522,7 +522,7 @@ Table of Contents
    catch-up, which fetch() [FETCH] follows on its own.
 
 
-3.5.  An origin server checks where it pushes
+3.5.  Verifying the subscription gateway
 
    In the webhook mode, the requester names a URL for the origin server
    to send requests to, so the origin server checks that URL before it

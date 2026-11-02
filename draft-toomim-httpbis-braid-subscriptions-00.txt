@@ -8,15 +8,15 @@ Intended status: Proposed Standard                       2 November 2026
 
 Abstract
 
-   Servers respond to an HTTP GET with a resource's current state in one
-   response.  However, if the resource changes afterward, HTTP has no
-   way for the server to notify its client of the new version.  This
-   document defines subscriptions.  When a client adds the Subscribe
-   header to a GET, the server responds with the resource's current
-   state, and then with a response for each change, as it happens.  Each
-   response is the one the server would have sent to the same GET just
-   after the change, so content negotiation, authorization, and caching
-   work as they do for any GET request.
+   Servers respond to an HTTP GET with a resource's current state.
+   However, if the resource changes afterward, HTTP has no way for the
+   server to notify its client of the new version.  This document
+   defines subscriptions.  When a client adds the Subscribe header to a
+   GET, the server responds with the resource's current state, and then
+   continues to respond as subsequent changes occur.  Each response
+   corresponds to a semantically-equivalent GET, so that content
+   negotiation, authorization, and caching work as they do for any GET
+   request.
 
    When a server grants a subscription, it promises to send each change
    as it happens.  So once a client is caught up, and while its
@@ -80,17 +80,17 @@ Table of Contents
 
    1.  Introduction ...................................................3
    1.1.  Terminology ..................................................5
-   2.  Each response in a subscription responds to a GET ..............6
+   2.  Subscription messages are responses to implied requests ........6
    3.  The Subscribe Header ...........................................7
-   3.1.  Resume a subscription with Parents ...........................8
-   3.2.  Subscribe to headers only, with Method-Override ..............9
-   3.3.  A server ignores If-None-Match on a subscription .............9
-   4.  Subscribe: stream sends a 209 Multiresponse ...................10
-   5.  A subscription is a validation that keeps going ...............11
+   3.1.  Resuming a subscription with Parents .........................8
+   3.2.  Subscribing to headers only, with Method-Override ............9
+   3.3.  Servers ignore If-None-Match on subscriptions ................9
+   4.  The "Subscribe: stream" mode creates a 209 Multiresponse ......10
+   5.  Subscriptions create continuous cache validation ..............11
    5.1.  The Heartbeats Header .......................................12
    5.2.  Status 105 and the Origin-Status Header .....................13
-   6.  Either side can end a subscription ............................15
-   7.  Subscriptions work through peers that predate them ............16
+   6.  Subscriptions can be ended by client or server ................15
+   7.  Subscriptions can function with legacy intermediaries .........16
    8.  Implementation Status .........................................17
    9.  Security Considerations .......................................18
    10.  IANA Considerations ..........................................18
@@ -221,7 +221,7 @@ Table of Contents
       time (Section 5).
 
 
-2.  Each response in a subscription responds to a GET
+2.  Subscription messages are responses to implied requests
 
    Each response in a subscription is one that the client could have
    gotten on its own, by sending the same GET at another time.  It is
@@ -320,7 +320,7 @@ Table of Contents
    ignores the header.
 
 
-3.1.  Resume a subscription with Parents
+3.1.  Resuming a subscription with Parents
 
    When a client knows its current version [VERSIONS], it can resume a
    subscription where it left off, by naming that version in a Parents
@@ -366,7 +366,7 @@ Table of Contents
    to send more of a version's state as the server receives it.
 
 
-3.2.  Subscribe to headers only, with Method-Override
+3.2.  Subscribing to headers only, with Method-Override
 
    Some subscribers need to know only when the resource changes, and to
    which version.  For example, the paper's notification server alerts
@@ -408,7 +408,7 @@ Table of Contents
    and GET the versions it needs.
 
 
-3.3.  A server ignores If-None-Match on a subscription
+3.3.  Servers ignore If-None-Match on subscriptions
 
    A cache can add an If-None-Match or If-Modified-Since header to a
    request that it forwards, to validate a response that it has stored
@@ -428,7 +428,7 @@ Table of Contents
    headers a meaning on a subscription.
 
 
-4.  Subscribe: stream sends a 209 Multiresponse
+4.  The "Subscribe: stream" mode creates a 209 Multiresponse
 
    In the stream mode, the server sends the whole subscription in one
    multiresponse [MULTIRESPONSE], as in the example in Section 1.  When
@@ -463,7 +463,7 @@ Table of Contents
    PUT or a DELETE.
 
 
-5.  A subscription is a validation that keeps going
+5.  Subscriptions create continuous cache validation
 
    Consider the paper's CDN, which stores /election, and responds to
    readers' reloads with its copy.  Ordinarily, it validates its copy
@@ -664,7 +664,7 @@ Table of Contents
    specification may give it a meaning there.
 
 
-6.  Either side can end a subscription
+6.  Subscriptions can be ended by client or server
 
    A client can end a subscription at any time, as Section 4 describes
    for the stream mode.  If it gets more responses than it can handle,
@@ -700,7 +700,7 @@ Table of Contents
    "Responds-To: container-request".
 
 
-7.  Subscriptions work through peers that predate them
+7.  Subscriptions can function with legacy intermediaries
 
    The client, the origin server, and any intermediaries between them
    may each predate this document.  Each one either understands

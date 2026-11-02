@@ -73,12 +73,12 @@ Copyright Notice
 Table of Contents
 
    1.  Introduction ...................................................4
-   1.1.  HTTP alone sends one snapshot per request ....................4
-   1.2.  HTTP gains versions, updates, and subscriptions ..............4
+   1.1.  HTTP needs state synchronization, not just transfer ..........4
+   1.2.  We extend HTTP with versions, updates, and subscriptions .....4
    2.  The extensions are modular and composable ......................6
-   3.  Combined, the extensions let peers resume, replay, and merge ...7
+   3.  The extensions combine to support replay, resume, and merge ....7
    4.  The same extensions serve CDNs, feeds, chats, and editors ......8
-   5.  Existing systems map onto the extensions .......................9
+   5.  The extensions support many existing systems ...................9
    5.1.  Subscriptions express both push and pull .....................9
    5.2.  Versions express both linear and branching histories .........9
    6.  Related work ...................................................9
@@ -99,7 +99,7 @@ Table of Contents
 1.  Introduction
 
 
-1.1.  HTTP alone sends one snapshot per request
+1.1.  HTTP needs state synchronization, not just transfer
 
    HTTP [RFC9110] transfers a snapshot of state within a single request
    and response.  If the state changes, HTTP does not automatically
@@ -133,7 +133,7 @@ Table of Contents
    non-standard Javascript frameworks to synchronize changes to state.
 
 
-1.2.  HTTP gains versions, updates, and subscriptions
+1.2.  We extend HTTP with versions, updates, and subscriptions
 
    Each of these workarounds exists because HTTP is missing a piece.
    HTTP has no way to name a point in a resource's history, to express a
@@ -274,7 +274,7 @@ Table of Contents
    client can parse with a regular expression.
 
 
-3.  Combined, the extensions let peers resume, replay, and merge
+3.  The extensions combine to support replay, resume, and merge
 
    Used together, the extensions add more:
 
@@ -337,7 +337,7 @@ Table of Contents
       [TIME-MACHINES] gives the theory.
 
 
-5.  Existing systems map onto the extensions
+5.  The extensions support many existing systems
 
    The extensions are general HTTP machinery.  They can express the ways
    that existing systems deliver changes, and the ways that they name

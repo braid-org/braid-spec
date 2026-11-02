@@ -80,8 +80,8 @@ Table of Contents
 
    1.  Introduction ...................................................4
    1.1.  Terminology ..................................................5
-   2.  Each update has an equivalent request and response .............6
-   3.  A snapshot is a PUT request, or a 200 response .................7
+   2.  Updates have symmetric requests and responses ..................6
+   3.  A Snapshot is a PUT request or 200 response ....................7
    4.  Patch formats specify deterministic changes ....................8
    4.1.  Patch-Type allows any patch format, in both directions .......8
    4.2.  Range patches are enough for most changes ...................10
@@ -213,7 +213,7 @@ Table of Contents
       the states they describe.
 
 
-2.  Each update has an equivalent request and response
+2.  Updates have symmetric requests and responses
 
    Each kind of update has a request that a client sends, and an
    equivalent response that a server sends.  The two mean the same
@@ -259,7 +259,7 @@ Table of Contents
    server responds with a snapshot.
 
 
-3.  A snapshot is a PUT request, or a 200 response
+3.  A Snapshot is a PUT request or 200 response
 
    A snapshot replaces the whole state of a resource.  A client sends
    one in a PUT:

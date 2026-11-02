@@ -79,13 +79,13 @@ Table of Contents
 
    1.  Introduction ...................................................3
    1.1.  Terminology ..................................................4
-   2.  A cache stores each response under its implied request .........5
-   3.  A validated copy counts as just validated ......................5
-   4.  When validation stops, the copy ages ...........................6
-   5.  A cache serves one upstream subscription to many subscribers ...7
-   5.1.  Subscribers with the same subscription key share one .........7
-   5.2.  The cache holds its own subscription upstream ................8
-   5.3.  Each subscriber gets a catch-up, then every change ...........9
+   2.  Caches identify responses by their implied requests ............5
+   3.  Continuously validated responses are always fresh ..............5
+   4.  Responses begin aging again when validation discontinues .......6
+   5.  Caches can fan out one upstream subscription to many clients ...7
+   5.1.  Requests for the same variant can share a subscription .......7
+   5.2.  Caches subscribe upstream ....................................8
+   5.3.  Subscribers receive catch-up, then changes ...................9
    6.  Implementation Status .........................................10
    7.  Security Considerations .......................................10
    8.  IANA Considerations ...........................................11
@@ -189,7 +189,7 @@ Table of Contents
       same key can share one upstream subscription.
 
 
-2.  A cache stores each response under its implied request
+2.  Caches identify responses by their implied requests
 
    Each response in a subscription is the response that the server would
    have sent to the same GET, without the Subscribe and Heartbeats
@@ -223,7 +223,7 @@ Table of Contents
    Versions describes ([VERSIONS], Section 2.2.3).
 
 
-3.  A validated copy counts as just validated
+3.  Continuously validated responses are always fresh
 
    When a cache validates a stored response, it asks the origin server
    whether the response is still current, and the origin server responds
@@ -273,7 +273,7 @@ Table of Contents
    origin server can authorize the requester (Section 5.1).
 
 
-4.  When validation stops, the copy ages
+4.  Responses begin aging again when validation discontinues
 
    Validation stops when the cache's upstream server sends an origin
    status of "down", when its heartbeats stop, or when the upstream
@@ -314,7 +314,7 @@ Table of Contents
    the copy is validated again.
 
 
-5.  A cache serves one upstream subscription to many subscribers
+5.  Caches can fan out one upstream subscription to many clients
 
    A cache can serve subscriptions, as well as plain GETs.  For each
    subscriber, it combines what it has stored with what its upstream
@@ -326,7 +326,7 @@ Table of Contents
    many subscribers the cache has.
 
 
-5.1.  Subscribers with the same subscription key share one
+5.1.  Requests for the same variant can share a subscription
 
    Two subscribers ask for the same variant of the same resource when
    their requests have the same target URI, and match in every header
@@ -368,7 +368,7 @@ Table of Contents
    it shared, and relays each new subscription one to one.
 
 
-5.2.  The cache holds its own subscription upstream
+5.2.  Caches subscribe upstream
 
    A cache opens its upstream subscription with Parents set to its
    current version, when it has one, so that each response it gets
@@ -412,7 +412,7 @@ Table of Contents
    subscriber leaves, so that its copy stays validated for plain GETs.
 
 
-5.3.  Each subscriber gets a catch-up, then every change
+5.3.  Subscribers receive catch-up, then changes
 
    For each subscriber, the cache sends a multiresponse of its own.  Its
    header section is the one from the cache's upstream response, without
