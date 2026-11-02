@@ -136,11 +136,11 @@ Table of Contents
    Each of these workarounds exists because HTTP is missing a piece.
    HTTP cannot name a point in a resource's history, cannot express a
    change the same way from client to server and from server to client,
-   cannot send several responses at once, and cannot keep responding to
-   a GET as its resource changes.  Braid-HTTP adds each missing piece as
-   a separate extension, which is useful by itself.  Together, they
-   generalize HTTP into a synchronization protocol, and ReST into a
-   synchronization architecture:
+   cannot send several 200 responses per request, and cannot keep
+   responding to a GET as its resource changes.  Braid-HTTP adds each
+   missing piece as a separate extension, which is useful by itself.
+   Together, they generalize HTTP into a synchronization protocol, and
+   ReST into a synchronization architecture:
 
 
          HTTP:         HyperText  *Transfer* Protocol
