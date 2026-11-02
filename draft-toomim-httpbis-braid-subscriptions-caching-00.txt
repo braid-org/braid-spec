@@ -10,21 +10,21 @@ Expires: 6 May 2027
 Abstract
 
    A cache can serve a stored response only while the response is fresh,
-   and then has to ask the origin server whether it has changed.  So a
-   cache serves a resource that changes often either stale, or with a
-   request to the origin server each time.  This document lets a cache
-   subscribe to the resource, as any HTTP client can.  The cache stores
-   each response in the subscription as the response to a GET.  While
-   the subscription is continuously validating, the cache knows at every
-   moment that its copy is current, so it can answer requests from the
-   copy without asking the origin server, even for responses marked
-   no-cache.  When validation stops, the copy ages, and HTTP's rules for
-   stale responses apply.
+   and then has to ask the origin server whether the resource has
+   changed.  So a cache serves a resource that changes often either
+   stale, or with a request to the origin server each time.  This
+   document defines how a cache subscribes to the resource, as any HTTP
+   client can.  The cache stores each response in the subscription as
+   the response to a GET.  While the subscription is continuously
+   validating, the cache knows at every moment that its copy is current,
+   so it can answer requests from the copy without asking the origin
+   server, even for responses marked no-cache.  When validation stops,
+   the copy ages, and HTTP's rules for stale responses apply.
 
-   A cache can also serve one subscription to the origin server to many
-   subscribers of its own, while keeping private responses private.
-   This document updates RFC 9111, so that a continuously validating
-   subscription satisfies the no-cache directive.
+   A cache can also serve many subscribers of its own from one
+   subscription to the origin server, and keep private responses
+   private.  This document updates RFC 9111, so that a continuously
+   validating subscription satisfies the no-cache directive.
 
    This document is one of the Braid-HTTP extensions, which work alone
    or together; together they make HTTP a state synchronization
@@ -96,16 +96,17 @@ Table of Contents
 1.  Introduction
 
    HTTP caches serve a stored response only while it is fresh (Section
-   4.2 of [RFC9111]), and then ask the origin server whether it has
-   changed.  For example, imagine a newspaper's website on election
-   night, as in [SUBSCRIPTIONS], with a results page at /election that
-   changes all evening.  The examples in this document follow the
-   paper's CDN through the night.  The results change too often for any
-   freshness lifetime to suit them.  With "Cache-Control: max-age=0",
-   the CDN has to validate its copy with the origin server for every
-   reader's reload.  With a longer lifetime, readers see stale results,
-   unless the paper purges the CDN's copy at each change, and a purge
-   and a refetch take one and a half round trips.
+   4.2 of [RFC9111]), and then ask the origin server whether the
+   resource has changed.  For example, imagine a newspaper's website on
+   election night, as in [SUBSCRIPTIONS], with a results page at
+   /election that changes all evening.  The results change too often for
+   any freshness lifetime to suit them.  With
+   "Cache-Control: max-age=0", the CDN has to validate its copy with the
+   origin server for every reader's reload.  With a longer lifetime,
+   readers see stale results, unless the paper purges the CDN's copy at
+   each change.  A purge and the refetch that follows it take one and a
+   half round trips.  The examples in this document follow the paper's
+   CDN through the night.
 
    With a subscription, the CDN subscribes to /election once, and the
    origin server sends it each change in half a round trip.  While that
@@ -136,21 +137,22 @@ Table of Contents
    one subscription for each edge of the CDN, however many readers the
    edge has.
 
-   Today a page has to choose.  Through a CDN, it loads fast, and puts
-   little load on the origin server, but it shows a change only when it
-   polls.  Over a WebSocket, it shows each change at once, but it loads
-   its data from the origin server, which holds a connection for every
-   reader.  A page that subscribes through the CDN gets all three: it
-   loads as fast as a cached page, the origin server holds one
-   subscription for each edge, and each change arrives as fast as over a
-   WebSocket (Section 6).
+   Today a site has to choose how to serve a page that changes.  Through
+   a CDN, the page loads fast, and puts little load on the origin
+   server, but it shows a change only when it polls.  Over a WebSocket,
+   it shows each change at once, but it loads its data from the origin
+   server, which holds a connection for every reader.  If the page
+   subscribes through the CDN, it gets all three: it loads as fast as a
+   cached page, the origin server holds one subscription for each edge,
+   and each change arrives as fast as over a WebSocket (Section 6).
 
-   This document says how a cache stores the responses in a subscription
-   (Section 2), how a validated copy satisfies HTTP's caching rules
-   (Section 3), how the copy ages when validation stops (Section 4), and
-   how a cache serves one subscription to many subscribers (Section 5).
-   It updates RFC 9111 [RFC9111] in one respect: a continuously
-   validating subscription satisfies the no-cache directive (Section 3).
+   This document defines how a cache stores the responses in a
+   subscription (Section 2), how a validated copy satisfies HTTP's
+   caching rules (Section 3), how the copy ages when validation stops
+   (Section 4), and how a cache serves one subscription to many
+   subscribers (Section 5).  It updates RFC 9111 [RFC9111] in one
+   respect: a continuously validating subscription satisfies the
+   no-cache directive (Section 3).
 
    It builds on Subscriptions [SUBSCRIPTIONS], and on Multiresponse
    [MULTIRESPONSE], which the stream mode uses.  With Versions
@@ -188,19 +190,20 @@ Table of Contents
 
 2.  A cache stores each response under its implied request
 
-   Each response in a subscription responds to an implied request: the
-   same GET, without Subscribe, sent just after the change
-   ([SUBSCRIPTIONS], Section 2).  So a cache can store each response as
-   it would any response to that GET (Section 3 of [RFC9111]), with the
-   response's own Cache-Control, Date, and ETag headers.
+   Each response in a subscription is the response that the server would
+   have sent to the same GET, without Subscribe, just after the change.
+   That GET is the response's implied request ([SUBSCRIPTIONS], Section
+   2).  So a cache can store each response as it would any response to
+   that GET (Section 3 of [RFC9111]), with the response's own
+   Cache-Control, Date, and ETag headers.
 
    For example, when the CDN subscribes to /election, its catch-up holds
    a snapshot of the results at version 1.  That snapshot responds to a
    plain GET for /election, so the CDN stores it as the response to the
-   plain GET.  Version 2 responds to a GET with "Parents: ("1")".  It is
-   also a snapshot, holding the whole state at version 2, which is what
-   a plain GET would get at that moment.  So it replaces the stored
-   response to the plain GET.
+   plain GET.  The response at version 2 responds to a GET with
+   "Parents: ("1")".  It is also a snapshot, holding the whole state at
+   version 2, which is what a plain GET would get at that moment.  So it
+   replaces the stored response to the plain GET.
 
    The cache does not store the multiresponse itself, which has
    "Cache-Control: no-store" ([MULTIRESPONSE], Section 2.3).  It builds
@@ -221,14 +224,14 @@ Table of Contents
 3.  A validated copy counts as just validated
 
    When a cache validates a stored response, it asks the origin server
-   whether the response is still current, and a 304 (Not Modified) tells
-   it that it is (Section 4.3 of [RFC9111]).  A continuously validating
-   subscription tells the cache the same thing at every moment
-   ([SUBSCRIPTIONS], Section 5).  So while the cache's upstream
-   subscription is continuously validating, each request that the cache
-   answers from its copy counts as one that it forwarded for validation,
-   and for which it received a successful response.  While the copy is
-   validated:
+   whether the response is still current, and the origin server answers
+   with a 304 (Not Modified) if it is (Section 4.3 of [RFC9111]).  With
+   a continuously validating subscription, the origin server tells the
+   cache the same thing at every moment ([SUBSCRIPTIONS], Section 5).
+   So while the cache's upstream subscription is continuously
+   validating, each request that the cache answers from its copy counts
+   as one that it forwarded for validation, and for which it received a
+   successful response.  While the copy is validated:
 
      - The cache can use the copy to satisfy a request, as it would a
        stored response that it had just validated (Section 4.3.3 of
@@ -246,20 +249,20 @@ Table of Contents
        (Section 4.3.2 of [RFC9111]).
 
    For example, a reader's plain GET for /election reaches the CDN at
-   03:05, while its subscription is continuously validating.  The
+   03:05, while the CDN's subscription is continuously validating.  The
    results have "max-age=0", so the copy is stale by RFC 9111's count,
    but it is validated, and the CDN answers from it with "Age: 0", as in
    Section 1.
 
-   This updates RFC 9111.  Section 5.2.2.4 of [RFC9111] says that a
+   This rule updates RFC 9111.  Section 5.2.2.4 of [RFC9111] says that a
    no-cache response "MUST NOT be used to satisfy any other request
    without forwarding it for validation and receiving a successful
    response".  With this document, a continuously validating
    subscription counts as forwarding each request for validation, and
    receiving a successful response.  The origin server consents to this
    when it grants the subscription and sends an origin status of "up"
-   ([SUBSCRIPTIONS], Section 5.2), which promises the cache each change
-   as it happens.
+   ([SUBSCRIPTIONS], Section 5.2), promising the cache each change as it
+   happens.
 
    Every other directive applies as usual.  For instance, a cache
    doesn't store a response marked no-store, and a shared cache doesn't
@@ -269,13 +272,14 @@ Table of Contents
 
 4.  When validation stops, the copy ages
 
-   Validation stops when the cache's upstream subscription sends an
-   origin status of "down", or its heartbeats stop, or it ends
-   ([SUBSCRIPTIONS], Section 5).  From then on, the copy ages as any
-   stored response does.  After a down, its age is the "age" parameter
-   of the down, plus the time since the down arrived.  If the heartbeats
-   stopped, or the subscription ended with no down, its age counts from
-   the last moment that the cache heard from its upstream server.
+   Validation stops when the cache's upstream server sends an origin
+   status of "down", when its heartbeats stop, or when the upstream
+   subscription ends ([SUBSCRIPTIONS], Section 5).  From then on, the
+   copy ages as any stored response does.  After a down, its age is the
+   "age" parameter of the down, plus the time since the down arrived.
+   If the heartbeats stopped, or the subscription ended with no down,
+   its age counts from the last moment that the cache heard from its
+   upstream server.
 
    The rules for stale responses then apply as usual (Section 4.2.4 of
    [RFC9111], and [RFC5861]), given two definitions:
@@ -290,10 +294,10 @@ Table of Contents
        disconnected, as Section 4.2.4 of [RFC9111] uses the word, and
        has encountered an error, as [RFC5861] uses the word.
 
-   So stale-while-revalidate lets the cache serve its stale copy to a
-   plain GET at once, while it resubscribes.  Stale-if-error lets it
-   serve the copy for as long as its upstream subscription is down.  And
-   must-revalidate forbids both, so if the cache can't validate the
+   So with stale-while-revalidate, the cache can serve its stale copy to
+   a plain GET at once, while it resubscribes.  With stale-if-error, it
+   can serve the copy for as long as its upstream subscription is down.
+   And must-revalidate forbids both, so if the cache can't validate the
    copy, it responds with a 504 (Gateway Timeout) (Section 5.2.2.2 of
    [RFC9111]).
 
@@ -302,38 +306,39 @@ Table of Contents
    their Cache-Control header.  At 03:20, the CDN stops hearing from the
    origin server, and 30 seconds later its upstream subscription times
    out.  It keeps serving the results it has to plain GETs, each with an
-   Age counted from 03:20, and resubscribes with backoff.  When the new
-   subscription sends an origin status of "up", the copy is validated
-   again.
+   Age counted from 03:20, and resubscribes with backoff.  When the
+   origin server sends an origin status of "up" on the new subscription,
+   the copy is validated again.
 
 
 5.  A cache serves one upstream subscription to many subscribers
 
    A cache can answer subscriptions, as well as plain GETs.  For each
    subscriber, it combines what it has stored with what its upstream
-   subscription sends, into one stream, and the subscriber can't tell
-   that the stream came from a cache.  A private cache, such as a
-   browser's, can do this for one user, as when the results are open in
-   several tabs.  A shared cache, such as a CDN, does it for all of its
-   users, and the origin server then holds one subscription for each
-   cache, however many subscribers the cache has.
+   server sends, into one stream, and the subscriber can't tell that the
+   stream came from a cache.  A private cache, such as a browser's, can
+   do this for one user, as when the results are open in several tabs.
+   A shared cache, such as a CDN, does it for all of its users, and the
+   origin server then holds one subscription for each cache, however
+   many subscribers the cache has.
 
 
 5.1.  Subscribers with the same subscription key share one
 
-   Subscribers whose requests have the same subscription key ask for the
-   same resource, and the same variant of it, as the origin server's
-   Vary header selects them (Section 12.5.5 of [RFC9110]).  A cache can
-   serve all of them from one upstream subscription, and sends the
+   Two subscribers ask for the same variant of the same resource when
+   their requests have the same target URI, and match in every header
+   that the origin server's Vary header names (Section 12.5.5 of
+   [RFC9110]).  Their requests then have the same subscription key, and
+   a cache can serve both from one upstream subscription.  It sends the
    headers that select the variant in its own upstream request.
 
-   Requests with credentials need more care.  This document treats both
-   the Authorization and the Cookie headers as credentials.  RFC 9111
-   names only Authorization (Section 3.5 of [RFC9111]), but caches
-   already treat Cookie the same way by convention, since a response to
-   a request with a cookie is often personal.  A cache shares a response
-   to a request with credentials only as the response's directives
-   allow:
+   A cache takes more care with requests that have credentials.  It
+   treats both the Authorization and the Cookie headers as credentials.
+   RFC 9111 names only Authorization (Section 3.5 of [RFC9111]), but
+   caches already treat Cookie the same way by convention, since a
+   response to a request with a cookie is often personal.  A cache
+   shares a response to a request with credentials only as the
+   response's directives allow:
 
      - If the response is public (Section 5.2.2.9 of [RFC9111]), the
        credentials don't matter for it, and the cache shares it with any
@@ -355,8 +360,8 @@ Table of Contents
    server, one to one.
 
 
-   If a response in the upstream subscription makes a shared resource
-   private, or no-store, the sharing ends.  The cache ends the
+   If the upstream server marks a shared resource private, or no-store,
+   in a later response, the cache stops sharing it.  It ends the
    subscriptions that it shared, and relays each new subscription one to
    one.
 
@@ -386,8 +391,9 @@ Table of Contents
    If the upstream server responds to the cache's subscription request
    without granting a subscription, the cache acts on the response:
 
-     - A 404 (Not Found) or a 410 (Gone) says that the resource is gone,
-       so the cache sends it on to its subscribers, as a response.
+     - A 404 (Not Found) or a 410 (Gone) says that the resource isn't
+       there, so the cache sends it on to its subscribers, as a
+       response.
 
      - A 5xx status code, or a 429 (Too Many Requests), says that the
        upstream server can't serve the subscription now.  The cache
@@ -415,11 +421,10 @@ Table of Contents
    patches that the cache has stored since the subscriber's version, or
    a snapshot.
 
-   The cache doesn't have to wait for its upstream server.  If RFC 9111
-   and RFC 5861 would let the cache serve its stored copy to a plain
-   GET, it can send that copy first, with its Age, and with no
-   Current-Version, and then send whatever its upstream subscription
-   brings.
+   The cache doesn't have to wait for its upstream server.  If the cache
+   could serve its stored copy to a plain GET under RFC 9111 and RFC
+   5861, it can send that copy first, with its Age, and with no
+   Current-Version, and then send whatever its upstream server sends.
 
    A subscriber can name a version that the cache doesn't have, as when
    the subscriber was last connected through another edge of the CDN,
@@ -450,11 +455,11 @@ Table of Contents
        cache forwards the subscriber's request upstream.
 
    After the catch-up, the cache sends the subscriber each response that
-   its upstream subscription brings, as it arrives.  It sends origin
-   status as Section 5.2 of [SUBSCRIPTIONS] describes, and heartbeats of
-   its own, at the interval it agreed to with the subscriber.  The
-   subscription ends when the subscriber leaves, or when the cache ends
-   it, as it can when the subscriber stops reading.
+   its upstream server sends, as it arrives.  It sends origin status as
+   Section 5.2 of [SUBSCRIPTIONS] describes, and heartbeats of its own,
+   at the interval it agreed to with the subscriber.  The subscription
+   ends when the subscriber leaves, or when the cache ends it, as it can
+   when the subscriber stops reading.
 
 
 6.  Implementation Status
@@ -502,9 +507,10 @@ Table of Contents
    server needs to see every request, it can mark its responses private,
    or decline to grant subscriptions.
 
-   A subscriber whose Parents names a version that the cache doesn't
-   have makes the cache ask the origin server about it (Section 5.3).
-   So a cache can limit how often it does this for each client.
+   When a subscriber's Parents names a version that the cache doesn't
+   have, the cache asks the origin server about it (Section 5.3).  A
+   client could use this to make the cache send many requests, so a
+   cache can limit how often it asks for each client.
 
    A cache trusts the origin status that its upstream server sends, as
    it trusts that server's responses, and its subscribers trust the
