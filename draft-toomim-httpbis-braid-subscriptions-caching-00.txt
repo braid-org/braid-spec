@@ -1,0 +1,590 @@
+Internet-Draft                                                 M. Toomim
+Updates: 9111 (if approved)                            Invisible College
+Intended status: Proposed Standard                       2 November 2026
+Expires: 6 May 2027
+
+
+                     Caching for HTTP Subscriptions
+          draft-toomim-httpbis-braid-subscriptions-caching-00
+
+Abstract
+
+   A cache can serve a stored response only while the response is fresh,
+   and then has to ask the origin server whether it has changed.  So a
+   cache serves a resource that changes often either stale, or with a
+   request to the origin server each time.  This document lets a cache
+   subscribe to the resource, as any HTTP client can.  The cache stores
+   each response in the subscription as the response to a GET, and while
+   the subscription is continuously validating, the cache knows at every
+   moment that its copy is current.  So it can answer requests from its
+   copy without asking the origin server, even for responses marked
+   no-cache.  When validation stops, the copy ages, and HTTP's rules for
+   stale responses apply.
+
+   A cache can also serve one subscription to the origin server to many
+   subscribers of its own, while keeping private responses private.
+   This document updates RFC 9111, so that a continuously validating
+   subscription satisfies the no-cache directive.
+
+   This document is one of the Braid-HTTP extensions, which work alone
+   or together; together they make HTTP a state synchronization
+   protocol.
+
+
+About This Document
+
+   This note is to be removed before publishing as an RFC.
+
+   Discussion of this document takes place on the HTTP Working Group
+   mailing list (ietf-http-wg@w3.org).  The source of this document, and
+   an issue tracker, are at https://github.com/braid-org/braid-spec.
+
+
+Status of this Memo
+
+   This Internet-Draft is submitted in full conformance with the
+   provisions of BCP 78 and BCP 79.
+
+   Internet-Drafts are working documents of the Internet Engineering
+   Task Force (IETF).  Note that other groups may also distribute
+   working documents as Internet-Drafts.  The list of current
+   Internet-Drafts is at https://datatracker.ietf.org/drafts/current/.
+
+   Internet-Drafts are draft documents valid for a maximum of six months
+   and may be updated, replaced, or obsoleted by other documents at any
+   time.  It is inappropriate to use Internet-Drafts as reference
+   material or to cite them other than as "work in progress."
+
+   This Internet-Draft will expire on 6 May 2027.
+
+
+Copyright Notice
+
+   Copyright (c) 2026 IETF Trust and the persons identified as the
+   document authors.  All rights reserved.
+
+   This document is subject to BCP 78 and the IETF Trust's Legal
+   Provisions Relating to IETF Documents
+   (https://trustee.ietf.org/license-info) in effect on the date of
+   publication of this document.  Please review these documents
+   carefully, as they describe your rights and restrictions with respect
+   to this document.  Code Components extracted from this document must
+   include Revised BSD License text as described in Section 4.e of the
+   Trust Legal Provisions and are provided without warranty as described
+   in the Revised BSD License.
+
+
+Table of Contents
+
+   1.  Introduction ...................................................3
+   1.1.  Terminology ..................................................4
+   2.  A cache stores each response under its implied request .........5
+   3.  A validated copy counts as just validated ......................5
+   4.  When validation stops, the copy ages ...........................6
+   5.  A cache serves one upstream subscription to many subscribers ...7
+   5.1.  Subscribers with the same subscription key share one .........7
+   5.2.  The cache holds its own subscription upstream ................8
+   5.3.  Each subscriber gets a catch-up, then every change ...........9
+   6.  Implementation Status .........................................10
+   7.  Security Considerations .......................................10
+   8.  IANA Considerations ...........................................11
+   9.  References ....................................................11
+   9.1.  Normative References ........................................11
+   9.2.  Informative References ......................................11
+
+
+1.  Introduction
+
+   A cache can serve a stored response only while the response is fresh,
+   and then has to ask the origin server whether it has changed.  So a
+   cache serves a resource that changes often either stale, or with a
+   request to the origin server each time.  For example, imagine a
+   newspaper's website on election night, as in [SUBSCRIPTIONS], with a
+   results page at /election that changes all evening.  The examples in
+   this document follow the paper's CDN through the night.  The results
+   change too often for any freshness lifetime to suit them, so the
+   origin server sends them with "Cache-Control: max-age=0".  Then the
+   CDN has to validate its copy with the origin server for every
+   reader's reload.  When the results change, the paper can purge the
+   CDN's copy, and the CDN fetches the new results at the next request,
+   which takes one and a half round trips.
+
+   With a subscription, the CDN subscribes to /election once, and the
+   origin server sends it each change in half a round trip.  While that
+   subscription is continuously validating ([SUBSCRIPTIONS], Section 5),
+   the CDN's copy is validated at every moment.  So the CDN answers each
+   reader's plain GET from its copy, without asking the origin server:
+
+
+      Request:
+
+         GET /election
+
+      Response:
+
+         HTTP/1.1 200 OK
+         Version: ("2")
+         Content-Type: text/plain
+         Cache-Control: max-age=0, stale-if-error=86400
+         Age: 0
+         Content-Length: 21
+
+         Bob leads, 51% to 49%
+
+
+   The response has "Age: 0", since the CDN's copy was validated at the
+   moment the CDN answered.  The CDN also serves its subscription to
+   every reader who subscribes through it, so the origin server holds
+   one subscription for each edge of the CDN, however many readers the
+   edge has.
+
+   Today a page has to choose.  Through a CDN, it loads fast, and puts
+   little load on the origin server, but it shows a change only when it
+   polls.  Over a WebSocket, it shows each change at once, but it loads
+   its data from the origin server, which holds a connection for every
+   reader.  A page that subscribes through the CDN gets all three: it
+   loads as fast as a cached page, the origin server holds one
+   subscription for each edge, and each change arrives as fast as over a
+   WebSocket (Section 6).
+
+   This document says how a cache stores the responses in a subscription
+   (Section 2), how a validated copy satisfies HTTP's caching rules
+   (Section 3), how the copy ages when validation stops (Section 4), and
+   how a cache serves one subscription to many subscribers (Section 5).
+   It updates RFC 9111 [RFC9111] in one respect: a continuously
+   validating subscription satisfies the no-cache directive (Section 3).
+
+   It builds on Subscriptions [SUBSCRIPTIONS], and on Multiresponse
+   [MULTIRESPONSE], which the stream mode uses.  With Versions
+   [VERSIONS], a cache can resume its subscription where it left off,
+   and catch up each subscriber from that subscriber's own version.
+
+
+1.1.  Terminology
+
+   The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
+   "SHOULD", "SHOULD NOT", "RECOMMENDED", "NOT RECOMMENDED", "MAY", and
+   "OPTIONAL" in this document are to be interpreted as described in BCP
+   14 [RFC2119] [RFC8174] when, and only when, they appear in all
+   capitals, as shown here.
+
+   This document uses these terms from Subscriptions [SUBSCRIPTIONS]:
+   subscription, catch-up, caught up, hop, origin status, validated, and
+   continuously validating.  It uses implied request from Multiresponse
+   [MULTIRESPONSE], and current version and variant key from Versions
+   [VERSIONS].  It uses the terms of HTTP Caching [RFC9111], such as
+   stored response, fresh, stale, and shared cache.  It also uses these
+   terms:
+
+   Upstream subscription:  A cache's own subscription to the server that
+      it forwards requests to, which can be the origin server or another
+      cache.
+
+   Subscriber:  A client that subscribes to a resource through a cache.
+
+   Subscription key:  A subscription's variant key ([VERSIONS], Section
+      2.1.1), which is made of its method, its target URI, and the
+      request headers that select the variant.  Subscriptions with the
+      same key can share one upstream subscription.
+
+
+2.  A cache stores each response under its implied request
+
+   Each response in a subscription responds to an implied request: the
+   same GET, without Subscribe, as the server would have sent it just
+   after the change ([SUBSCRIPTIONS], Section 2).  So a cache can store
+   each response as it would any response to that GET (Section 3 of
+   [RFC9111]), with the response's own Cache-Control, Date, and ETag
+   headers.
+
+   For example, when the CDN subscribes to /election, its catch-up holds
+   a snapshot of the results at version 1.  That snapshot responds to a
+   plain GET for /election, so the CDN stores it as the response to the
+   plain GET.  Version 2 responds to a GET with "Parents: ("1")".  It is
+   also a snapshot, which holds the whole state at version 2, so it is
+   the response that a plain GET would get at that moment, too, and it
+   replaces the stored response to the plain GET.
+
+   The cache does not store the multiresponse itself, which has
+   "Cache-Control: no-store" ([MULTIRESPONSE], Section 2.3).  It builds
+   multiresponses of its own for its subscribers (Section 5).
+
+   A change can also arrive as a patch [UPDATES], which holds only part
+   of the state.  If the cache can apply the patch, it applies it to its
+   stored snapshot, and stores the result as the response to the plain
+   GET.  If it can't, its stored snapshot doesn't hold the current
+   state, so the cache doesn't answer a plain GET from it until the next
+   snapshot arrives.
+
+   A cache doesn't need to know a resource's Version Type.  It compares
+   versions only for equality, and tracks its current version as
+   Versions describes ([VERSIONS], Section 2.2.3).
+
+
+3.  A validated copy counts as just validated
+
+   When a cache validates a stored response, it asks the origin server
+   whether the response is still current, and a 304 (Not Modified) tells
+   it that it is (Section 4.3 of [RFC9111]).  A continuously validating
+   subscription tells the cache the same thing at every moment
+   ([SUBSCRIPTIONS], Section 5).  So while the cache's upstream
+   subscription is continuously validating, each request that the cache
+   answers from its copy counts as one that it forwarded for validation,
+   and for which it received a successful response.  While the copy is
+   validated:
+
+     - The cache can use the copy to satisfy a request, as it would a
+       stored response that it had just validated (Section 4.3.3 of
+       [RFC9111]), whatever the copy's freshness lifetime.  It sends the
+       copy with "Age: 0" (Section 5.1 of [RFC9111]).
+
+     - The copy satisfies the no-cache response and request directives
+       (Sections 5.2.2.4 and 5.2.1.4 of [RFC9111]), the must-revalidate
+       directive (Section 5.2.2.2), and a request's "max-age=0" (Section
+       5.2.1.1).
+
+
+     - The cache can answer a conditional request from the copy, with a
+       304 (Not Modified) when the request's validators match it
+       (Section 4.3.2 of [RFC9111]).
+
+   For example, a reader's plain GET for /election reaches the CDN at
+   03:05, while its subscription is continuously validating.  The
+   results have "max-age=0", so the copy is stale by RFC 9111's count,
+   but it is validated, and the CDN answers from it with "Age: 0", as in
+   Section 1.
+
+   This updates RFC 9111.  Section 5.2.2.4 of [RFC9111] says that a
+   no-cache response "MUST NOT be used to satisfy any other request
+   without forwarding it for validation and receiving a successful
+   response".  With this document, a continuously validating
+   subscription counts as forwarding each request for validation, and
+   receiving a successful response.  The origin server consents to this
+   when it grants the subscription and sends an origin status of "up"
+   ([SUBSCRIPTIONS], Section 5.2), which promises the cache each change
+   as it happens.
+
+   Every other directive applies as usual.  For instance, a cache
+   doesn't store a response marked no-store, and a shared cache doesn't
+   store one marked private.  And a cache still forwards a request with
+   credentials, to authorize the requester (Section 5.1).
+
+
+4.  When validation stops, the copy ages
+
+   Validation stops when the cache's upstream subscription sends an
+   origin status of "down", or its heartbeats stop, or it ends
+   ([SUBSCRIPTIONS], Section 5).  From then on, the copy ages as any
+   stored response does.  After a down, its age is the "age" parameter
+   of the down, plus the time since the down arrived.  If the heartbeats
+   stopped, or the subscription ended with no down, its age counts from
+   the last moment that the cache heard from its upstream server.
+
+   The rules for stale responses then apply as usual (Section 4.2.4 of
+   [RFC9111], and [RFC5861]), given two definitions:
+
+     - Revalidating the copy includes resubscribing, with Parents set to
+       the copy's version.  The copy is validated again at that
+       subscription's origin status of "up", and stays validated while
+       the subscription is continuously validating.
+
+     - An origin status of "down", whether the cache receives one or
+       finds that its upstream server's heartbeats have stopped, means
+       that the cache is disconnected, as Section 4.2.4 of [RFC9111]
+       uses the word, and that it has encountered an error, as [RFC5861]
+       uses the word.
+
+   So stale-while-revalidate lets the cache serve its stale copy to a
+   plain GET at once, while it resubscribes.  Stale-if-error lets it
+   serve the copy for as long as its upstream subscription is down.  And
+   must-revalidate forbids both, so if the cache can't validate the
+   copy, it responds with a 504 (Gateway Timeout) (Section 5.2.2.2 of
+   [RFC9111]).
+
+
+   For example, the results have "max-age=0, stale-if-error=86400" in
+   their Cache-Control header.  At 03:20, the CDN stops hearing from the
+   origin server, and 30 seconds later its upstream subscription times
+   out.  It keeps serving the results it has to plain GETs, each with an
+   Age counted from 03:20, and resubscribes with backoff.  When the new
+   subscription sends an origin status of "up", the copy is validated
+   again.
+
+
+5.  A cache serves one upstream subscription to many subscribers
+
+   A cache can answer subscriptions, as well as plain GETs.  For each
+   subscriber, it combines what it has stored with what its upstream
+   subscription sends, into one stream, and the subscriber can't tell
+   that the stream came from a cache.  A private cache, such as a
+   browser's, can do this for one user, as when the results are open in
+   several tabs.  A shared cache, such as a CDN, does it for all of its
+   users, and the origin server then holds one subscription for each
+   cache, however many subscribers the cache has.
+
+
+5.1.  Subscribers with the same subscription key share one
+
+   A cache can serve one upstream subscription to all the subscribers
+   whose requests have the same subscription key, which names one
+   resource, and one of its variants, as the origin server's Vary header
+   selects it (Section 12.5.5 of [RFC9110]).  The cache sends the
+   request headers that select the variant in its upstream request.
+
+   Requests with credentials need more care.  This document treats both
+   the Authorization and the Cookie headers as credentials.  RFC 9111
+   names only Authorization (Section 3.5 of [RFC9111]), but caches
+   already treat Cookie the same way by convention, since a response to
+   a request with a cookie is often personal.  A cache shares a response
+   to a request with credentials only as the response's directives
+   allow:
+
+     - If the response is public (Section 5.2.2.9 of [RFC9111]), the
+       credentials don't matter for it, and the cache shares it with any
+       subscriber.
+
+     - If the response has must-revalidate or s-maxage, or is public
+       with no-cache, the cache shares it, but first forwards each new
+       subscriber's request, with that subscriber's credentials, so that
+       the origin server can authorize the subscriber (Section 3.5 of
+       [RFC9111]).
+
+     - Otherwise, as when the response is private, or has none of these
+       directives, the cache relays the subscription to its subscriber
+       one to one, and shares it with no one else.
+
+   For example, a logged-in reader's page of the races she follows, at
+   /election/my-races, comes with a cookie, and the origin server marks
+   it private.  The CDN relays that reader's subscription to the origin
+   server, one to one.
+
+
+   If a response in the upstream subscription makes a shared resource
+   private, or no-store, the sharing ends.  The cache ends the
+   subscriptions that it shared, and relays each new subscription one to
+   one.
+
+
+5.2.  The cache holds its own subscription upstream
+
+   A cache opens its upstream subscription with Parents set to its
+   current version, when it has one, so that each response it gets
+   applies to what it holds.  It lists the patch formats and range units
+   that it can apply ([UPDATES], Section 2), so that the upstream server
+   sends it only patches that it can use.
+
+   A cache can add a Subscribe header to any GET that it forwards
+   upstream.  If the resource has no subscriptions, the upstream server
+   responds to the GET as usual, and the request costs nothing extra.
+   If it has, the response is a subscription, whose catch-up responds to
+   the GET that the cache forwarded.  A "Vary: Subscribe" header in a
+   response is also a sign that the resource has subscriptions
+   ([SUBSCRIPTIONS], Section 3).
+
+   If the cache loses its upstream subscription, it sends an origin
+   status of "down" to each of its subscribers, and resubscribes with
+   backoff, from its current version.  Its subscribers stay connected
+   meanwhile.  In a chain of caches, each one recovers this way on its
+   own.
+
+   If the upstream server responds to the cache's subscription request
+   without granting a subscription, the cache acts on the response:
+
+     - A 404 (Not Found) or a 410 (Gone) says that the resource is gone,
+       so the cache sends it on to its subscribers, as a response.
+
+     - A 5xx status code, or a 429 (Too Many Requests), says that the
+       upstream server can't serve the subscription now.  The cache
+       sends a down to its subscribers, and retries with backoff,
+       waiting at least as long as any Retry-After header says.
+
+     - A 200 (OK) with no Subscribe header says that the upstream server
+       doesn't offer a subscription now.  The cache sends that response
+       to its subscribers as a snapshot, if it differs from what they
+       hold, and then ends their subscriptions, since it can't keep them
+       validated.
+
+   A cache can keep its upstream subscription open after its last
+   subscriber leaves, so that its copy stays validated for plain GETs.
+
+
+5.3.  Each subscriber gets a catch-up, then every change
+
+   For each subscriber, the cache sends a multiresponse of its own.  Its
+   header section is the one from the cache's upstream response, without
+   a Current-Version header until the cache knows its current version.
+   Then the cache sends the subscriber a catch-up, from the subscriber's
+   Parents to the cache's current version.  The catch-up is empty if the
+   subscriber already holds that version.  Otherwise, it holds the
+   patches that the cache has stored since the subscriber's version, or
+   a snapshot.
+
+   The cache doesn't have to wait for its upstream server.  If RFC 9111
+   and RFC 5861 would let the cache serve its stored copy to a plain
+   GET, it can send that copy first, with its Age, and with no
+   Current-Version, and then send whatever its upstream subscription
+   brings.
+
+   A subscriber can name a version that the cache doesn't have, as when
+   the subscriber was last connected through another edge of the CDN,
+   which was further along.  Then the cache makes sure that its upstream
+   subscription is open, and watches it for that version.  Meanwhile, it
+   asks the origin server where the subscriber's version stands, with a
+   GET that has "Method-Override: HEAD" ([MULTIRESPONSE], Section 5),
+   Parents set to the cache's current version, Version set to the
+   subscriber's, and the subscriber's headers that select the variant.
+   The first answer decides:
+
+     - A 432 (Version Not Found) says that the origin server doesn't
+       have the version either, so the cache responds to the subscriber
+       with a 432 ([VERSIONS], Section 2.4).
+
+     - A 304 (Not Modified) says that the subscriber's version is among
+       the ancestors of the cache's version ([VERSIONS], Section 2.3.5).
+       So the subscriber is behind the cache, and a snapshot catches it
+       up.
+
+     - If the subscriber's version arrives on the upstream subscription,
+       or the origin server's 209 lists the versions between the cache's
+       version and the subscriber's, then the subscriber is ahead of the
+       cache.  The cache waits for those versions, and then catches the
+       subscriber up as usual.
+
+     - If the answer says none of these, or none comes in time, the
+       cache forwards the subscriber's request upstream.
+
+   After the catch-up, the cache sends the subscriber each response that
+   its upstream subscription brings, as it arrives.  It sends origin
+   status as Section 5.2 of [SUBSCRIPTIONS] describes, and heartbeats of
+   its own, at the interval it agreed to with the subscriber.  The
+   subscription ends when the subscriber leaves, or when the cache ends
+   it, as it can when the subscriber stops reading.
+
+
+6.  Implementation Status
+
+   This section records the known implementations of this document, as
+   [RFC7942] describes.  It is to be removed before publishing as an
+   RFC.
+
+   The Braid-HTTP polyfill for Cloudflare [CDN-POLYFILLS] is a cache for
+   subscriptions that runs on Cloudflare's network, using only its
+   public APIs.  It holds one upstream subscription for each resource,
+   and stores its responses in the cache of each Cloudflare data center
+   that has readers.  It answers plain GETs from a validated copy,
+   serves subscriptions from its copy and its upstream subscription, and
+   adds Subscribe to the GETs that it forwards upstream.  It honors
+   private, no-store, stale-while-revalidate, and stale-if-error, and it
+   relays every request with an Authorization or Cookie header one to
+   one, whatever the response's directives.
+
+   In September 2026 we measured the polyfill on Cloudflare's network,
+   from test machines in several regions [MEETING-144].  An edit reached
+   the edge cache one round trip sooner than with a purge and a refetch,
+   which made it 41% to 49% faster.  A page that subscribed through the
+   polyfill loaded about 9 times faster than a page that loaded its data
+   over a WebSocket, and showed each edit as quickly as the WebSocket
+   page did.
+
+   We also tested subscriptions through Cloudflare's own cache, with
+   tests that we wrote for the HTTP cache-tests engine [CACHE-TESTS].
+   Cloudflare passed each 209 through, streaming each response as it was
+   sent.
+
+
+7.  Security Considerations
+
+   A cache that serves one subscription to many subscribers shares one
+   response among many users.  So it follows the rules of RFC 9111 for
+   shared caches (Section 3.5 of [RFC9111]), and the rules for
+   credentials in Section 5.1.  When a cache relays a private
+   subscription one to one, it shares nothing with other users.
+
+   When a cache answers requests from a validated copy, the origin
+   server stops seeing those requests, and loses the signal that each
+   one gave it, as for logging, or for counting views.  If an origin
+   server needs to see every request, it can mark its responses private,
+   or decline to grant subscriptions.
+
+   A subscriber whose Parents names a version that the cache doesn't
+   have makes the cache ask the origin server about it (Section 5.3).
+   So a cache can limit how often it does this for each client.
+
+   A cache trusts the origin status that its upstream server sends, as
+   it trusts that server's responses, and its subscribers trust the
+   cache the same way ([SUBSCRIPTIONS], Section 9).
+
+
+8.  IANA Considerations
+
+   This document has no IANA actions.
+
+
+9.  References
+
+
+9.1.  Normative References
+
+   [MULTIRESPONSE]
+              Toomim, M., "Multiresponses for HTTP",
+              draft-toomim-httpbis-braid-multiresponse-00, work in
+              progress, November 2026.
+
+   [RFC2119]  Bradner, S., "Key words for use in RFCs to Indicate
+              Requirement Levels", BCP 14, RFC 2119, March 1997.
+
+   [RFC8174]  Leiba, B., "Ambiguity of Uppercase vs Lowercase in RFC
+              2119 Key Words", BCP 14, RFC 8174, May 2017.
+
+   [RFC9110]  Fielding, R., Ed., Nottingham, M., Ed., and J. Reschke,
+              Ed., "HTTP Semantics", STD 97, RFC 9110, June 2022.
+
+   [RFC9111]  Fielding, R., Ed., Nottingham, M., Ed., and J. Reschke,
+              Ed., "HTTP Caching", STD 98, RFC 9111, June 2022.
+
+   [SUBSCRIPTIONS]
+              Toomim, M., "Subscriptions for HTTP",
+              draft-toomim-httpbis-braid-subscriptions-00, work in
+              progress, November 2026.
+
+
+9.2.  Informative References
+
+   [CACHE-TESTS]
+              Nottingham, M., "HTTP Caching Tests",
+              <https://cache-tests.fyi/>.
+
+   [CDN-POLYFILLS]
+              braid.org, "Braid Polyfills for CDNs",
+              <https://github.com/braid-org/cdn-polyfills>.
+
+   [MEETING-144]
+              Toomim, M., "Braided CDN Polyfills", Braid Meeting 144,
+              September 2026, <https://braid.org/meeting-144>.
+
+   [RFC5861]  Nottingham, M., "HTTP Cache-Control Extensions for Stale
+              Content", RFC 5861, May 2010.
+
+   [RFC7942]  Sheffer, Y. and A. Farrel, "Improving Awareness of Running
+              Code: The Implementation Status Section", BCP 205, RFC
+              7942, July 2016.
+
+
+   [UPDATES]  Toomim, M., "Replayable Updates for HTTP",
+              draft-toomim-httpbis-braid-updates-00, work in progress,
+              November 2026.
+
+   [VERSIONS] Toomim, M., "Resource Versioning for HTTP",
+              draft-toomim-httpbis-braid-versions-00, work in progress,
+              November 2026.
+
+
+Author's Address
+
+   Michael Toomim
+   Invisible College, Berkeley
+   2053 Berkeley Way
+   Berkeley, CA 94704
+
+   EMail: toomim@gmail.com
+   Web:   https://invisible.college/@toomim
