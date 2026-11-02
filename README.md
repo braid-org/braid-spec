@@ -11,7 +11,8 @@ limitation of HTTP, and works alone, or together with the others.
 
 Braid-HTTP extends HTTP from transferring state to synchronizing it.  With it,
 a website can synchronize with any other website's state by its URL alone,
-just as a page can link to any other page.  Start here.
+just as a page can link to any other page.  The HyperText Transfer Protocol
+becomes a HyperState Synchronization Protocol.  Start here.
 
 ## The extensions
 
