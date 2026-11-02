@@ -1,0 +1,722 @@
+Internet-Draft                                                 M. Toomim
+Expires: 6 May 2027                                    Invisible College
+Intended status: Informational                                 G. Little
+                                                       Invisible College
+                                                               R. Walker
+                                                            Bard College
+                                                              B. Bellomy
+                                                       Invisible College
+                                                               J. Gentle
+                                                       Invisible College
+                                                         2 November 2026
+
+
+               Braid-HTTP: State Synchronization for HTTP
+                   draft-toomim-httpbis-braid-http-05
+
+Abstract
+
+   HTTP transfers the state of a resource, but leaves programmers to
+   keep that state up to date as it changes.  Braid-HTTP is a set of
+   independent extensions to HTTP.  Each one fixes a limitation of HTTP
+   on its own, and together they generalize HTTP from a state *transfer*
+   protocol into a state *synchronization* protocol.  This document
+   introduces the extensions, shows how they function alone and
+   together, and points to the documents that define them.
+
+
+About This Document
+
+   This note is to be removed before publishing as an RFC.
+
+   Discussion of this document takes place on the HTTP Working Group
+   mailing list (ietf-http-wg@w3.org).  The source of this document, and
+   an issue tracker, are at https://github.com/braid-org/braid-spec.
+
+
+Status of this Memo
+
+   This Internet-Draft is submitted in full conformance with the
+   provisions of BCP 78 and BCP 79.
+
+   Internet-Drafts are working documents of the Internet Engineering
+   Task Force (IETF).  Note that other groups may also distribute
+   working documents as Internet-Drafts.  The list of current
+   Internet-Drafts is at https://datatracker.ietf.org/drafts/current/.
+
+   Internet-Drafts are draft documents valid for a maximum of six months
+   and may be updated, replaced, or obsoleted by other documents at any
+   time.  It is inappropriate to use Internet-Drafts as reference
+   material or to cite them other than as "work in progress."
+
+   This Internet-Draft will expire on 6 May 2027.
+
+
+Copyright Notice
+
+   Copyright (c) 2026 IETF Trust and the persons identified as the
+   document authors.  All rights reserved.
+
+   This document is subject to BCP 78 and the IETF Trust's Legal
+   Provisions Relating to IETF Documents
+   (https://trustee.ietf.org/license-info) in effect on the date of
+   publication of this document.  Please review these documents
+   carefully, as they describe your rights and restrictions with respect
+   to this document.  Code Components extracted from this document must
+   include Revised BSD License text as described in Section 4.e of the
+   Trust Legal Provisions and are provided without warranty as described
+   in the Revised BSD License.
+
+
+Table of Contents
+
+   1.  Introduction ...................................................4
+   1.1.  HTTP sends one snapshot per request ..........................4
+   1.2.  HTTP gains versions, updates, and subscriptions ..............4
+   2.  The extensions are modular and composable ......................6
+   3.  Combined, the extensions let peers resume, replay, and merge ...7
+   4.  The same extensions serve CDNs, feeds, chats, and editors ......8
+   5.  Existing systems map onto the extensions .......................8
+   5.1.  Subscriptions express both push and pull .....................8
+   5.2.  Versions express both linear and branching histories .........9
+   6.  Related work ...................................................9
+   6.1.  SSE and WebSocket ............................................9
+   6.2.  Transfer-Encoding: chunked ...................................9
+   6.3.  IETF work in progress .......................................10
+   6.4.  Other IETF protocols ........................................10
+   6.5.  Web frameworks ..............................................10
+   7.  Where to start reading ........................................11
+   8.  How this work is developed ....................................12
+   9.  Security Considerations .......................................12
+   10.  IANA Considerations ..........................................12
+   11.  References ...................................................12
+   11.1.  Normative References .......................................12
+   11.2.  Informative References .....................................12
+
+
+1.  Introduction
+
+
+1.1.  HTTP sends one snapshot per request
+
+   HTTP [RFC9110] transfers a snapshot of state within a single request
+   and response.  If the state changes, HTTP does not automatically
+   update clients with the new versions.  This design satisficed when
+   webpages were mostly static and written by hand; however today's
+   websites are dynamic, generated from layers of state in databases,
+   and provide realtime updates across multiple clients and servers.
+   Programmers today need to *synchronize*, not just *transfer* state,
+   and to do this, they must work around HTTP.
+
+   The web has a long history of such workarounds.  The original web
+   required users to click reload when a page changed.  Javascript and
+   XMLHTTPRequest [XHR] made it possible to update just part of a page,
+   running a GET request behind the scenes.  However, a GET request
+   still could not push server-initiated updates.  To work around this,
+   web programmers would poll the resource with repeated GETs, which was
+   inefficient.  Long-polling was invented to reduce redundant requests,
+   but still requires the client to initiate a round-trip for each
+   update.  Server-Sent Events [SSE] finally created a standard for the
+   server to push events, but SSE provides semantics of an event-stream,
+   not an update-stream, and SSE programmers must encode the semantics
+   of updating a resource within the event stream.  Today there is still
+   no standard to push updates to a resource's state.
+
+   In practice, web programmers today often give up on using standards
+   for "data that changes", and instead send custom messages over a
+   WebSocket -- a hand-rolled synchronization protocol.  Unfortunately,
+   this forfeits the benefits of HTTP and ReST, such as caching and a
+   uniform interface [REST].  As the web becomes increasingly dynamic,
+   web applications are forced to implement additional layers of
+   non-standard Javascript frameworks to synchronize changes to state.
+
+
+1.2.  HTTP gains versions, updates, and subscriptions
+
+   Each of these workarounds exists because HTTP is missing a piece.
+   HTTP cannot name a point in a resource's history, cannot express a
+   change the same way from client to server and from server to client,
+   cannot send several responses at once, and cannot keep responding to
+   a GET as its resource changes.  Braid-HTTP adds each missing piece as
+   a separate extension, which is useful by itself.  Together, they
+   generalize HTTP into a synchronization protocol, and ReST into a
+   synchronization architecture:
+
+
+         HTTP:         HyperText  *Transfer* Protocol
+         becomes:      HyperState *Synchronization* Protocol
+
+         ReST:         Representational State *Transfer*
+         becomes:      Representational State *Synchronization*
+
+
+   For example, a client can subscribe to a chat, and get its current
+   state, and then each new message as it is posted:
+
+
+      Request:
+
+         GET /chat
+         Subscribe: stream
+
+      Response:
+
+         HTTP/1.1 209 Multiresponse
+         Subscribe: stream
+         Content-Type: application/http-history
+         Cache-Control: no-store
+         Incremental: ?1
+
+         HTTP/1.1 200 OK                    | The state at version 1
+         Version: ("1")                     |
+         Content-Type: text/plain           |
+         Content-Length: 6                  |
+                                            |
+         Hello!                             |
+
+         HTTP/1.1 200 OK                    | The change to version 2
+         Version: ("2")                     |
+         Parents: ("1")                     |
+         Content-Type: text/plain           |
+         Content-Length: 14                 |
+                                            |
+         Hello! Hi you.                     |
+
+
+   Each extension adds one piece of this exchange.  The Subscribe header
+   asks the server to keep the response open, and to send each change
+   [SUBSCRIPTIONS].  The 209 Multiresponse carries several responses in
+   one [MULTIRESPONSE], and the Incremental header [RFC10036] asks
+   intermediaries to forward each one as it arrives.  The Version header
+   says which point in time each response is at, and Parents says which
+   points came just before it [VERSIONS].  And Updates [UPDATES] defines
+   how to send each change as a patch, which replays deterministically
+   at every client, server, and intermediary.
+
+
+   A cache can serve this subscription to many clients at once.  It
+   holds one subscription to the origin, and passes each change on to
+   every client that subscribes through it [SUBSCRIPTIONS-CACHING]:
+
+
+                           +--------+
+                           | origin |
+                           +--------+
+                               |
+                        one subscription
+                               |
+                         +----------+
+                         | CDN edge |
+                         +----------+
+                         /    |     \
+                        /     |      \
+                   client  client  client
+
+
+   While that subscription is live, the origin pushes each change into
+   the cache in half a round trip, so the cache serves the new state
+   even to plain GETs of /chat.
+
+   Just as a page can link to a page on any other website by its URL
+   alone, these extensions let a website synchronize with the state of
+   any other website by its URL alone, with no API or socket protocol
+   between the two.
+
+
+2.  The extensions are modular and composable
+
+   Each one addresses one limitation of HTTP, in a separate
+   specification:
+
+   Versions [VERSIONS]:  HTTP cannot name a point in a resource's
+      history.  Versions names points in time, with the events of a DAG.
+      A client can GET the state at a version, and say which version its
+      PUT builds on.
+
+   Updates [UPDATES]:  A change has no form that means the same in a
+      request and in a response: PATCH has no response form, and a 206
+      does not say that the rest of the representation is unchanged.
+      Updates defines snapshots, patches, and deletions, in one form for
+      both requests and responses.  Each one replays the same way at
+      every peer.
+
+   Multiresponse [MULTIRESPONSE]:  HTTP sends one response to each
+      request.  Multiresponse defines the 209 Multiresponse status code,
+      whose content holds several responses.  It also defines
+      application/http-history, a format for a resource's responses over
+      time.
+
+
+   Subscriptions [SUBSCRIPTIONS]:  HTTP responds to a GET once, and the
+      client does not hear when its resource changes later.  With a
+      subscription, the server sends each change as it happens, in a
+      multiresponse.  Two documents extend it: Subscriptions Caching
+      [SUBSCRIPTIONS-CACHING] lets caches fan one upstream subscription
+      out to many subscribers, and Poll and Push [POLL-AND-PUSH] serves
+      subscriptions from origins, and through paths, that cannot hold a
+      response open.
+
+   Merge Types [MERGE-TYPES]:  HTTP does not say how to merge changes
+      that peers make in parallel.  A Merge Type says how to merge them,
+      so that every peer reaches the same state.  It builds on Versions
+      and Updates.
+
+   The new header fields of these extensions share one syntax, Simpler
+   Fields [SIMPLER-FIELDS], a profile of Structured Fields that a light
+   client can parse with a regular expression.
+
+
+3.  Combined, the extensions let peers resume, replay, and merge
+
+   Used together, the extensions add more:
+
+   Updates and Versions:  Each update applies to the state at its
+      Parents, even when updates arrive out of order.
+
+   Versions and Multiresponse:  A client can request a span of history,
+      and get each update in it.
+
+   Subscriptions and Versions:  A subscription resumes where it left
+      off, from the origin or from a cache.
+
+   Subscriptions and Updates:  A subscription can send each change as a
+      patch, and every peer replays it the same way.
+
+   Updates, Versions, and Merge Types:  When peers edit a resource in
+      parallel, they merge their edits consistently.
+
+   Subscriptions, Updates, Versions, and Merge Types:  Peers reach
+      strong eventual consistency [CRDT].  Subscriptions deliver every
+      update to each subscriber, and once two peers have received the
+      same updates, the Merge Type brings them to the same state.  A
+      future document will define reliable delivery for the updates that
+      clients send to servers.
+
+
+4.  The same extensions serve CDNs, feeds, chats, and editors
+
+   CDN performance:  With a subscription, the origin updates the CDN's
+      cache in half a round trip, where a purge and a refetch take 1.5
+      round trips.  Live pages, which bypass the CDN today over a
+      WebSocket or SSE, can load and update through it: they load about
+      as fast as cached pages, and update as fast as a WebSocket.  Each
+      edge serves all its subscribers from one subscription to the
+      origin [SUBSCRIPTIONS] [SUBSCRIPTIONS-CACHING].  We demonstrated
+      this with a prototype on Cloudflare's network, using only its
+      public APIs [MEETING-144].
+
+   Simple updates over time:  Most applications just need their pages to
+      update as their data changes.  Subscriptions make this easy, and
+      keep these applications on HTTP, where caches can serve them
+      [SUBSCRIPTIONS].
+
+   News and feeds:  A news site, or an RSS feed, can push each new item
+      to its readers, with no polling [SUBSCRIPTIONS], and a reader can
+      resume where it left off ([VERSIONS], Section 4.1).
+
+   AI sessions:  A conversation with an AI model is an append-only log,
+      which a subscription makes cacheable and resumable [SUBSCRIPTIONS]
+      [VERSIONS] [UPDATES].
+
+   Resumable uploads:  An upload is the same append-only log, going the
+      other way, from client to server ([UPDATES], and the bytestream
+      Version Type of [VERSIONS], Section 4.3).
+
+   Collaborative editing:  Collaborative editors, and local-first
+      applications, can merge parallel edits with any OT or CRDT
+      algorithm [VERSIONS] [UPDATES] [MERGE-TYPES].  Time Machines
+      [TIME-MACHINES] gives the theory.
+
+
+5.  Existing systems map onto the extensions
+
+   The extensions are general HTTP machinery.  They can express the ways
+   that existing systems deliver changes, and the ways that they name
+   points in time.
+
+
+5.1.  Subscriptions express both push and pull
+
+   A subscription can stream its updates in one response, deliver them
+   one at a time to a client that polls, or push them to a server as
+   requests [SUBSCRIPTIONS] [POLL-AND-PUSH].  These are the ways that
+   existing systems deliver changes.  Server-Sent Events [SSE] streams
+   them.  HTTP Events Query [EVENTS-QUERY] streams them, or long-polls
+   for them.  Webhooks and WebSub [WEBSUB] push them to a server.  And
+   Mercure's hub [MERCURE] and Pushpin's proxy [GRIP] relay them from a
+   publisher to its subscribers.
+
+
+5.2.  Versions express both linear and branching histories
+
+   A version is a set of events in a DAG [VERSIONS], and a Version Type
+   can say how to read the events.  So versions can express:
+
+     - hash histories, as in git, and Merkle DAGs, as in the AT Protocol
+       [ATPROTO];
+
+     - vector clocks;
+
+     - branches and tags, which can simulate opening and committing a
+       transaction; and
+
+     - bytestreams, as for resumable uploads.
+
+
+6.  Related work
+
+
+6.1.  SSE and WebSocket
+
+   Server-Sent Events [SSE] (1) doesn't support binary data, (2) assumes
+   versioning is linear (which doesn't work in a distributed system),
+   (3) doesn't provide any way to add new headers to each response, and
+   (4) doesn't specify semantics of updating a resource.
+
+   SSE is a way to tunnel a specific, limited, use-case of centralized,
+   text-only, server-to-client-only event streaming over a HTTP
+   response, without specifying how those events change the state of an
+   HTTP resource.
+
+   WebSocket doesn't provide semantics of state change.  Users have to
+   roll their own.
+
+
+6.2.  Transfer-Encoding: chunked
+
+   Some people have suggested using chunked boundaries as a way to
+   encode multiple responses to a subscription.  However, chunk
+   boundaries cannot be relied upon to remain intact; they can be
+   changed by intermediaries.  The chunks are only an encoding of the
+   transfer.  They are not supposed to contain any semantic information.
+   It is also disallowed in HTTP/2, and will disappear over any HTTP/2
+   hop.
+
+
+6.3.  IETF work in progress
+
+   Four drafts in progress overlap with this work:
+
+     - HTTP Events Query [EVENTS-QUERY] also subscribes a client to the
+       resource itself, with a QUERY request.  Each notification
+       represents an event, and Events Query leaves versions,
+       resumption, and merging to other specifications, which Versions,
+       Updates, and Merge Types could provide.  It follows Per Resource
+       Events [PREP], by the same author.
+
+     - The Mercure Protocol [MERCURE] relays updates from a publisher to
+       its subscribers through a hub, at the hub's own URL.  Each update
+       is a Server-Sent Event with no headers of its own, so it carries
+       no version, and the caches on the path to the resource gain
+       nothing from it.  Poll and Push [POLL-AND-PUSH] defines a
+       subscription gateway, which works like a Mercure hub, for origins
+       that cannot hold a response open.
+
+     - Resumable Uploads [RESUMABLE-UPLOAD] defines headers and a status
+       code for one task, uploading a file in pieces.  Updates and
+       Versions express the same task in general terms, as patches with
+       a bytestream Version Type ([VERSIONS], Section 4.3).
+
+     - Byte-Range PATCH [BYTE-RANGE-PATCH] carries patches with
+       Content-Range, as Updates does, so the two can share one patch
+       format.  It also has useful mechanisms to avoid Partial PUTs on
+       legacy servers.
+
+
+6.4.  Other IETF protocols
+
+   A number of IETF specifications already standardize aspects of
+   synchronization for specific domains.  IMAP [RFC9051] provides
+   synchronization of email.  WebDAV provides the synchronization of
+   "collections" [RFC6578], and has been extended specifically for
+   calendar data in CalDAV [RFC4791], and vCards in [RFC6350].  More
+   recently, JMAP [RFC8620] provides an updated method of
+   synchronization, supporting mail, calendars, and contacts.
+
+
+6.5.  Web frameworks
+
+   Web applications typically synchronize the state of a client and
+   server with layers of models, views, and controllers in web
+   frameworks.  By automating synchronization within HTTP, programmers
+   have to write fewer layers of code on top of it.
+
+
+      ====== Legacy Websites ======      ====== Braid Websites ======
+
+      Today's webpages are               Braid-HTTP generalizes HTTP
+      generated from multiple            into a standard for
+      layers of state.  Each layer       synchronizing state within
+      has a different API.               and between websites.
+
+        x Non-standard state API          o Standard state API
+
+        _Client__
+       /         \
+      :  o o o o  :   Webpage DOM          o o o o       State
+      :   \|  \|  :                         \|  \|
+      :    x   x  :   HTML Templates         o   o       State
+      :   /|  /|  :                         /|  /|
+      :  x x x x  :   JS Models            o o o o       State
+       \ | | | | /                         | | | |
+         | | | |                           | | | |
+         o o o o    - http:// -            o o o o     - http:// -
+       / | | | | \                         | | | |
+      :  x x x x  :   Views                o o o o       State
+      :  |  \| |  :                        |  \| |
+      :  x   x x  :   Controllers          o   o o       State
+      :   \ / \|  :                         \ / \|
+      :    x   x  :   Models                 o   o       State
+      :     \ /   :                           \ /
+       \.... x ../    Database                 o         State
+         Server
+
+      Today's programmers have to        Each piece of state (o) has a
+      learn each API, and wire them      URI; whether public or
+      together, making sure that         internal.  State can be a
+      changes to shared state            function of other state, and
+      synchronize across all             automatically recompute when
+      layers and computers.              its dependencies change.
+                                         Braid-HTTP guarantees network
+                                         synchronization.
+
+
+7.  Where to start reading
+
+   Application developers can start with Subscriptions [SUBSCRIPTIONS],
+   which shows how a page subscribes to a resource with a GET, and then
+   read Updates [UPDATES], to send changes as patches.
+
+   CDN and cache implementers can start with Subscriptions Caching
+   [SUBSCRIPTIONS-CACHING], which shows how one subscription to the
+   origin serves every subscriber at an edge, and keeps the cache
+   current for plain GETs.
+
+   Origins on serverless or shared hosting, which cannot hold a response
+   open, can start with Poll and Push [POLL-AND-PUSH].
+
+
+8.  How this work is developed
+
+   braid.org is an open group working on interoperable state
+   synchronization: with HTTP, where most of the world's state lives,
+   and with the state of operating systems and applications.  Its aim is
+   for any state, anywhere, to be as easy to read and write as a local
+   variable: as if already downloaded and always up to date, within its
+   access control.
+
+   These documents are contributions to the IETF, developed in the open
+   at braid.org.  Anyone can propose changes to them, and once the HTTP
+   Working Group adopts them, it holds change control.
+
+
+9.  Security Considerations
+
+   Each extension's document has its own security considerations.  This
+   document adds none.
+
+
+10.  IANA Considerations
+
+   This document has no IANA actions.
+
+
+11.  References
+
+
+11.1.  Normative References
+
+   [RFC9110]  Fielding, R., Ed., Nottingham, M., Ed., and J. Reschke,
+              Ed., "HTTP Semantics", STD 97, RFC 9110, June 2022.
+
+
+11.2.  Informative References
+
+   [ATPROTO]  "AT Protocol", <https://atproto.com/>.
+
+   [BYTE-RANGE-PATCH]
+              Wright, A., "Byte Range PATCH",
+              draft-wright-http-patch-byterange, work in progress.
+
+   [CRDT]     Shapiro, M., Preguica, N., Baquero, C., and M. Zawirski,
+              "Conflict-free replicated data types", in SSS'11
+              Proceedings of the 13th international conference on
+              Stabilization, safety, and security of distributed
+              systems, October 2011.
+
+   [EVENTS-QUERY]
+              Gupta, R., "HTTP Events Query",
+              draft-gupta-httpapi-events-query-04, work in progress,
+              November 2026.
+
+   [GRIP]     Fanout, "Generic Realtime Intermediary Protocol",
+              <https://pushpin.org/docs/protocols/grip/>.
+
+
+   [MEETING-144]
+              Toomim, M., "Braided CDN Polyfills", Braid Meeting 144,
+              September 2026, <https://braid.org/meeting-144>.
+
+   [MERCURE]  Dunglas, K., "The Mercure Protocol",
+              draft-dunglas-mercure-08, work in progress, August 2026.
+
+   [MERGE-TYPES]
+              Toomim, M., Milutinovic, M., and B. Bellomy, "Consistent
+              Merge Types for HTTP",
+              draft-toomim-httpbis-braid-merge-types-00, work in
+              progress, November 2026.
+
+   [MULTIRESPONSE]
+              Toomim, M., "Multiresponses for HTTP",
+              draft-toomim-httpbis-braid-multiresponse-00, work in
+              progress, November 2026.
+
+   [POLL-AND-PUSH]
+              Toomim, M., "Poll and Push Modes for HTTP Subscriptions",
+              draft-toomim-httpbis-braid-poll-and-push-00, work in
+              progress, November 2026.
+
+   [PREP]     Gupta, R., "Per Resource Events",
+              draft-gupta-httpbis-per-resource-events-03, work in
+              progress.
+
+   [REST]     Fielding, R., "Architectural Styles and the Design of
+              Network-based Software Architectures", Doctoral
+              dissertation, University of California, Irvine, 2000.
+
+   [RESUMABLE-UPLOAD]
+              Kleidl, M., Zhang, G., and L. Pardue, "Resumable Uploads
+              for HTTP", draft-ietf-httpbis-resumable-upload, work in
+              progress.
+
+   [RFC4791]  Daboo, C., Desruisseaux, B., and L. Dusseault,
+              "Calendaring Extensions to WebDAV (CalDAV)", RFC 4791,
+              March 2007.
+
+   [RFC6350]  Perreault, S., "vCard Format Specification", RFC 6350,
+              August 2011.
+
+   [RFC6578]  Daboo, C. and A. Quillaud, "Collection Synchronization for
+              Web Distributed Authoring and Versioning (WebDAV)", RFC
+              6578, March 2012.
+
+   [RFC8620]  Jenkins, N. and C. Newman, "The JSON Meta Application
+              Protocol (JMAP)", RFC 8620, July 2019.
+
+   [RFC9051]  Melnikov, A., Ed. and B. Leiba, Ed., "Internet Message
+              Access Protocol (IMAP) - Version 4rev2", RFC 9051, August
+              2021.
+
+   [RFC10036] Oku, K., Pauly, T., and M. Thomson, "Incremental
+              Forwarding of HTTP Messages", RFC 10036, August 2026.
+
+
+   [SIMPLER-FIELDS]
+              Toomim, M., "Simpler Fields for HTTP",
+              draft-toomim-httpbis-simpler-fields-00, work in progress,
+              November 2026.
+
+   [SSE]      Hickson, I., "Server-Sent Events", W3C Recommendation,
+              February 2015,
+              <https://www.w3.org/TR/2015/REC-eventsource-20150203/>.
+
+   [SUBSCRIPTIONS]
+              Toomim, M., "Subscriptions for HTTP",
+              draft-toomim-httpbis-braid-subscriptions-00, work in
+              progress, November 2026.
+
+   [SUBSCRIPTIONS-CACHING]
+              Toomim, M., "Caching for HTTP Subscriptions",
+              draft-toomim-httpbis-braid-subscriptions-caching-00, work
+              in progress, November 2026.
+
+   [TIME-MACHINES]
+              Toomim, M., "Time Machines",
+              <https://braid.org/time-machines>.
+
+   [UPDATES]  Toomim, M., "Replayable Updates for HTTP",
+              draft-toomim-httpbis-braid-updates-00, work in progress,
+              November 2026.
+
+   [VERSIONS] Toomim, M., "Resource Versioning for HTTP",
+              draft-toomim-httpbis-braid-versions-00, work in progress,
+              November 2026.
+
+   [WEBSUB]   Genestoux, J., Ed. and A. Parecki, Ed., "WebSub", W3C
+              Recommendation, January 2018,
+              <https://www.w3.org/TR/websub/>.
+
+   [XHR]      van Kesteren, A., "XMLHttpRequest", WHATWG Living
+              Standard, <https://xhr.spec.whatwg.org/>.
+
+
+Acknowledgements
+
+   In addition to the authors, this spec contains intellectual
+   contributions from the following people:
+
+      - Mitar Milutinovic
+      - Sarah Allen
+      - Duane Johnson
+      - Travis Kriplean
+      - Marius Nita
+      - Paul Pham
+      - Morgan Dixon
+      - Karthik Palaniappan
+
+   We thank the following people for key feedback on previous drafts:
+
+      - Austin Wright
+      - Martin Thomson
+      - Eric Kinnear
+      - Olli Vanhoja
+      - Julian Reschke
+      - Chris Lemmons
+      - Rahul Gupta
+
+   We also thank Mark Nottingham, Fred Baker, Adam Roach, and Barry
+   Leiba for facilitating a productive environment within the IETF.
+
+
+Authors' Addresses
+
+   Michael Toomim
+   Invisible College, Berkeley
+   2053 Berkeley Way
+   Berkeley, CA 94704
+
+   EMail: toomim@gmail.com
+   Web:   https://invisible.college/@toomim
+
+
+   Greg Little
+   Invisible College, Berkeley
+   2053 Berkeley Way
+   Berkeley, CA 94704
+
+   EMail: glittle@gmail.com
+   Web:   https://glittle.org/
+
+
+   Rafie Walker
+   Bard College
+
+   EMail: slickytail.mc@gmail.com
+
+
+   Bryn Bellomy
+   Invisible College, Berkeley
+   2053 Berkeley Way
+   Berkeley, CA 94704
+
+   EMail: bryn@signals.io
+   Web:   https://invisible.college/@bryn
+
+
+   Joseph Gentle
+   Invisible College, Berkeley
+   2053 Berkeley Way
+   Berkeley, CA 94704
+
+   EMail: me@josephg.com
+   Web:   https://josephg.com/
