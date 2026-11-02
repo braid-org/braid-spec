@@ -88,11 +88,12 @@ Table of Contents
    5.2.2.  Registrations ..............................................8
    5.2.3.  Comments on Merge Type Registrations .......................8
    5.2.4.  Change Procedures ..........................................8
-   6.  Security Considerations ........................................9
-   7.  Conventions ....................................................9
-   8.  References ....................................................10
-   8.1.  Normative References ........................................10
-   8.2.  Informative References ......................................10
+   6.  Implementation Status ..........................................9
+   7.  Security Considerations ........................................9
+   8.  Conventions ...................................................10
+   9.  References ....................................................10
+   9.1.  Normative References ........................................10
+   9.2.  Informative References ......................................11
 
 
 1.  Introduction
@@ -353,7 +354,37 @@ Table of Contents
    community.
 
 
-6.  Security Considerations
+6.  Implementation Status
+
+   This section records the known implementations of this document, as
+   [RFC7942] describes.  It is to be removed before publishing as an
+   RFC.
+
+     - braid-text [BRAID-TEXT] implements three Merge Types for text:
+       "simpleton" [SIMPLETON], for light clients, "dt", which merges
+       with Diamond Types [DIAMOND-TYPES], and "yjs", which merges with
+       Yjs [YJS].
+
+     - braid-blob [BRAID-BLOB] implements "aww", arbitrary writer wins
+       [AWW], for binary files.
+
+     - braidfs [BRAIDFS] synchronizes a folder of local files, merging
+       text with "dt" and other files with "aww".
+
+     - braid-chrome [BRAID-CHROME], a browser extension for Chrome and
+       Firefox, merges text with "dt" and "simpleton", to edit pages
+       collaboratively.
+
+     - Editor plugins for Emacs [BRAID-EMACS], Neovim [BRAID-NEOVIM],
+       and VS Code [BRAID-VSCODE] merge text with "simpleton", to edit
+       any braid-text resource collaboratively.
+
+     - "sync9" [SYNC9], a peer-to-peer CRDT for text and JSON, is
+       implemented in antimatter [ANTIMATTER] and antimatter_wiki
+       [ANTIMATTER-WIKI].
+
+
+7.  Security Considerations
 
    An analysis of security issues SHOULD be done for all registered
    Merge Types.  However, regardless of what security analysis has or
@@ -374,6 +405,7 @@ Table of Contents
    extended by use of the "comments on Merge Types" mechanism described
    in Section 5.2.3 above.
 
+
    Some of the issues that need to be examined and described in a
    security analysis of a Merge Type are:
 
@@ -394,7 +426,7 @@ Table of Contents
        it uses to accept or reject updates.
 
 
-7.  Conventions
+8.  Conventions
 
    The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
    "SHOULD", "SHOULD NOT", "RECOMMENDED", "NOT RECOMMENDED", "MAY", and
@@ -402,11 +434,11 @@ Table of Contents
    BCP 14 [RFC2119] [RFC8174] when, and only when, they appear in all
    capitals, as shown here.
 
-
-8.  References
+
+9.  References
 
 
-8.1.  Normative References
+9.1.  Normative References
 
    [RFC2119]  Bradner, S., "Key words for use in RFCs to Indicate
               Requirement Levels", BCP 14, RFC 2119, March 1997.
@@ -428,6 +460,7 @@ Table of Contents
    [RFC9651]  Nottingham, M. and P-H. Kamp, "Structured Field Values
               for HTTP", RFC 9651, September 2024.
 
+
    [UPDATES]  Toomim, M., "Replayable Updates for HTTP",
               draft-toomim-httpbis-braid-updates-00, work in progress,
               November 2026.
@@ -437,7 +470,7 @@ Table of Contents
               November 2026.
 
 
-8.2.  Informative References
+9.2.  Informative References
 
    [BRAID-HTTP]
               Toomim, M., "Braid-HTTP: State Synchronization for HTTP",
@@ -455,7 +488,63 @@ Table of Contents
               ACM SIGMOD international conference on Management of data,
               June 1989.
 
+   [RFC7942]  Sheffer, Y. and A. Farrel, "Improving Awareness of Running
+              Code: The Implementation Status Section", BCP 205, RFC
+              7942, July 2016.
+
+   [AWW]      braid.org, "Arbitrary Writer Wins",
+              <https://braid.org/protocol/merge-types/aww>.
+
+   [BRAID-BLOB]
+              braid.org, "braid-blob",
+              <https://github.com/braid-org/braid-blob>.
+
+   [BRAID-TEXT]
+              braid.org, "braid-text",
+              <https://github.com/braid-org/braid-text>.
+
+   [BRAIDFS]  braid.org, "braidfs",
+              <https://github.com/braid-org/braidfs>.
+
+   [DIAMOND-TYPES]
+              Gentle, J., "Diamond Types",
+              <https://github.com/josephg/diamond-types>.
+
+   [SIMPLETON]
+              braid.org, "Simpleton",
+              <https://braid.org/protocol/simpleton>.
+
+   [SYNC9]    braid.org, "Sync9: a Peer-to-Peer Synchronizer",
+              <https://braid.org/sync9>.
+
 
+   [BRAID-CHROME]
+              braid.org, "braid-chrome",
+              <https://github.com/braid-org/braid-chrome>.
+
+   [ANTIMATTER]
+              braid.org, "antimatter",
+              <https://github.com/braid-org/antimatter>.
+
+   [ANTIMATTER-WIKI]
+              braid.org, "antimatter_wiki",
+              <https://github.com/braid-org/antimatter_wiki>.
+
+   [BRAID-EMACS]
+              braid.org, "braid-emacs",
+              <https://github.com/braid-org/braid-emacs>.
+
+   [BRAID-NEOVIM]
+              braid.org, "braid-neovim",
+              <https://github.com/braid-org/braid-neovim>.
+
+   [BRAID-VSCODE]
+              braid.org, "braid-vscode",
+              <https://github.com/braid-org/braid-vscode>.
+
+   [YJS]      Jahns, K., "Yjs", <https://github.com/yjs/yjs>.
+
+
 Authors' Addresses
 
    For more information, the authors of this document are best contacted

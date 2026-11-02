@@ -81,10 +81,10 @@ Table of Contents
    2.2.2.  Definition of Events and Versions .......................10
    2.2.3.  Computing the current version ...........................10
    2.3.  Using Versioning with HTTP Methods ........................11
-   2.3.1.  GET the current version .................................12
-   2.3.2.  GET a specific version ..................................13
-   2.3.3.  PUT, POST, or PATCH a new version .......................13
-   2.3.4.  GET a span of history ...................................14
+   2.3.1.  GET the current version .................................11
+   2.3.2.  GET a specific version ..................................12
+   2.3.3.  PUT a new version .......................................13
+   2.3.4.  GET a span of history ...................................13
    2.3.5.  Rules for Version and Parents headers ...................15
    2.3.6.  Interaction with Conditional Request Headers ............16
    2.4.  Status 432: Version Not Found .............................17
@@ -120,10 +120,11 @@ Table of Contents
    7.2.2.  Version Type Registrations ..............................39
    7.2.3.  Comments on Version Type Registrations ..................40
    7.2.4.  Change Procedures .......................................40
-   8.  Security Considerations .....................................41
-   9.  References ..................................................42
-   9.1.  Normative References ......................................42
-   9.2.  Informative References ....................................42
+   8.  Implementation Status .......................................41
+   9.  Security Considerations .....................................41
+   10.  References .................................................42
+   10.1.  Normative References .....................................42
+   10.2.  Informative References ...................................43
 
 
 
@@ -301,18 +302,18 @@ Table of Contents
 
            Parents: ("ajtva12kid" "cmdpvkpll2")
 
-   These headers may be used in PUT, PATCH, POST, and DELETE requests,
-   and GET and HEAD responses, to convey the version before and after
-   the Update conveyed by the HTTP message.  (See [Updates].)
+   These headers may be used in PUT and DELETE requests, and GET and
+   HEAD responses, to convey the version before and after the Update
+   conveyed by the HTTP message.  (See [Updates].)
 
    These headers can also be used in GET and HEAD requests to ask a
    server for a specific version or span of history.
 
-   If an Update (a PUT, PATCH, POST, or DELETE request, or a GET or HEAD
-   response) does not specify a Version header, the recipient MAY
-   generate and assign it a new version ID.  If an Update does not
-   specify a Parents header, the recipient MAY presume that its current
-   version is the new version's Parents.
+   If an Update (a PUT or DELETE request, or a GET or HEAD response)
+   does not specify a Version header, the recipient MAY generate and
+   assign it a new version ID.  If an Update does not specify a Parents
+   header, the recipient MAY presume that its current version is the new
+   version's Parents.
 
    To describe a merger, a version MAY contain several Event IDs:
 
@@ -469,8 +470,6 @@ Table of Contents
      - GET
      - HEAD
      - PUT
-     - PATCH
-     - POST
      - DELETE
 
    For each of these methods, if a Version or Parents header exists in
@@ -480,7 +479,7 @@ Table of Contents
    We now detail the ways in which these headers modify requests and
    responses for these methods.
 
-
+
 2.3.1.  GET the current version
 
    If the Version: header is not specified, a GET request returns the
@@ -502,7 +501,7 @@ Table of Contents
          [{"text": "Hi, everyone!",
            "author": {"link": "/user/tommy"}}]
 
-
+
    The server MAY include a Version and/or Parents header in the
    response, to indicate the current version and its parents.
 
@@ -521,7 +520,7 @@ Table of Contents
          Parents: ("oakwn5b8qh" "uc9zwhw7mf")
          Content-Type: application/json
 
-
+
 2.3.2.  GET a specific version
 
    A server can allow clients to request a resource at historical
@@ -546,12 +545,12 @@ Table of Contents
          [{"text": "Hi, everyone!",
            "author": {"link": "/user/tommy"}}]
 
+
+2.3.3.  PUT a new version
 
-2.3.3.  PUT, POST, or PATCH a new version
-
-   When a PUT, POST, or PATCH request changes the state of a
-   resource, it can specify the version that the resource's new state
-   is at, and the version that it was based on:
+   When a PUT request changes the state of a resource, it can specify
+   the version that the resource's new state is at, and the version that
+   it was based on:
 
 
       Request:
@@ -576,7 +575,7 @@ Table of Contents
    recipient may assume that its current version is the version's
    parents.
 
-
+
 2.3.4.  GET a span of history
 
    A client can request a span of history by including a Parents and a
@@ -584,7 +583,7 @@ Table of Contents
    (the oldest versions) and the Version marks the end of the span (the
    newest versions) that it requests.
 
-
+
       Request:
 
          GET /chat
@@ -730,7 +729,7 @@ Table of Contents
    When both are present, the server SHOULD first resolve the requested
    version, then evaluate any preconditions.
 
-   The Parents header in mutation requests (PUT, PATCH, POST) serves a
+   The Parents header in mutation requests (PUT and DELETE) serves a
    related but distinct purpose from If-Match: whereas If-Match causes
    the request to fail if the resource's current state does not match,
    Parents specifies the version lineage of the mutation, which the
@@ -1891,7 +1890,41 @@ Table of Contents
    community.
 
 
-8.  Security Considerations
+8.  Implementation Status
+
+   This section records the known implementations of this document, as
+   [RFC7942] describes.  It is to be removed before publishing as an
+   RFC.
+
+   Each implementation below sends Version and Parents in an earlier
+   syntax, as quoted strings, and not yet as the Inner Lists of Section
+   2.2.1.
+
+     - The reference JavaScript library [Braid-HTTP-JS] sends and parses
+       Version and Parents in requests and responses, and reads
+       Current-Version.
+
+     - braid-text [Braid-Text] responds to a GET for a specific version,
+       or for the updates since its Parents, and names each event with
+       an agent and a sequence number.
+
+     - braid-blob [Braid-Blob] responds with 432 (Version Not Found)
+       when it does not have a requested version, and sends
+       Current-Version.
+
+     - braidfs [Braidfs] synchronizes a folder of local files with HTTP
+       resources, and sends Version and Parents with each PUT.
+
+     - braid-chrome [Braid-Chrome], a browser extension for Chrome and
+       Firefox, lets a developer view and navigate the version history
+       of a resource.
+
+     - The Braid-HTTP polyfill for Cloudflare [CDN-Polyfills] serves a
+       cached copy to a request that names a version only when the copy
+       is at exactly that version (Section 2.7).
+
+
+9.  Security Considerations
 
    Version IDs may reveal information about the structure and activity
    of a resource's editors.  For instance, the "peer-counter"
@@ -1911,6 +1944,7 @@ Table of Contents
    Not Found if acknowledging the existence of a version would itself
    constitute an information leak.
 
+
    Requesting a long span of history could require significant server
    resources to assemble and transmit.  Servers SHOULD impose limits on
    the size of version history responses and MAY respond with 413
@@ -1936,61 +1970,120 @@ Table of Contents
    clients as opaque, unverified claims rather than trusted
    identifiers.
 
-
-9.  References
+
+10.  References
 
 
-9.1.  Normative References
+10.1.  Normative References
 
-   [RFC2119]           "Key words for use in RFCs to Indicate
-                       Requirement Levels", RFC 2119.
+   [RFC2119]  Bradner, S., "Key words for use in RFCs to Indicate
+              Requirement Levels", BCP 14, RFC 2119, March 1997.
 
-   [RFC3986]           "Uniform Resource Identifier (URI): Generic
-                       Syntax", RFC 3986.
+   [RFC3986]  Berners-Lee, T., Fielding, R., and L. Masinter, "Uniform
+              Resource Identifier (URI): Generic Syntax", STD 66, RFC
+              3986, January 2005.
 
-   [RFC8126]           "Guidelines for Writing an IANA Considerations
-                       Section in RFCs", RFC 8126.
+   [RFC8126]  Cotton, M., Leiba, B., and T. Narten, "Guidelines for
+              Writing an IANA Considerations Section in RFCs", BCP 26,
+              RFC 8126, June 2017.
 
-   [RFC8174]           "Ambiguity of Uppercase vs Lowercase in RFC 2119
-                       Key Words", RFC 8174.
+   [RFC8174]  Leiba, B., "Ambiguity of Uppercase vs Lowercase in RFC
+              2119 Key Words", BCP 14, RFC 8174, May 2017.
 
-   [RFC9110]           "HTTP Semantics", RFC 9110.
+   [RFC9110]  Fielding, R., Ed., Nottingham, M., Ed., and J. Reschke,
+              Ed., "HTTP Semantics", STD 97, RFC 9110, June 2022.
 
-   [RFC9111]           "HTTP Caching", RFC 9111.
+   [RFC9111]  Fielding, R., Ed., Nottingham, M., Ed., and J. Reschke,
+              Ed., "HTTP Caching", STD 98, RFC 9111, June 2022.
 
-   [RFC9651]           "Structured Field Values for HTTP", RFC 9651.
-
-   [Multiresponse]     draft-toomim-httpbis-braid-multiresponse-00
-
-   [SIMPLER-FIELDS]    draft-toomim-httpbis-simpler-fields-00
-
-
-9.2.  Informative References
-
-   [Braid-HTTP]        draft-toomim-httpbis-braid-http-05
-
-   [Merge-Types]       draft-toomim-httpbis-braid-merge-types-00
-
-   [Updates]           draft-toomim-httpbis-braid-updates-00
-
-   [Range-Patch]       draft-toomim-httpbis-range-patch-01
-
-   [Resumable Upload]  draft-ietf-httpbis-resumable-upload
-
-   [Braid-Text] <https://github.com/braid-org/braid-text>
-
-   [RFC7089]  "HTTP Framework for Time-Based Access to Resource States
-              -- Memento",  RFC 7089.
-
-   [RFC3253]  "Versioning Extensions to WebDAV (Web Distributed
-              Authoring and Versioning)", RFC 3253.
-
-   [RFC5829]  "Link Relation Types for Simple Version Navigation between
-              Web Resources", RFC 5829.
-
-   [RFC8246]  "HTTP Immutable Responses", RFC 8246.
+   [RFC9651]  Nottingham, M. and P-H. Kamp, "Structured Field Values for
+              HTTP", RFC 9651, September 2024.
 
 
+   [Multiresponse]
+              Toomim, M., "Multiresponses for HTTP",
+              draft-toomim-httpbis-braid-multiresponse-00, work in
+              progress, November 2026.
+
+   [SIMPLER-FIELDS]
+              Toomim, M., "Simpler Fields for HTTP",
+              draft-toomim-httpbis-simpler-fields-00, work in progress,
+              November 2026.
+
+
+10.2.  Informative References
+
+   [Braid-HTTP]
+              Toomim, M., Little, G., Walker, R., Bellomy, B., and J.
+              Gentle, "Braid-HTTP: State Synchronization for HTTP",
+              draft-toomim-httpbis-braid-http-05, work in progress,
+              November 2026.
+
+   [Merge-Types]
+              Toomim, M., Milutinovic, M., and B. Bellomy, "Consistent
+              Merge Types for HTTP",
+              draft-toomim-httpbis-braid-merge-types-00, work in
+              progress, November 2026.
+
+   [Updates]  Toomim, M., "Replayable Updates for HTTP",
+              draft-toomim-httpbis-braid-updates-00, work in progress,
+              November 2026.
+
+   [Range-Patch]
+              Milutinovic, M., Toomim, M., and B. Bellomy, "Range
+              Patch", draft-toomim-httpbis-range-patch-00, work in
+              progress, May 2020.
+
+   [Resumable Upload]
+              Kleidl, M., Zhang, G., and L. Pardue, "Resumable Uploads
+              for HTTP", draft-ietf-httpbis-resumable-upload, work in
+              progress.
+
+   [Braid-Text]
+              braid.org, "braid-text",
+              <https://github.com/braid-org/braid-text>.
+
+   [RFC7089]  Van de Sompel, H., Nelson, M., and R. Sanderson, "HTTP
+              Framework for Time-Based Access to Resource States --
+              Memento", RFC 7089, December 2013.
+
+   [RFC3253]  Clemm, G., Amsden, J., Ellison, T., Kaler, C., and J.
+              Whitehead, "Versioning Extensions to WebDAV (Web
+              Distributed Authoring and Versioning)", RFC 3253, March
+              2002.
+
+   [RFC5829]  Brown, A., Clemm, G., and J. Reschke, Ed., "Link Relation
+              Types for Simple Version Navigation between Web
+              Resources", RFC 5829, April 2010.
+
+
+   [RFC8246]  McManus, P., "HTTP Immutable Responses", RFC 8246,
+              September 2017.
+
+   [RFC7942]  Sheffer, Y. and A. Farrel, "Improving Awareness of Running
+              Code: The Implementation Status Section", BCP 205, RFC
+              7942, July 2016.
+
+   [Braid-HTTP-JS]
+              braid.org, "braid-http",
+              <https://github.com/braid-org/braid-http>.
+
+   [Braid-Blob]
+              braid.org, "braid-blob",
+              <https://github.com/braid-org/braid-blob>.
+
+   [Braidfs]  braid.org, "braidfs",
+              <https://github.com/braid-org/braidfs>.
+
+   [CDN-Polyfills]
+              braid.org, "Braid Polyfills for CDNs",
+              <https://github.com/braid-org/cdn-polyfills>.
+
+   [Braid-Chrome]
+              braid.org, "braid-chrome",
+              <https://github.com/braid-org/braid-chrome>.
+
+
 Authors' Addresses
 
    For more information, the authors of this document are best contacted

@@ -570,11 +570,12 @@ Table of Contents
        positions that count back from the end, and several patches in
        one update.
 
-     - braid-http-js [BRAID-HTTP-JS] sends and parses range patches,
-       alone or with a Patches header, in requests and in responses,
-       with a blank line between patches.  With a Patches header, it
-       sends Content-Type "application/http-patches", where this
-       document keeps Content-Type for the media type of the resource.
+     - The reference JavaScript library [BRAID-HTTP-JS] sends and parses
+       range patches, alone or with a Patches header, in requests and in
+       responses, with a blank line between patches.  With a Patches
+       header, it sends Content-Type "application/http-patches", where
+       this document keeps Content-Type for the media type of the
+       resource.
 
      - No implementation yet sends Patch-Type, 210 (Patch), or
        Accept-Patch and Accept-Ranges in requests.
@@ -703,7 +704,7 @@ Table of Contents
               November 2026.
 
    [BRAID-HTTP-JS]
-              braid.org, "braid-http-js",
+              braid.org, "braid-http",
               <https://github.com/braid-org/braid-http>.
 
    [BRAID-TEXT]

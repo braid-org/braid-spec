@@ -345,7 +345,7 @@ Table of Contents
    records known implementations at the time of posting, as described
    in [RFC7942].
 
-   braid-http-js [BRAID-HTTP-JS], a JavaScript library for clients and
+   The reference JavaScript library [BRAID-HTTP-JS], for clients and
    servers, sends and parses multiresponses, for subscriptions.
 
    In September 2026 we tested 209 Multiresponses through Cloudflare's
@@ -492,8 +492,8 @@ Table of Contents
 8.2.  Informative References
 
    [BRAID-HTTP-JS]
-              braid.org, "braid-http-js", <https://github.com/braid-org/
-              braid-http>.
+              braid.org, "braid-http",
+              <https://github.com/braid-org/braid-http>.
 
    [CACHE-TESTS]
               Nottingham, M., "HTTP Caching Tests",
