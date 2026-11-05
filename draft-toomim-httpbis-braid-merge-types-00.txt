@@ -1,7 +1,7 @@
 Internet-Draft                                                 M. Toomim
 Expires: 6 May 2027                                    Invisible College
 Intended status: Proposed Standard                        M. Milutinovic
-                                                             UC Berkeley
+                                                        Layer8 Institute
                                                               B. Bellomy
                                                        Invisible College
                                                          2 November 2026
