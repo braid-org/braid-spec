@@ -1,5 +1,5 @@
 Internet-Draft                                            M. Milutinovic
-Expires: Mar 16, 2020                                        UC Berkeley
+Expires: Mar 16, 2020                                   Layer8 Institute
 Intended status: Proposed Standard                             M. Toomim
                                                        Invisible College
                                                               B. Bellomy
@@ -640,9 +640,8 @@ Authors' Addresses
 
 
    Michael Toomim
-   Invisible College, Berkeley
-   2053 Berkeley Way
-   Berkeley, CA 94704
+   Invisible College, Austin
+   Austin, TX 78750
 
    EMail: toomim@gmail.com
    Web:   https://invisible.college/@toomim
@@ -650,7 +649,6 @@ Authors' Addresses
 
    Bryn Bellomy
    Invisible College, Berkeley
-   2053 Berkeley Way
    Berkeley, CA 94704
 
    EMail: bryn@signals.io

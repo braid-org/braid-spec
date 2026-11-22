@@ -1,10 +1,10 @@
 Internet-Draft                                                 M. Toomim
-Expires: 6 May 2027                                    Invisible College
-Intended status: Proposed Standard                       2 November 2026
+Expires: 26 May 2027                                   Invisible College
+Intended status: Proposed Standard                      22 November 2026
 
 
                Poll and Push Modes for HTTP Subscriptions
-              draft-toomim-httpbis-braid-poll-and-push-00
+              draft-toomim-httpbis-braid-poll-and-push-01
 
 Abstract
 
@@ -22,9 +22,9 @@ Abstract
    first can too, so no message depends on a connection, and each can
    take its own path.
 
-   This document is one of the Braid-HTTP extensions, which work alone
-   or together; together they make HTTP a state synchronization
-   protocol.
+   This document is one of the Braid-HTTP extensions, which add features
+   to HTTP, alone or together.  Together, they extend HTTP into a state
+   synchronization protocol.
 
 
 About This Document
@@ -51,7 +51,7 @@ Status of this Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 6 May 2027.
+   This Internet-Draft will expire on 26 May 2027.
 
 
 Copyright Notice
@@ -115,7 +115,7 @@ Table of Contents
    grants a subscription.  The client gets a catch-up, and then each
    change ([SUBSCRIPTIONS], Section 2), and it learns from heartbeats
    and origin status whether it is caught up ([SUBSCRIPTIONS], Section
-   5).  Each exchange picks up the subscription from the client's
+   3).  Each exchange picks up the subscription from the client's
    version, named in a Parents header [VERSIONS].  So no exchange
    depends on a connection staying open, and since HTTP is stateless
    (Section 3.3 of [RFC9110]), each one can take its own path.
@@ -245,7 +245,7 @@ Table of Contents
 2.1.  A poll response is a heartbeat
 
    A client asks for heartbeats with the Heartbeats header, as in the
-   stream mode ([SUBSCRIPTIONS], Section 5.1), and in its response, the
+   stream mode ([SUBSCRIPTIONS], Section 3.2), and in its response, the
    server gives the interval that it will use.  In the long-poll mode,
    the server responds to each poll within that interval.  If nothing
    has changed by the time the interval runs out, it responds with a 304
@@ -261,14 +261,14 @@ Table of Contents
    version.
 
    A server ignores If-None-Match and If-Modified-Since on a poll, as on
-   any subscription ([SUBSCRIPTIONS], Section 3.3), since the client
+   any subscription ([SUBSCRIPTIONS], Section 2.5), since the client
    already names the version it holds, in its Parents header.
 
 
 2.2.  A poll response has an Origin-Status header
 
    In the stream mode, the server sends origin status in 105 (Origin
-   Status) sub-responses ([SUBSCRIPTIONS], Section 5.2).  In the
+   Status) sub-responses ([SUBSCRIPTIONS], Section 3.3).  In the
    long-poll mode, it sends origin status in the headers of each
    response: an Origin-Status header, with its age on a down, and a
    Proxy-Status header on a down.  For example, while the reader's poll
@@ -301,7 +301,7 @@ Table of Contents
    no-cache="Origin-Status" (Section 5.2.2.4 of [RFC9111]), so that a
    cache doesn't send a stored Origin-Status to a later client.  As in
    the stream mode, a server sends origin status only on a subscription
-   with heartbeats ([SUBSCRIPTIONS], Section 5).
+   with heartbeats ([SUBSCRIPTIONS], Section 3.1).
 
 
 2.3.  Either side can end a long-poll subscription
@@ -406,7 +406,7 @@ Table of Contents
    So the gateway re-sends its subscription request from time to time,
    at a rate it picks, with Parents set to its current version.  It
    names that rate in a Heartbeats header ([SUBSCRIPTIONS], Section
-   5.1).  If the origin server gets no re-sent request within that
+   3.2).  If the origin server gets no re-sent request within that
    interval, plus an allowance for network delay, it ends the push
    subscription, as a client does when a hop's heartbeats stop.  The
    origin server responds to each one as it responded to the first, and
@@ -611,7 +611,7 @@ Table of Contents
 
    [MULTIRESPONSE]
               Toomim, M., "Multiresponses for HTTP",
-              draft-toomim-httpbis-braid-multiresponse-00, work in
+              draft-toomim-httpbis-braid-multiresponse-01, work in
               progress, November 2026.
 
    [RFC2119]  Bradner, S., "Key words for use in RFCs to Indicate
@@ -634,20 +634,20 @@ Table of Contents
 
    [SUBSCRIPTIONS]
               Toomim, M., "Subscriptions for HTTP",
-              draft-toomim-httpbis-braid-subscriptions-00, work in
+              draft-toomim-httpbis-braid-subscriptions-01, work in
               progress, November 2026.
 
    [SUBSCRIPTIONS-CACHING]
               Toomim, M., "Caching for HTTP Subscriptions",
-              draft-toomim-httpbis-braid-subscriptions-caching-00, work
+              draft-toomim-httpbis-braid-subscriptions-caching-01, work
               in progress, November 2026.
 
    [UPDATES]  Toomim, M., "Replayable Updates for HTTP",
-              draft-toomim-httpbis-braid-updates-00, work in progress,
+              draft-toomim-httpbis-braid-updates-01, work in progress,
               November 2026.
 
    [VERSIONS] Toomim, M., "Resource Versioning for HTTP",
-              draft-toomim-httpbis-braid-versions-00, work in progress,
+              draft-toomim-httpbis-braid-versions-01, work in progress,
               November 2026.
 
 
@@ -674,9 +674,8 @@ Table of Contents
 Author's Address
 
    Michael Toomim
-   Invisible College, Berkeley
-   2053 Berkeley Way
-   Berkeley, CA 94704
+   Invisible College, Austin
+   Austin, TX 78750
 
    EMail: toomim@gmail.com
    Web:   https://invisible.college/@toomim

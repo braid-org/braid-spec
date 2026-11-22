@@ -1,10 +1,10 @@
 Internet-Draft                                                 M. Toomim
-Expires: 6 May 2027                                    Invisible College
-Intended status: Proposed Standard                       2 November 2026
+Expires: 26 May 2027                                   Invisible College
+Intended status: Proposed Standard                      22 November 2026
 
 
                       Resource Versioning for HTTP
-                 draft-toomim-httpbis-braid-versions-00
+                 draft-toomim-httpbis-braid-versions-01
 
 Abstract
 
@@ -22,9 +22,9 @@ Abstract
    approach that can enable new use-cases for HTTP.  It also provides an
    upgrade path for legacy intermediaries.
 
-   This document is one of the Braid-HTTP extensions, which work alone
-   or together; together they make HTTP a state synchronization
-   protocol.
+   This document is one of the Braid-HTTP extensions, which add features
+   to HTTP, alone or together.  Together, they extend HTTP into a state
+   synchronization protocol.
 
 
 About This Document
@@ -51,7 +51,7 @@ Status of this Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 6 May 2027.
+   This Internet-Draft will expire on 26 May 2027.
 
 
 Copyright Notice
@@ -629,9 +629,10 @@ Table of Contents
 
 
    If the client just wants the version identifiers for a span of
-   history, it can send its GET with "Method-Override: HEAD".  Then the
-   server sends each response in the span as a response to a HEAD, with
-   no content, and sends the same header in its 209 [Multiresponse]:
+   history, it can send its GET with "Method-Override: HEAD"
+   ([Multiresponse], Section 5).  Then the server sends each response in
+   the span as a response to a HEAD, with no content, and sends the same
+   header in its 209:
 
 
       Request:
@@ -2008,12 +2009,12 @@ Table of Contents
 
    [Multiresponse]
               Toomim, M., "Multiresponses for HTTP",
-              draft-toomim-httpbis-braid-multiresponse-00, work in
+              draft-toomim-httpbis-braid-multiresponse-01, work in
               progress, November 2026.
 
    [SIMPLER-FIELDS]
               Toomim, M., "Simpler Fields for HTTP",
-              draft-toomim-httpbis-simpler-fields-00, work in progress,
+              draft-toomim-httpbis-simpler-fields-01, work in progress,
               November 2026.
 
 
@@ -2022,17 +2023,17 @@ Table of Contents
    [Braid-HTTP]
               Toomim, M., Little, G., Walker, R., Bellomy, B., and J.
               Gentle, "Braid-HTTP: State Synchronization for HTTP",
-              draft-toomim-httpbis-braid-http-05, work in progress,
+              draft-toomim-httpbis-braid-http-06, work in progress,
               November 2026.
 
    [Merge-Types]
               Toomim, M., Milutinovic, M., and B. Bellomy, "Consistent
               Merge Types for HTTP",
-              draft-toomim-httpbis-braid-merge-types-00, work in
+              draft-toomim-httpbis-braid-merge-types-01, work in
               progress, November 2026.
 
    [Updates]  Toomim, M., "Replayable Updates for HTTP",
-              draft-toomim-httpbis-braid-updates-00, work in progress,
+              draft-toomim-httpbis-braid-updates-01, work in progress,
               November 2026.
 
 
@@ -2109,9 +2110,8 @@ Authors' Addresses
    via Internet mail:
 
    Michael Toomim
-   Invisible College, Berkeley
-   2053 Berkeley Way
-   Berkeley, CA 94704
+   Invisible College, Austin
+   Austin, TX 78750 USA
 
    EMail: toomim@gmail.com
    Web:   https://invisible.college/@toomim

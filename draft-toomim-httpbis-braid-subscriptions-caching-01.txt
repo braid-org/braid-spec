@@ -1,11 +1,11 @@
 Internet-Draft                                                 M. Toomim
 Updates: 9111 (if approved)                            Invisible College
-Intended status: Proposed Standard                       2 November 2026
-Expires: 6 May 2027
+Intended status: Proposed Standard                      22 November 2026
+Expires: 26 May 2027
 
 
                      Caching for HTTP Subscriptions
-          draft-toomim-httpbis-braid-subscriptions-caching-00
+          draft-toomim-httpbis-braid-subscriptions-caching-01
 
 Abstract
 
@@ -27,9 +27,9 @@ Abstract
    private.  This document updates RFC 9111, so that a continuously
    validating subscription satisfies the no-cache directive.
 
-   This document is one of the Braid-HTTP extensions, which work alone
-   or together; together they make HTTP a state synchronization
-   protocol.
+   This document is one of the Braid-HTTP extensions, which add features
+   to HTTP, alone or together.  Together, they extend HTTP into a state
+   synchronization protocol.
 
 
 About This Document
@@ -56,7 +56,7 @@ Status of this Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 6 May 2027.
+   This Internet-Draft will expire on 26 May 2027.
 
 
 Copyright Notice
@@ -111,10 +111,10 @@ Table of Contents
 
    With a subscription, the CDN subscribes to /election once, and the
    origin server sends it each change in half a round trip.  While that
-   subscription is continuously validating ([SUBSCRIPTIONS], Section 5),
-   the CDN's copy is validated at every moment.  So the CDN responds to
-   each reader's plain GET with its copy, without asking the origin
-   server:
+   subscription is continuously validating ([SUBSCRIPTIONS], Section
+   3.1), the CDN's copy is validated at every moment.  So the CDN
+   responds to each reader's plain GET with its copy, without asking the
+   origin server:
 
 
       Request:
@@ -229,7 +229,7 @@ Table of Contents
    whether the response is still current, and the origin server responds
    with a 304 (Not Modified) if it is (Section 4.3 of [RFC9111]).  With
    a continuously validating subscription, the origin server tells the
-   cache the same thing at every moment ([SUBSCRIPTIONS], Section 5).
+   cache the same thing at every moment ([SUBSCRIPTIONS], Section 3.1).
    So while the cache's upstream subscription is continuously
    validating, each request that the cache satisfies with its copy
    counts as one that it forwarded for validation, and for which it
@@ -263,7 +263,7 @@ Table of Contents
    subscription counts as forwarding each request for validation, and
    receiving a successful response.  The origin server consents to this
    when it grants the subscription and sends an origin status of "up"
-   ([SUBSCRIPTIONS], Section 5.2), promising the cache each change as it
+   ([SUBSCRIPTIONS], Section 3.3), promising the cache each change as it
    happens.
 
    Every other directive applies as usual.  For instance, a cache
@@ -277,7 +277,7 @@ Table of Contents
 
    Validation stops when the cache's upstream server sends an origin
    status of "down", when its heartbeats stop, or when the upstream
-   subscription ends ([SUBSCRIPTIONS], Section 5).  From then on, the
+   subscription ends ([SUBSCRIPTIONS], Section 3.1).  From then on, the
    copy ages as any stored response does.  After a down, its age is the
    "age" parameter of the down, plus the time since the down arrived.
    If the heartbeats stopped, or the subscription ended with no down,
@@ -382,7 +382,7 @@ Table of Contents
    If it has, the upstream server grants a subscription, and the
    catch-up responds to the GET that the cache forwarded.  A
    "Vary: Subscribe" header in a response is also a sign that the
-   resource has subscriptions ([SUBSCRIPTIONS], Section 3).
+   resource has subscriptions ([SUBSCRIPTIONS], Section 2.1).
 
    If the cache loses its upstream subscription, it sends an origin
    status of "down" to each of its subscribers, and resubscribes with
@@ -458,7 +458,7 @@ Table of Contents
 
    After the catch-up, the cache sends the subscriber each response that
    its upstream server sends, as it arrives.  It sends origin status as
-   Section 5.2 of [SUBSCRIPTIONS] describes, and heartbeats of its own,
+   Section 3.3 of [SUBSCRIPTIONS] describes, and heartbeats of its own,
    at the interval it agreed to with the subscriber.  The subscription
    ends when the subscriber leaves, or when the cache ends it, as it can
    when the subscriber stops reading.
@@ -516,7 +516,7 @@ Table of Contents
 
    A cache trusts the origin status that its upstream server sends, as
    it trusts that server's responses, and its subscribers trust the
-   cache the same way ([SUBSCRIPTIONS], Section 9).
+   cache the same way ([SUBSCRIPTIONS], Section 6).
 
 
 8.  IANA Considerations
@@ -531,7 +531,7 @@ Table of Contents
 
    [MULTIRESPONSE]
               Toomim, M., "Multiresponses for HTTP",
-              draft-toomim-httpbis-braid-multiresponse-00, work in
+              draft-toomim-httpbis-braid-multiresponse-01, work in
               progress, November 2026.
 
    [RFC2119]  Bradner, S., "Key words for use in RFCs to Indicate
@@ -548,7 +548,7 @@ Table of Contents
 
    [SUBSCRIPTIONS]
               Toomim, M., "Subscriptions for HTTP",
-              draft-toomim-httpbis-braid-subscriptions-00, work in
+              draft-toomim-httpbis-braid-subscriptions-01, work in
               progress, November 2026.
 
 
@@ -575,20 +575,19 @@ Table of Contents
 
 
    [UPDATES]  Toomim, M., "Replayable Updates for HTTP",
-              draft-toomim-httpbis-braid-updates-00, work in progress,
+              draft-toomim-httpbis-braid-updates-01, work in progress,
               November 2026.
 
    [VERSIONS] Toomim, M., "Resource Versioning for HTTP",
-              draft-toomim-httpbis-braid-versions-00, work in progress,
+              draft-toomim-httpbis-braid-versions-01, work in progress,
               November 2026.
 
 
 Author's Address
 
    Michael Toomim
-   Invisible College, Berkeley
-   2053 Berkeley Way
-   Berkeley, CA 94704
+   Invisible College, Austin
+   Austin, TX 78750
 
    EMail: toomim@gmail.com
    Web:   https://invisible.college/@toomim

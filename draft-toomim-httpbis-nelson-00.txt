@@ -271,16 +271,14 @@ Author's Address
    via Internet mail:
 
    Michael Toomim
-   Invisible College, Berkeley
-   2053 Berkeley Way
-   Berkeley, CA 94704
+   Invisible College, Austin
+   Austin, TX 78750
 
    EMail: toomim@gmail.com
    Web:   https://invisible.college/@toomim
 
    Bryn Bellomy
    Invisible College, Berkeley
-   2053 Berkeley Way
    Berkeley, CA 94704
 
    EMail: bryn@signals.io

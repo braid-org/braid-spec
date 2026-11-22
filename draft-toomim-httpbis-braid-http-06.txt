@@ -1,5 +1,5 @@
 Internet-Draft                                                 M. Toomim
-Expires: 6 May 2027                                    Invisible College
+Expires: 26 May 2027                                   Invisible College
 Intended status: Informational                                 G. Little
                                                        Invisible College
                                                                R. Walker
@@ -8,11 +8,19 @@ Intended status: Informational                                 G. Little
                                                        Invisible College
                                                                J. Gentle
                                                        Invisible College
-                                                         2 November 2026
+                                                        22 November 2026
+
+
+                   ╳╳                              ╳╳
+                   ╳╳                      ╱╱      ╳╳
+                   ╳╳╳╳╳   ╲╲ ╲╲╲   ╱╱╱╱        ╳╳╳╳╳
+                   ╳╳  ╳╳  ╲╲╲     ╲╲  ╲╲  ╱╱  ╳╳  ╳╳
+                   ╳╳  ╳╳  ╲╲      ╱╱  ╱╱  ╱╱  ╳╳  ╳╳
+                   ╳╳╳╳╳   ╲╲       ╲╲╲╲╲  ╱╱   ╳╳╳╳╳
 
 
                Braid-HTTP: State Synchronization for HTTP
-                   draft-toomim-httpbis-braid-http-05
+                   draft-toomim-httpbis-braid-http-06
 
 Abstract
 
@@ -51,7 +59,7 @@ Status of this Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 6 May 2027.
+   This Internet-Draft will expire on 26 May 2027.
 
 
 Copyright Notice
@@ -267,10 +275,6 @@ Table of Contents
       reaches the same state.  Merge Types builds on Versions, to tell
       which edits were parallel, and on Updates, to know what each one
       changed.
-
-   The new header fields of these extensions share one syntax, Simpler
-   Fields [SIMPLER-FIELDS], a profile of Structured Fields that a light
-   client can parse with a regular expression.
 
 
 3.  The extensions combine to support replay, resume, and merge
@@ -566,17 +570,17 @@ Table of Contents
    [MERGE-TYPES]
               Toomim, M., Milutinovic, M., and B. Bellomy, "Consistent
               Merge Types for HTTP",
-              draft-toomim-httpbis-braid-merge-types-00, work in
+              draft-toomim-httpbis-braid-merge-types-01, work in
               progress, November 2026.
 
    [MULTIRESPONSE]
               Toomim, M., "Multiresponses for HTTP",
-              draft-toomim-httpbis-braid-multiresponse-00, work in
+              draft-toomim-httpbis-braid-multiresponse-01, work in
               progress, November 2026.
 
    [POLL-AND-PUSH]
               Toomim, M., "Poll and Push Modes for HTTP Subscriptions",
-              draft-toomim-httpbis-braid-poll-and-push-00, work in
+              draft-toomim-httpbis-braid-poll-and-push-01, work in
               progress, November 2026.
 
 
@@ -614,23 +618,18 @@ Table of Contents
    [RFC10036] Oku, K., Pauly, T., and M. Thomson, "Incremental
               Forwarding of HTTP Messages", RFC 10036, August 2026.
 
-   [SIMPLER-FIELDS]
-              Toomim, M., "Simpler Fields for HTTP",
-              draft-toomim-httpbis-simpler-fields-00, work in progress,
-              November 2026.
-
    [SSE]      Hickson, I., "Server-Sent Events", W3C Recommendation,
               February 2015,
               <https://www.w3.org/TR/2015/REC-eventsource-20150203/>.
 
    [SUBSCRIPTIONS]
               Toomim, M., "Subscriptions for HTTP",
-              draft-toomim-httpbis-braid-subscriptions-00, work in
+              draft-toomim-httpbis-braid-subscriptions-01, work in
               progress, November 2026.
 
    [SUBSCRIPTIONS-CACHING]
               Toomim, M., "Caching for HTTP Subscriptions",
-              draft-toomim-httpbis-braid-subscriptions-caching-00, work
+              draft-toomim-httpbis-braid-subscriptions-caching-01, work
               in progress, November 2026.
 
    [TIME-MACHINES]
@@ -639,11 +638,11 @@ Table of Contents
 
 
    [UPDATES]  Toomim, M., "Replayable Updates for HTTP",
-              draft-toomim-httpbis-braid-updates-00, work in progress,
+              draft-toomim-httpbis-braid-updates-01, work in progress,
               November 2026.
 
    [VERSIONS] Toomim, M., "Resource Versioning for HTTP",
-              draft-toomim-httpbis-braid-versions-00, work in progress,
+              draft-toomim-httpbis-braid-versions-01, work in progress,
               November 2026.
 
    [WEBSUB]   Genestoux, J., Ed. and A. Parecki, Ed., "WebSub", W3C
@@ -685,9 +684,8 @@ Acknowledgements
 Authors' Addresses
 
    Michael Toomim
-   Invisible College, Berkeley
-   2053 Berkeley Way
-   Berkeley, CA 94704
+   Invisible College
+   Austin, TX
 
    EMail: toomim@gmail.com
    Web:   https://invisible.college/@toomim
@@ -695,7 +693,6 @@ Authors' Addresses
 
    Greg Little
    Invisible College, Berkeley
-   2053 Berkeley Way
    Berkeley, CA 94704
 
    EMail: glittle@gmail.com
@@ -709,7 +706,6 @@ Authors' Addresses
 
    Bryn Bellomy
    Invisible College, Berkeley
-   2053 Berkeley Way
    Berkeley, CA 94704
 
    EMail: bryn@signals.io
@@ -718,7 +714,6 @@ Authors' Addresses
 
    Joseph Gentle
    Invisible College, Berkeley
-   2053 Berkeley Way
    Berkeley, CA 94704
 
    EMail: me@josephg.com

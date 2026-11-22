@@ -12,7 +12,7 @@ a website can synchronize with any other website's state by its URL alone,
 just as a page can link to any other page.  The HyperText Transfer Protocol
 becomes a HyperState Synchronization Protocol.
 
-- [`draft-braid-http`](https://raw.githubusercontent.com/braid-org/braid-spec/master/draft-toomim-httpbis-braid-http-05.txt)
+- [`draft-braid-http`](https://raw.githubusercontent.com/braid-org/braid-spec/master/draft-toomim-httpbis-braid-http-06.txt)
   explains how the individual Braid-HTTP pieces (below) compose as aspects of a synchronization protocol
 
 ### Subscriptions
@@ -23,13 +23,13 @@ updates until the subscription ends.  Each update is itself an HTTP response
 (see the `updates` draft below), which can be cached and served by
 intermediaries.
 
-- [`draft-braid-subscriptions`](https://raw.githubusercontent.com/braid-org/braid-spec/master/draft-toomim-httpbis-braid-subscriptions-00.txt)
+- [`draft-braid-subscriptions`](https://raw.githubusercontent.com/braid-org/braid-spec/master/draft-toomim-httpbis-braid-subscriptions-01.txt)
   defines the `Subscribe:` header, and specifies its semantics.
-  - [`draft-braid-subscriptions-caching`](https://raw.githubusercontent.com/braid-org/braid-spec/master/draft-toomim-httpbis-braid-subscriptions-caching-00.txt)
+  - [`draft-braid-subscriptions-caching`](https://raw.githubusercontent.com/braid-org/braid-spec/master/draft-toomim-httpbis-braid-subscriptions-caching-01.txt)
     specifies how a cache (like a CDN or proxy) should store the responses in a
     subscription, serve requests from a continuously validated copy, and share
     one upstream subscription among many subscribers
-  - [`draft-braid-poll-and-push`](https://raw.githubusercontent.com/braid-org/braid-spec/master/draft-toomim-httpbis-braid-poll-and-push-00.txt)
+  - [`draft-braid-poll-and-push`](https://raw.githubusercontent.com/braid-org/braid-spec/master/draft-toomim-httpbis-braid-poll-and-push-01.txt)
     specifies the additional poll and push modes, which support servers that run
     as serverless functions or on shared hosting, and paths through proxies that
     buffer each response until it ends
@@ -49,7 +49,7 @@ sends a patch to a server in a PUT, and the server sends the same patch on to
 other clients, in a response.  Every peer that replays the same updates reaches
 the same state, whether it's a client, a server, or a cache in between.
 
-- [`draft-braid-updates`](https://raw.githubusercontent.com/braid-org/braid-spec/master/draft-toomim-httpbis-braid-updates-00.txt)
+- [`draft-braid-updates`](https://raw.githubusercontent.com/braid-org/braid-spec/master/draft-toomim-httpbis-braid-updates-01.txt)
   specifies snapshots, patches, and deletions, the same way in requests and in
   responses
 
@@ -60,7 +60,7 @@ that it's at, and the points just before it, so a client can GET the state at
 any version, and say which version its PUT builds on.  History can branch and
 merge, as a DAG, and every peer names each point the same way.
 
-- [`draft-braid-versions`](https://raw.githubusercontent.com/braid-org/braid-spec/master/draft-toomim-httpbis-braid-versions-00.txt)
+- [`draft-braid-versions`](https://raw.githubusercontent.com/braid-org/braid-spec/master/draft-toomim-httpbis-braid-versions-01.txt)
   specifies the Version and Parents headers, and how each HTTP method reads and
   writes state at a version
 
@@ -71,7 +71,7 @@ sequence of ordinary responses, such as a span of a resource's history, or a
 subscription's changes as they happen.  Each one still responds to a request of
 its own, so caches can store them one by one.
 
-- [`draft-braid-multiresponse`](https://raw.githubusercontent.com/braid-org/braid-spec/master/draft-toomim-httpbis-braid-multiresponse-00.txt)
+- [`draft-braid-multiresponse`](https://raw.githubusercontent.com/braid-org/braid-spec/master/draft-toomim-httpbis-braid-multiresponse-01.txt)
   specifies the 209 Multiresponse status code, and the application/http-history
   media type
 
@@ -82,7 +82,7 @@ Merge Type names the algorithm, OT or CRDT, that every peer uses to merge
 parallel edits, so they all reach the same state.  It builds on Versions, to
 tell which edits were parallel, and on Updates, to know what each one changed.
 
-- [`draft-braid-merge-types`](https://raw.githubusercontent.com/braid-org/braid-spec/master/draft-toomim-httpbis-braid-merge-types-00.txt)
+- [`draft-braid-merge-types`](https://raw.githubusercontent.com/braid-org/braid-spec/master/draft-toomim-httpbis-braid-merge-types-01.txt)
   specifies the Merge-Type header, and a registry of merge types
 
 ## HTTP Utility Specs
@@ -94,7 +94,7 @@ a profile of Structured Fields, with special characters in strings
 percent-encoded, so a light client can parse a field with a regular expression,
 and a full Structured Fields parser reads it unchanged.
 
-- [`draft-simpler-fields`](https://raw.githubusercontent.com/braid-org/braid-spec/master/draft-toomim-httpbis-simpler-fields-00.txt)
+- [`draft-simpler-fields`](https://raw.githubusercontent.com/braid-org/braid-spec/master/draft-toomim-httpbis-simpler-fields-01.txt)
   specifies the profile, and how a client parses a field with a short regular
   expression of its own
 

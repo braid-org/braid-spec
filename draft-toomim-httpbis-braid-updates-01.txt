@@ -1,11 +1,11 @@
 Internet-Draft                                                 M. Toomim
 Updates: 5789, 9110 (if approved)                      Invisible College
-Intended status: Proposed Standard                       2 November 2026
-Expires: 6 May 2027
+Intended status: Proposed Standard                      22 November 2026
+Expires: 26 May 2027
 
 
                       Replayable Updates for HTTP
-                 draft-toomim-httpbis-braid-updates-00
+                 draft-toomim-httpbis-braid-updates-01
 
 Abstract
 
@@ -28,9 +28,9 @@ Abstract
    replacement of a range expressed via an extended syntax of Range
    Unit.
 
-   This document is one of the Braid-HTTP extensions, which work alone
-   or together; together they make HTTP a state synchronization
-   protocol.
+   This document is one of the Braid-HTTP extensions, which add features
+   to HTTP, alone or together.  Together, they extend HTTP into a state
+   synchronization protocol.
 
 
 About This Document
@@ -57,7 +57,7 @@ Status of this Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 6 May 2027.
+   This Internet-Draft will expire on 26 May 2027.
 
 
 Copyright Notice
@@ -376,7 +376,7 @@ Table of Contents
    from a registry of delta formats.  Patch-Type uses media types, which
    a PUT and a 210 share, so each patch format works in both directions.
 
-   Patch-Type is a Simpler Field [SIMPLER-FIELDS]: an Item whose value
+   Patch-Type is a Structured Field [RFC9651]: an Item whose value
    is a Token, the media type of the patch format, which a recipient
    compares case-insensitively.  Its parameters are the media type's
    parameters.  If a recipient does not know a patch format, or one of
@@ -498,7 +498,7 @@ Table of Contents
    future revision of this document might specify when they can, and
    what happens then.
 
-   Patches is a Simpler Field [SIMPLER-FIELDS]: an Item whose value is
+   Patches is a Structured Field [RFC9651]: an Item whose value is
    an Integer, the number of patches, which is at least 1.  A recipient
    ignores parameters that it does not know.
 
@@ -687,20 +687,17 @@ Table of Contents
    [RFC9111]  Fielding, R., Ed., Nottingham, M., Ed., and J. Reschke,
               Ed., "HTTP Caching", STD 98, RFC 9111, June 2022.
 
-   [SIMPLER-FIELDS]
-              Toomim, M., "Simpler Fields for HTTP",
-              draft-toomim-httpbis-simpler-fields-00, work in progress,
-              November 2026.
+   [RFC9651]  Nottingham, M. and P-H. Kamp, "Structured Field Values
+              for HTTP", RFC 9651, September 2024.
 
    [UNICODE]  The Unicode Consortium, "The Unicode Standard",
               <https://www.unicode.org/versions/latest/>.
 
-
    [VERSIONS] Toomim, M., "Resource Versioning for HTTP",
-              draft-toomim-httpbis-braid-versions-00, work in progress,
+              draft-toomim-httpbis-braid-versions-01, work in progress,
               November 2026.
 
-
+
 10.2.  Informative References
 
    [BRAID-EMACS]
@@ -710,7 +707,7 @@ Table of Contents
    [BRAID-HTTP]
               Toomim, M., Little, G., Walker, R., Bellomy, B., and J.
               Gentle, "Braid-HTTP: State Synchronization for HTTP",
-              draft-toomim-httpbis-braid-http-05, work in progress,
+              draft-toomim-httpbis-braid-http-06, work in progress,
               November 2026.
 
    [BRAID-HTTP-JS]
@@ -728,12 +725,12 @@ Table of Contents
    [MERGE-TYPES]
               Toomim, M., Milutinovic, M., and B. Bellomy, "Consistent
               Merge Types for HTTP",
-              draft-toomim-httpbis-braid-merge-types-00, work in
+              draft-toomim-httpbis-braid-merge-types-01, work in
               progress, November 2026.
 
    [MULTIRESPONSE]
               Toomim, M., "Multiresponses for HTTP",
-              draft-toomim-httpbis-braid-multiresponse-00, work in
+              draft-toomim-httpbis-braid-multiresponse-01, work in
               progress, November 2026.
 
    [RFC3229]  Mogul, J., Krishnamurthy, B., Douglis, F., Feldmann, A.,
@@ -749,7 +746,7 @@ Table of Contents
 
    [SUBSCRIPTIONS]
               Toomim, M., "Subscriptions for HTTP",
-              draft-toomim-httpbis-braid-subscriptions-00, work in
+              draft-toomim-httpbis-braid-subscriptions-01, work in
               progress, November 2026.
 
 
@@ -763,9 +760,8 @@ Acknowledgements
 Author's Address
 
    Michael Toomim
-   Invisible College, Berkeley
-   2053 Berkeley Way
-   Berkeley, CA 94704
+   Invisible College, Austin
+   Austin, TX 78750
 
    EMail: toomim@gmail.com
    Web:   https://invisible.college/@toomim

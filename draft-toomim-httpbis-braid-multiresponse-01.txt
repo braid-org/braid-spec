@@ -1,10 +1,10 @@
 Internet-Draft                                                 M. Toomim
-Expires: 6 May 2027                                    Invisible College
-Intended status: Proposed Standard                       2 November 2026
+Expires: 26 May 2027                                   Invisible College
+Intended status: Proposed Standard                      22 November 2026
 
 
                         Multiresponses for HTTP
-              draft-toomim-httpbis-braid-multiresponse-00
+              draft-toomim-httpbis-braid-multiresponse-01
 
 Abstract
 
@@ -15,9 +15,9 @@ Abstract
    server can send a history of a resource, or a stream of its changes,
    in one response, which caches can store piece by piece.
 
-   This document is one of the Braid-HTTP extensions, which work alone
-   or together; together they make HTTP a state synchronization
-   protocol.
+   This document is one of the Braid-HTTP extensions, which add features
+   to HTTP, alone or together.  Together, they extend HTTP into a state
+   synchronization protocol.
 
 
 About This Document
@@ -44,7 +44,7 @@ Status of this Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 6 May 2027.
+   This Internet-Draft will expire on 26 May 2027.
 
 
 Copyright Notice
@@ -77,15 +77,15 @@ Table of Contents
    3.1.  Syntax .......................................................8
    4.  The Responds-To Header .........................................9
    5.  The Method-Override Header .....................................9
-   6.  Implementation Status .........................................10
-   7.  Security Considerations .......................................11
-   8.  IANA Considerations ...........................................11
-   8.1.  Status Code Registration ....................................11
-   8.2.  Media Type Registration .....................................12
-   8.3.  Field Registration ..........................................13
-   9.  References ....................................................13
-   9.1.  Normative References ........................................13
-   9.2.  Informative References ......................................14
+   6.  Implementation Status .........................................11
+   7.  Security Considerations .......................................12
+   8.  IANA Considerations ...........................................12
+   8.1.  Status Code Registration ....................................12
+   8.2.  Media Type Registration .....................................13
+   8.3.  Field Registration ..........................................14
+   9.  References ....................................................14
+   9.1.  Normative References ........................................14
+   9.2.  Informative References ......................................15
 
 
 1.  Introduction
@@ -173,8 +173,8 @@ Table of Contents
    Implied Request:  A request that the client could have sent, to which
       a sub-response responds (Section 2.2).
 
-   It also uses Version and Parents from [VERSIONS], and Simpler Fields
-   from [SIMPLER-FIELDS].
+   It also uses Version and Parents from [VERSIONS].  Its new fields are
+   Structured Fields [RFC9651].
 
 
 1.2.  Conventions
@@ -324,7 +324,7 @@ Table of Contents
 
    A server puts a Responds-To header on a sub-response to say which
    request it responds to, when that isn't its implied request.
-   Responds-To is a Simpler Field [SIMPLER-FIELDS].  Its value is a
+   Responds-To is a Structured Field [RFC9651].  Its value is a
    Dictionary with exactly one member, whose key names the kind of
    request.  This document defines one key:
 
@@ -340,14 +340,17 @@ Table of Contents
 
 5.  The Method-Override Header
 
-   Sometimes a client wants just the headers of each response in a
-   multiresponse, such as the versions in a span of history.  It can't
-   send a HEAD request for them, because a response to a HEAD has no
-   content (Section 9.3.2 of [RFC9110]), so it can't hold any
-   sub-responses.  So the client sends a GET, with the Method-Override
-   header:
+   Sometimes a client wants just the header section of each response in
+   a multiresponse.  For instance, a client can look at which versions a
+   span of history holds [VERSIONS], before it decides which ones to GET
+   in full.  Or a subscriber [SUBSCRIPTIONS] might need to know only
+   when a resource changes, and to which version, as a server that
+   alerts phones does.  The client can't send a HEAD request for these,
+   because a response to a HEAD has no content (Section 9.3.2 of
+   [RFC9110]), so it can't hold any sub-responses.  So the client sends
+   a GET, with the Method-Override header:
 
-
+
       Request:
 
          GET /chat
@@ -376,7 +379,7 @@ Table of Contents
          Content-Length: 11                               |
                                                           |
 
-
+
    With "Method-Override: HEAD", each implied request is a HEAD.  So
    each sub-response has the header section that the response to a GET
    would have, and ends at the empty line after it (Section 3.1).  Its
@@ -384,7 +387,11 @@ Table of Contents
    any response to a HEAD (Section 8.6 of [RFC9110]).  The multiresponse
    itself responds to the GET, so its content holds the sub-responses.
 
-   Method-Override is a Simpler Field [SIMPLER-FIELDS], whose value is
+   On a subscription, each update then arrives as just its header
+   section, as it happens.  The subscriber can use them as an index of
+   the resource's history, and GET the versions it needs.
+
+   Method-Override is a Structured Field Item [RFC9651], whose value is
    a Token that names a method.  This document defines one value,
    HEAD.  A recipient ignores any value it doesn't know, and other
    specifications can define more.
@@ -396,6 +403,7 @@ Table of Contents
    sub-response ends, since a response to a HEAD can have a
    Content-Length with no content after it.
 
+
    If a server responds with a non-multiresponse, it MUST ignore
    Method-Override, and send that response with its content.
    Otherwise, a cache that doesn't know Method-Override could store the
@@ -566,13 +574,11 @@ Table of Contents
    [RFC9112]  Fielding, R., Ed., Nottingham, M., Ed., and J. Reschke,
               Ed., "HTTP/1.1", STD 99, RFC 9112, June 2022.
 
+   [RFC9651]  Nottingham, M. and P-H. Kamp, "Structured Field Values
+              for HTTP", RFC 9651, September 2024.
+
    [RFC10036] Oku, K., Pauly, T., and M. Thomson, "Incremental
               Forwarding of HTTP Messages", RFC 10036, August 2026.
-
-   [SIMPLER-FIELDS]
-              Toomim, M., "Simpler Fields for HTTP",
-              draft-toomim-httpbis-simpler-fields-00, work in progress,
-              November 2026.
 
 
 9.2.  Informative References
@@ -607,24 +613,23 @@ Table of Contents
 
    [SUBSCRIPTIONS]
               Toomim, M., "Subscriptions for HTTP",
-              draft-toomim-httpbis-braid-subscriptions-00, work in
+              draft-toomim-httpbis-braid-subscriptions-01, work in
               progress, November 2026.
 
    [UPDATES]  Toomim, M., "Replayable Updates for HTTP",
-              draft-toomim-httpbis-braid-updates-00, work in progress,
+              draft-toomim-httpbis-braid-updates-01, work in progress,
               November 2026.
 
    [VERSIONS] Toomim, M., "Resource Versioning for HTTP",
-              draft-toomim-httpbis-braid-versions-00, work in progress,
+              draft-toomim-httpbis-braid-versions-01, work in progress,
               November 2026.
 
 
 Authors' Addresses
 
    Michael Toomim
-   Invisible College, Berkeley
-   2053 Berkeley Way
-   Berkeley, CA 94704
+   Invisible College, Austin
+   Austin, TX 78750
 
    EMail: toomim@gmail.com
    Web:   https://invisible.college/@toomim

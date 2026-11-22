@@ -1,10 +1,10 @@
 Internet-Draft                                                 M. Toomim
-Expires: 6 May 2027                                    Invisible College
-Intended status: Proposed Standard                       2 November 2026
+Expires: 26 May 2027                                   Invisible College
+Intended status: Proposed Standard                      22 November 2026
 
 
                         Simpler Fields for HTTP
-                 draft-toomim-httpbis-simpler-fields-00
+                 draft-toomim-httpbis-simpler-fields-01
 
 Abstract
 
@@ -43,7 +43,7 @@ Status of this Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 6 May 2027.
+   This Internet-Draft will expire on 26 May 2027.
 
 
 Copyright Notice
@@ -65,7 +65,7 @@ Copyright Notice
 Table of Contents
 
    1.  Introduction ...................................................4
-   1.1.  Conventions ..................................................5
+   1.1.  Conventions ..................................................4
    2.  Rules for Simpler Fields .......................................5
    2.1.  Strings are percent-encoded ..................................5
    2.2.  Serialization is canonical ...................................5
@@ -75,7 +75,7 @@ Table of Contents
    4.  Tradeoffs ......................................................7
    5.  Implementation Status ..........................................7
    6.  Security Considerations ........................................7
-   7.  IANA Considerations ............................................8
+   7.  IANA Considerations ............................................7
    8.  References .....................................................8
    8.1.  Normative References .........................................8
    8.2.  Informative References .......................................8
@@ -102,15 +102,12 @@ Table of Contents
    expression has to track escapes to find where a String ends.
 
    This document defines a profile of Structured Fields that removes
-   these difficulties.  We call it Simpler Fields.  These are all
-   Simpler Fields:
+   these difficulties.  We call it Simpler Fields.  Here are two Simpler
+   Fields:
 
 
-           Version: ("a%2Cb" "c")
-           Parents: ("a3" "b7")
-           Subscribe: webhook;to="https://gateway.example/push/7f3a"
-           Heartbeats: 0.5
-           Origin-Status: down;age=12
+           Example-List: ("a%2Cb" "c")
+           Example-Item: "x%3By";n=2
 
 
    In a Simpler Field, a String contains no quotes, backslashes, commas,
@@ -118,7 +115,7 @@ Table of Contents
    String with /"[^"]*"/, and can split the field at its commas and
    semicolons without looking inside its Strings.  The sender
    percent-encodes each String, and the recipient decodes it, so the
-   first Event ID above is "a,b".
+   first String above is "a,b".
 
    Simpler Fields make both kinds of parser possible.  A client can
    parse the one field it needs with a short regular expression of its
@@ -126,11 +123,12 @@ Table of Contents
    Field value, an implementation that handles many fields can use a
    general Structured Fields parser, and add just the decoding step.
 
-   Several fields are Simpler Fields, including Version, Parents, and
-   Current-Version [VERSIONS], Subscribe, Heartbeats, and Origin-Status
-   [SUBSCRIPTIONS], and Responds-To and Method-Override [MULTIRESPONSE].
+   Simpler Fields suit a field whose Strings can contain any character,
+   such as identifiers that an application chooses.  A field whose
+   values are Tokens, Integers, or Strings without special characters is
+   easy to parse already, and can be an ordinary Structured Field.
 
-
+
 1.1.  Conventions
 
    The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
@@ -139,7 +137,7 @@ Table of Contents
    BCP 14 [RFC2119] [RFC8174] when, and only when, they appear in all
    capitals, as shown here.
 
-
+
 2.  Rules for Simpler Fields
 
    A Simpler Field follows the rules of Structured Fields [RFC9651], and
@@ -217,18 +215,13 @@ Table of Contents
    its semicolons, into its Item and its parameters.  Then it finds each
    String with /"([^"]*)"/, and percent-decodes it.
 
-   For example, this JavaScript reads the Event IDs from one field line
-   of the Version field [VERSIONS]:
+   For example, this JavaScript reads the Strings from one field line of
+   the Example-List field above:
 
 
-           var event_ids = field_line.match(/"[^"]*"/g)
+           var strings = field_line.match(/"[^"]*"/g)
                  .map(s => decodeURIComponent(s.slice(1, -1)))
 
-
-   And this regular expression reads the Origin-Status field
-   [SUBSCRIPTIONS], with its optional age:
-
-           /^(up|down)(?:;age=(\d+))?$/
 
    A regular expression can still parse a field after the field is
    extended, because the field's definition gives the general shape of
@@ -239,7 +232,6 @@ Table of Contents
 
            (?:;KEY(?:=(?:VALUE))?)*
 
-
    KEY and VALUE stand for these patterns:
 
 
@@ -247,12 +239,12 @@ Table of Contents
            VALUE = [A-Za-z*][A-Za-z0-9!#$%&'*+.^_`|~:/-]*
                    | "[^"]*" | -?[0-9]+(?:\.[0-9]+)? | \?[01]
 
-
+
 4.  Tradeoffs
 
    A String with special characters is less readable, since it contains
-   percent escapes.  Most values, such as typical version identifiers,
-   have none.
+   percent escapes.  Most values, such as typical identifiers, have
+   none.
 
    Every String takes one decoding step after parsing.
 
@@ -268,9 +260,9 @@ Table of Contents
    records known implementations at the time of posting, as described
    in [RFC7942].
 
-   Parsers and serializers for the Version and Parents fields of
-   [VERSIONS], written under these rules, were presented at braid.org
-   meeting 136 [MEETING-136].  Without comments, they take:
+   Parsers and serializers for two Simpler Fields, written under these
+   rules, were presented at braid.org meeting 136 [MEETING-136].
+   Without comments, they take:
 
 
            JavaScript    32 lines    1.5 KB
@@ -294,15 +286,14 @@ Table of Contents
 
    Since a sender MAY percent-encode more than it needs to, the same
    value can be serialized as "%41" or as "A".  When a recipient
-   compares Strings, as a cache compares versions, it compares their
-   decoded values.
+   compares Strings, it compares their decoded values.
 
-
+
 7.  IANA Considerations
 
    This document has no IANA actions.
 
-
+
 8.  References
 
 
@@ -334,11 +325,6 @@ Table of Contents
               braid.org, "Braid Meeting 136", 2026,
               <https://braid.org/meeting-136>.
 
-   [MULTIRESPONSE]
-              Toomim, M., "Multiresponses for HTTP",
-              draft-toomim-httpbis-braid-multiresponse-00, work in
-              progress, November 2026.
-
    [RFC7942]  Sheffer, Y. and A. Farrel, "Improving Awareness of Running
               Code: The Implementation Status Section", BCP 205,
               RFC 7942, July 2016.
@@ -347,23 +333,12 @@ Table of Contents
               "structured-headers", npm package,
               <https://www.npmjs.com/package/structured-headers>.
 
-   [SUBSCRIPTIONS]
-              Toomim, M., "Subscriptions for HTTP",
-              draft-toomim-httpbis-braid-subscriptions-00, work in
-              progress, November 2026.
-
-
-   [VERSIONS] Toomim, M., "Resource Versioning for HTTP",
-              draft-toomim-httpbis-braid-versions-00, work in progress,
-              November 2026.
-
 
 Authors' Addresses
 
    Michael Toomim
-   Invisible College, Berkeley
-   2053 Berkeley Way
-   Berkeley, CA 94704
+   Invisible College
+   Austin, TX
 
    EMail: toomim@gmail.com
    Web:   https://invisible.college/@toomim
