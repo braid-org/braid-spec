@@ -199,9 +199,9 @@ Table of Contents
    one [MULTIRESPONSE], and the Incremental header [RFC10036] asks
    intermediaries to forward each one as it arrives.  The Version header
    says which point in time each response is at, and Parents says which
-   points came just before it [VERSIONS].  And Updates [UPDATES] defines
-   how to send each change as a patch, which every client, server, and
-   intermediary replays the same way.
+   points came just before it [VERSIONS].  Finally, Updates [UPDATES]
+   defines how to send each change as a patch, which every client,
+   server, and intermediary replays the same way.
 
 
    A cache can serve this subscription to many clients at once.  It
@@ -261,7 +261,7 @@ Table of Contents
    Subscriptions [SUBSCRIPTIONS]:  An ordinary GET gets one response,
       and the client does not hear when its resource changes later.
       Subscriptions turn a GET into a stream of changes.  The server
-      sends the current state, and then each change as it happens, in a
+      sends the current state, and then each subsequent change, in a
       multiresponse.  Two documents extend Subscriptions.  Subscriptions
       Caching [SUBSCRIPTIONS-CACHING] defines how a cache serves one
       upstream subscription to many subscribers, and Poll and Push
@@ -356,14 +356,14 @@ Table of Contents
    ways that existing systems deliver changes.  Server-Sent Events [SSE]
    streams them.  HTTP Events Query [EVENTS-QUERY] streams them, or
    long-polls for them.  Webhooks and WebSub [WEBSUB] push them to a
-   server.  And Mercure's hub [MERCURE] and Pushpin's proxy [GRIP] relay
+   server.  Mercure's hub [MERCURE] and Pushpin's proxy [GRIP] relay
    them from a publisher to its subscribers.
 
 
 5.2.  Versions express both linear and branching histories
 
    A version is a set of events in a DAG [VERSIONS], and a Version Type
-   can say how to read the events.  So versions can express:
+   can say how to read the events.  With these, versions can express:
 
      - hash histories, as in git, and Merkle DAGs, as in the AT Protocol
        [ATPROTO];
@@ -397,7 +397,7 @@ Table of Contents
    A server could send each response of a subscription as a chunk, in
    chunked transfer coding.  But chunks are only an encoding of the
    transfer, with no meaning of their own, and any intermediary can
-   re-chunk a response as it forwards it.  And HTTP/2 has no chunked
+   re-chunk a response as it forwards it.  HTTP/2 has no chunked
    transfer coding at all, so the chunk boundaries disappear over any
    HTTP/2 hop.
 

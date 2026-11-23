@@ -68,8 +68,8 @@ merge, as a DAG, and every peer names each point the same way.
 
 Multiresponse fits many responses into one.  A 209 Multiresponse holds a
 sequence of ordinary responses, such as a span of a resource's history, or a
-subscription's changes as they happen.  Each one still responds to a request of
-its own, so caches can store them one by one.
+subscription's changes.  Each one still responds to a request of its own, so
+caches can store them one by one.
 
 - [`draft-braid-multiresponse`](https://raw.githubusercontent.com/braid-org/braid-spec/master/draft-toomim-httpbis-braid-multiresponse-01.txt)
   specifies the 209 Multiresponse status code, and the application/http-history
@@ -133,8 +133,6 @@ start with Poll and Push.
 ## Earlier drafts
 
 - The [Range-Patch](https://raw.githubusercontent.com/braid-org/braid-spec/master/draft-toomim-httpbis-range-patch-01.txt) has now been replaced by the Updates draft above.
-
-Earlier versions of the drafts are in [`old/`](old/).
 
 
 ## Contributing

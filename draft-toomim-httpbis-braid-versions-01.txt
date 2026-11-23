@@ -204,7 +204,7 @@ Table of Contents
         +----------------> Space     <-- Range: header
 
 
-   So a client can query any resource in both time and space, with a
+   A client can query any resource in both time and space, with a
    Version and a Range:
 
 
@@ -214,7 +214,7 @@ Table of Contents
 
 
    In this model, the term "Version" is synonymous with "timestamp", and
-   a Version represents a point in distributed time.  So on its own, a
+   a Version represents a point in distributed time.  On its own, a
    Version identifies a point in time for the whole universe of
    resources.  We can use a Version for a single resource, or for
    several resources, to identify their states at the same point in
@@ -705,7 +705,7 @@ Table of Contents
 
    An ETag identifies a representation, which is a variant at a version.
    A version is a point in time, across all of a resource's variants.
-   So a resource at one version can have several ETags, one for each
+   A resource at one version can have several ETags, one for each
    variant, and one ETag can recur at several versions, when the state
    returns to an earlier value (Section 3.1.2).
 
@@ -786,8 +786,8 @@ Table of Contents
 
    A client compares the Current-Version it receives with its own
    current version (Section 2.2.3), and when they match, it has caught
-   up.  So even when no updates arrive, the client can tell whether it
-   is up to date, or still waiting for them.
+   up.  Even when no updates arrive, the client can tell whether it is
+   up to date, or still waiting for them.
 
 
 2.6.  Version Types
@@ -896,8 +896,8 @@ Table of Contents
          GET /foo
          Version: ("2")
 
-      And the cache ignores the Version header and returns what it has
-      most recently seen:
+      The cache ignores the Version header, and returns what it has most
+      recently seen:
 
          HTTP/1.1 200 OK
          Version: ("1")
@@ -983,15 +983,15 @@ Table of Contents
       A peer has no way to order versions by ETag, or to know which
       version came before another.
 
-   2. An ETag identifies content.  So the same ETag can recur over time,
+   2. An ETag identifies content, so the same ETag can recur over time,
       if the resource's state returns to an earlier value.
 
    3. A strong ETag depends on the Content-Encoding.  If a server sends
       a resource at one version with different Content-Encodings (e.g.,
       gzip), each one has a different strong ETag.
 
-   So one version can have several ETags, and one ETag can recur at
-   several versions.
+   As a result, one version can have several ETags, and one ETag can
+   recur at several versions.
 
 
 3.2.  Approaches defining versions as new resources
@@ -1099,8 +1099,8 @@ Table of Contents
    requests and round trips.  This simplifies implementation and
    improves performance.  An intermediary can then understand and
    accurately cache the version history of state as it passes through,
-   without making additional requests of its own.  And an application
-   can add versioning information to its existing resources, and leave
+   without making additional requests of its own.  An application can
+   also add versioning information to its existing resources, and leave
    its existing URI space unchanged.  Changing the URI space would be an
    unnecessary burden for many applications.
 
@@ -1439,7 +1439,7 @@ Table of Contents
 
    - Case C: Restart the upload from the beginning.
 
-   This protocol relies on the general semantics of versions.  So if a
+   This protocol relies on the general semantics of versions.  If a
    server implements HTTP Resource Versioning with the "peer-counter"
    Version Type and its "bytestream" modifier, it supports resumable
    uploads inherently.
@@ -1812,7 +1812,7 @@ Table of Contents
 
 
    Each peer guarantees that its counter will always increase in
-   subsequent versions.  So a recipient can order any two Event IDs from
+   subsequent versions, so a recipient can order any two Event IDs from
    the same peer in time, just by examining their counters.
 
 
@@ -1820,9 +1820,9 @@ Table of Contents
    counter to enable run-length encoding.  Specifically, each Unicode
    code point that a peer inserts or deletes takes the next value of
    that peer's counter, counting from zero, and an update's Event ID has
-   the counter of the last code point that it inserts or deletes.  So if
-   a peer's last Event ID was "3f84786c-56", and it then inserts 4 code
-   points, its new Event ID is "3f84786c-60".
+   the counter of the last code point that it inserts or deletes.  For
+   example, if a peer's last Event ID was "3f84786c-56", and it then
+   inserts 4 code points, its new Event ID is "3f84786c-60".
 
    With "text-runs", a recipient can also infer the intermediate
    versions between any two versions sent explicitly, by assuming that

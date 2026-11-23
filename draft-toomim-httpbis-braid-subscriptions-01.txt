@@ -3,12 +3,12 @@ Expires: 26 May 2027                                   Invisible College
 Intended status: Proposed Standard                      22 November 2026
 
 
-                   ╳╳                              ╳╳
-                   ╳╳                      ╱╱      ╳╳
-                   ╳╳╳╳╳   ╲╲ ╲╲╲   ╱╱╱╱        ╳╳╳╳╳
-                   ╳╳  ╳╳  ╲╲╲     ╲╲  ╲╲  ╱╱  ╳╳  ╳╳
-                   ╳╳  ╳╳  ╲╲      ╱╱  ╱╱  ╱╱  ╳╳  ╳╳
-                   ╳╳╳╳╳   ╲╲       ╲╲╲╲╲  ╱╱   ╳╳╳╳╳
+
+               ╳╳╳╳╳╳   ┃━┃━┃━    ╱╱╱╱╱   ╬╬╬╬╬╬  ╲╲╲╲╲╲
+               ╳╳   ╳╳  ━┃   ┃━  ╲╲   ╲╲    ╬╬    ╲╲   ╲╲
+               ╳╳╳╳╳╳   ┃━┃━┃━   ╱╱╱╱╱╱╱    ╬╬    ╲╲   ╲╲
+               ╳╳   ╳╳  ━┃  ━┃   ╲╲   ╲╲    ╬╬    ╲╲   ╲╲
+               ╳╳╳╳╳╳   ┃━   ━┃  ╱╱   ╱╱  ╬╬╬╬╬╬  ╲╲╲╲╲╲
 
                          Subscriptions for HTTP
               draft-toomim-httpbis-braid-subscriptions-01
@@ -22,13 +22,13 @@ Abstract
    Each update is itself an HTTP response, which can be cached and
    served by intermediaries.
 
-   Subscriptions can fan out through a tree of intermediaries.  Each hop
-   can send heartbeats and origin-status headers to communicate the
-   state of the origin connection upstream.  When an intermediary is
-   connected to a subscription chained all the way to the origin server,
-   its cache is said to be "continuously validated", which makes it
-   continuously fresh, with Age: 0, and allows it to be served to
-   clients without a validation round-trip to the origin server.
+   Subscriptions can fan out through a tree of intermediaries, so that a
+   single origin server connection can serve any number of clients.  At
+   each hop in the tree, the connection state can be up or down.  To
+   enable any client or intermediary to know the state of its upstream
+   connection chain, this document also defines a method for heartbeats,
+   and origin-status messages, from which a node's origin-connection
+   status can be inferred.
 
    This document is one of the Braid-HTTP extensions, which add features
    to HTTP, alone or together.  Together, they extend HTTP into a state
@@ -81,45 +81,146 @@ Copyright Notice
 Table of Contents
 
    1.  Introduction ...................................................3
-   1.1.  Terminology ..................................................5
-   2.  HTTP Subscriptions .............................................6
-   2.1.  The Subscribe Header .........................................7
-   2.2.  The "Subscribe: stream" mode .................................8
-   2.3.  Resuming a subscription with Parents .........................9
-   2.4.  Ending a subscription .......................................10
-   2.5.  Interaction with If-None-Match ..............................10
-   3.  Cache behavior during subscriptions ...........................11
-   3.1.  Continuous validation .......................................11
-   3.2.  Heartbeats ..................................................12
-   3.3.  Status 105 and the Origin-Status Header .....................13
-   4.  Interaction with legacy intermediaries ........................15
-   5.  Implementation Status .........................................16
-   6.  Security Considerations .......................................17
-   7.  IANA Considerations ...........................................17
-   7.1.  Status Code Registration ....................................17
-   7.2.  Field Registration ..........................................18
-   8.  References ....................................................18
-   8.1.  Normative References ........................................18
-   8.2.  Informative References ......................................19
+   1.1.  Conventions ..................................................3
+   2.  HTTP Subscriptions .............................................4
+   2.1.  The Subscribe Header .........................................4
+   2.2.  The "Subscribe: stream" mode .................................6
+   2.3.  Resuming a subscription with Parents .........................7
+   2.4.  Ending a subscription ........................................8
+   2.5.  Interaction with If-None-Match ...............................9
+   3.  Origin connection status .......................................9
+   3.1.  Catching up, and staying connected ..........................10
+   3.2.  Heartbeats ..................................................10
+   3.3.  Status 105 and the Origin-Status Header .....................11
+   4.  Interaction with legacy intermediaries ........................13
+   5.  Implementation Status .........................................14
+   6.  Security Considerations .......................................15
+   7.  IANA Considerations ...........................................15
+   7.1.  Status Code Registration ....................................15
+   7.2.  Field Registration ..........................................16
+   8.  References ....................................................16
+   8.1.  Normative References ........................................16
+   8.2.  Informative References ......................................17
 
 
 1.  Introduction
 
-   A server responds to an ordinary GET once.  If the resource changes
-   afterward, the client does not hear about it, unless it asks again.
-   For example, imagine a newspaper's website on election night, with a
-   results page at /election that changes all evening.  Every reader
-   reloads the results page, again and again.  A cache can respond to
-   the reloads with its stored copy only while the copy is fresh, so the
-   site has to choose between stale results and a flood of requests to
-   its origin server.  Sites that want their pages to change with the
-   news often send each change over a WebSocket [RFC6455], which
-   bypasses the caches entirely.  The examples in this document follow
-   this site through the night.
+   An HTTP client can GET the current state of a resource, but if the
+   resource changes, it has no way to get the updates other than to GET
+   it again.  Consequently, applications that need updates either poll
+   at some frequency, which wastes resources at high frequencies, but
+   incurs large update delays at low frequencies, or switch to another
+   protocol, such as WebSocket [RFC6455] or SSE [SSE].  Those protocols
+   lose the advantages of HTTP and REST [REST], such as caching and a
+   uniform interface, and add a second round trip from browser to server
+   before the page can load its data.
+
+   This document adds subscriptions to HTTP.  A client subscribes to a
+   resource by adding a Subscribe header to a GET request.  The server
+   responds with the current state of the resource, and then, each time
+   the resource changes, sends the response that the client would get if
+   it polled at that moment.  This response can be read, stored, and
+   fanned out to clients by caches and intermediaries.
+
+
+1.1.  Conventions
+
+   The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
+   "SHOULD", "SHOULD NOT", "RECOMMENDED", "NOT RECOMMENDED", "MAY", and
+   "OPTIONAL" in this document are to be interpreted as described in BCP
+   14 [RFC2119] [RFC8174] when, and only when, they appear in all
+   capitals, as shown here.
 
 
-   With a subscription, a reader's browser sends its GET once, with a
-   Subscribe header, and the server keeps responding:
+2.  HTTP Subscriptions
+
+   An HTTP subscription is a promise from a server to keep a client
+   up to date with responses to a request, as the resource changes
+   state, or as the server learns new information about it.
+
+   When a client subscribes to a resource with a GET or a HEAD, the
+   server responds in two phases:
+
+      1. Catching the client up
+
+         First, the server responds with information that conveys the
+         state of the resource at the time of the request.
+
+      2. Keeping the client caught up
+
+         Then, the server sends additional responses to update the
+         client as the resource state changes, or the server learns new
+         information, until the subscription ends.
+
+   We call each of these responses within a subscription a
+   "sub-response".  For a GET or a HEAD, each of these responses is the
+   response that the server would send, at that moment, to the same
+   request without its subscription headers (Subscribe, Heartbeats, and
+   Origin-Status), and with the sub-response's Parents header.  We call
+   that request the sub-response's implied request [MULTIRESPONSE].  A
+   cache can store each sub-response as the response to its implied
+   request [SUBSCRIPTIONS-CACHING].
+
+   This document defines subscriptions on GET and HEAD.  Future
+   specifications can define them for other methods, for instance to
+   deliver the result of a POST later, or as the server computes it.  If
+   a server doesn't know a meaning for Subscribe on a request's method,
+   it ignores the header.
+
+
+2.1.  The Subscribe Header
+
+   A client requests a subscription by adding a "Subscribe" header to a
+   request.  There are three modes of subscription: stream, long-poll,
+   and webhook:
+
+
+      Subscribe: stream
+
+      Subscribe: long-poll
+
+      Subscribe: webhook;to="<url>"
+
+
+   This document defines the stream mode.  The long-poll and webhook
+   modes are defined in [POLL-AND-PUSH].
+
+   The value of the Subscribe header is parsed as a Structured Field
+   [RFC9651] List of Tokens, each with optional parameters.  For a
+   client to accept multiple modes, it lists them in order of its
+   preference, such as:
+
+
+      Subscribe: stream, long-poll
+
+
+   The server responds by choosing a mode, and echoing back its choice
+   in the response's Subscribe header:
+
+
+      Response:
+
+         HTTP/1.1 200 OK
+         Subscribe: long-poll
+         Content-Type: text/plain
+         Content-Length: 12
+
+         Hello world!
+
+
+   The server's response MUST include a Subscribe header if and only if
+   it is granting a subscription.  Servers that do not support
+   subscriptions MUST NOT respond with a Subscribe header.
+
+   The server SHOULD add "Vary: Subscribe" in response to every
+   URI+Method combination that supports subscriptions.
+
+
+2.2.  The "Subscribe: stream" mode
+
+   In the stream mode, the server sends the whole subscription in one
+   multiresponse [MULTIRESPONSE].  For example, a reader's browser
+   subscribes to /election:
 
 
       Request:
@@ -151,199 +252,9 @@ Table of Contents
          Bob leads, 51% to 49%              |
 
 
-   The browser sends one request, and gets two responses here.  The
-   first holds the results at version 1, and the second arrives when the
-   results change to version 2.  Each one is an ordinary HTTP response.
-   The server sends them inside one 209 (Multiresponse) response
-   [MULTIRESPONSE], and with an Incremental header [RFC10036], it asks
-   intermediaries to forward each one as soon as it is sent.  With the
-   Version and Parents headers [VERSIONS], it says which point in time
-   each one is at.
-
-   A cache can subscribe, too.  It holds one subscription to the origin
-   server, and serves it to every reader who asks the cache for one
-   [SUBSCRIPTIONS-CACHING].  Each time the results change, the origin
-   server updates the cache in half a round trip.  The cache can then
-   respond even to plain GETs with the new results, without asking the
-   origin server.  And if an origin server can't hold a response open,
-   as on serverless hosting, it can still deliver each change to its
-   readers as it happens [POLL-AND-PUSH].
-
-
-   This document defines how a client asks for a subscription, with the
-   Subscribe header (Section 2.1), and how a server sends the whole
-   subscription in one multiresponse, in the stream mode (Section 2.2).
-   It also defines how a server tells its client whether the client's
-   copy of the resource is validated, with the Heartbeats header and the
-   105 (Origin Status) status code (Section 3).
-
-   Of the other Braid-HTTP extensions [BRAID-HTTP], subscriptions need
-   only Multiresponse, which the stream mode uses.  With Versions
-   [VERSIONS], a client can resume a subscription where it left off.
-   With Updates [UPDATES], the server can send each change as a patch,
-   and every peer that replays the patches reaches the same state.
-
-
-1.1.  Terminology
-
-   The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
-   "SHOULD", "SHOULD NOT", "RECOMMENDED", "NOT RECOMMENDED", "MAY", and
-   "OPTIONAL" in this document are to be interpreted as described in BCP
-   14 [RFC2119] [RFC8174] when, and only when, they appear in all
-   capitals, as shown here.
-
-   This document uses these terms from Multiresponse [MULTIRESPONSE]:
-   multiresponse, sub-response, container request, and implied request.
-   It uses these from Versions [VERSIONS]: Version, Parents, and current
-   version.  Its new fields are Structured Fields [RFC9651].  It
-   also uses these terms:
-
-   Subscription:  A GET request that the server keeps responding to,
-      with a new response each time the resource changes.
-
-   Catch-up:  The responses that bring a client up to the server's
-      current version, as at the start of a subscription (Section 2).
-
-   Caught up:  Holding the origin server's current version.
-
-   Hop:  One connection on the path between a client and the origin
-      server, as from a client to a cache, or from a cache to the origin
-      server.
-
-   Origin status:  Whether a client is caught up, with every hop between
-      it and the origin server connected (Section 3.3).
-
-   Validated:  Known to match the resource's current state at the origin
-      server, as a stored copy is when a validation request (Section 4.3
-      of [RFC9111]) would bring back nothing new.
-
-   Continuously validating:  The state of a subscription between an
-      origin status of "up" and the next "down", while its heartbeats
-      arrive.  The client's copy is validated at every moment of this
-      time (Section 3.1).
-
-
-2.  HTTP Subscriptions
-
-   Each sub-response in a subscription is one that the client could have
-   gotten on its own, by sending the same GET at another time.
-   Specifically, it is the response that the server would have sent:
-
-     - to the same GET
-     - without the Subscribe and Heartbeats headers
-     - just after the change that the response describes.
-
-   When the client knows its current version ([VERSIONS], Section
-   2.2.3), that GET has a Parents header naming the version that the
-   client held just before the change.
-
-   These GETs are the subscription's implied requests [MULTIRESPONSE].
-   In the example in Section 1, the first response responds to an
-   ordinary GET, which any reader could send:
-
-
-         GET /election
-
-
-   And the second responds to the GET that a client holding version "1"
-   would have sent, just after the change to version 2:
-
-
-         GET /election
-         Parents: ("1")
-
-
-   The first responses bring the client up to the server's current
-   version, and we call them the "catch-up".  A new subscriber's
-   catch-up is often one snapshot of the current state.  When a client
-   resumes a subscription from a version (Section 2.3), its catch-up
-   holds only the changes since that version.  If the client already
-   holds the current version, its catch-up is empty, since nothing has
-   changed.
-
-   So the server sends the subscriber a history of ordinary HTTP
-   responses, which every HTTP peer already understands.  Everything
-   that HTTP defines for a GET applies to each one.  The server selects
-   each subscriber's variant by content negotiation.  For instance, a
-   reader who sends "Accept-Language: es" gets each change in Spanish.
-   The Vary header applies too.  The server authorizes each implied
-   request with the subscriber's own credentials, as it would the
-   subscriber's GET.  And a cache can store each response as the
-   response to its implied request, as [SUBSCRIPTIONS-CACHING]
-   describes.
-
-   The responses can be any responses.  For example, a reader who
-   subscribes to /election before the polls close gets a 404 (Not Found)
-   as the catch-up, and then the first results, as soon as they are
-   posted.  When the responses are updates [UPDATES], every peer that
-   replays them reaches the same state.
-
-
-   When a server grants a subscription, it promises to keep the client
-   caught up, and no more.  Clients and servers negotiate the rest with
-   other mechanisms: how often responses come, how they are rebased, and
-   which merge types, patch formats, and version types they use, as the
-   Merge-Type [MERGE-TYPES] and Accept-Patch [UPDATES] headers do.
-   There are many ways to view the same history, and subscriptions work
-   with any of them.
-
-
-2.1.  The Subscribe Header
-
-   A client asks for a subscription by sending a GET with a Subscribe
-   header, listing the subscription modes that the client accepts, in
-   order of preference.
-
-
-         Subscribe: stream, long-poll
-
-
-   Subscribe is a Structured Field [RFC9651].  Its value is a List
-   of Tokens, each naming a mode.  A mode can have parameters.  A server
-   ignores any mode that it doesn't know.  There are three modes:
-
-   stream:  The server sends the whole subscription in one
-      multiresponse.  This document defines the stream mode (Section
-      2.2).
-
-   long-poll:  The client sends a GET for each response, and the server
-      holds each GET until the next change.  Poll and Push
-      [POLL-AND-PUSH] defines this mode.
-
-   webhook:  The origin server pushes each change to a subscription
-      gateway, as a PUT or a DELETE.  Poll and Push [POLL-AND-PUSH]
-      defines this mode too.
-
-   If a client accepts more than one mode, it lists them all, as in
-   "Subscribe: stream, long-poll".
-
-   If the server grants a subscription, its response has a Subscribe
-   header naming the mode it granted, with that mode's parameters.  If
-   the response has no Subscribe header, the server did not grant one,
-   perhaps because it doesn't know the header.  The response is then the
-   one that the GET would get without Subscribe, and the client can
-   poll, or try again later.
-
-   A server SHOULD send "Vary: Subscribe" in every response to a GET for
-   a resource that a client can subscribe to.  Then if a cache doesn't
-   know subscriptions, it won't respond to a subscription request with a
-   response that it stored for an ordinary GET (Section 4).  And a
-   client can take the Vary header as a sign that it can subscribe to
-   the resource.
-
-
-   This document defines Subscribe on GET.  Future specifications can
-   define its meaning on other methods, for instance to deliver the
-   result of a POST later, or as the server computes it.  If a server
-   doesn't know a meaning for Subscribe on a request's method, it
-   ignores the header.
-
-
-2.2.  The "Subscribe: stream" mode
-
-   In the stream mode, the server sends the whole subscription in one
-   multiresponse [MULTIRESPONSE], as in the example in Section 1.  When
-   a client sends "Subscribe: stream", it says that it can read a
+   The browser sends one request, and gets two responses: the results
+   at version 1, and then, when the results change, version 2.  When a
+   client sends "Subscribe: stream", it says that it can read a
    multiresponse, as Section 2.1 of [MULTIRESPONSE] requires.
 
    The response has the 209 (Multiresponse) status code, the header
@@ -352,27 +263,27 @@ Table of Contents
    server keeps the response open, so it SHOULD send "Incremental: ?1"
    [RFC10036], to ask intermediaries to forward each response as it
    arrives.
-
-   The content holds the catch-up, and then a response for each change,
-   as it happens.  The server SHOULD start the content with a bare CRLF,
-   which every recipient skips (Section 3.1 of [MULTIRESPONSE]), since
-   some clients and proxies don't deliver a response's header section
-   until its content begins.  It SHOULD send each response in one write,
-   so that it goes out in as few packets as possible.  If the client
-   asked for heartbeats, the server sends each one as a bare CRLF
-   between responses (Section 3.2), and it sends 105 (Origin Status)
+
+   The content holds the subscription's responses (Section 2), in order.
+   The server SHOULD start the content with a bare CRLF, which every
+   recipient skips (Section 3.1 of [MULTIRESPONSE]), since some clients
+   and proxies don't deliver a response's header section until its
+   content begins.  It SHOULD send each response in one write, so that
+   it goes out in as few packets as possible.  If the client asked for
+   heartbeats, the server sends each one as a bare CRLF between
+   responses (Section 3.2), and it sends 105 (Origin Status)
    sub-responses to say whether the client is caught up (Section 3.3).
 
-   If a client needs only the header section of each response, as to
-   learn when the resource changes, and to which version, it can add
-   "Method-Override: HEAD" to its request ([MULTIRESPONSE], Section 5).
+   A response to a HEAD has no content, so it can't carry a stream.  To
+   subscribe to the header sections in the stream mode, a client sends a
+   GET with "Method-Override: HEAD" ([MULTIRESPONSE], Section 5).
 
    Either side can end the subscription (Section 2.4).  The client ends
    it by resetting its stream in HTTP/2 [RFC9113] or HTTP/3 [RFC9114],
    or by closing its connection in HTTP/1.1.  The server ends it by
    ending the multiresponse.
 
-
+
 2.3.  Resuming a subscription with Parents
 
    When a client knows its current version [VERSIONS], it can resume a
@@ -403,8 +314,8 @@ Table of Contents
 
          Bob wins, 51% to 49%
 
-
-   The catch-up holds only the change that the laptop missed.  If the
+
+   The server sends only the change that the laptop missed.  If the
    server doesn't have version "2", it can catch the client up with a
    snapshot of the current state, or respond with a 432 (Version Not
    Found) ([VERSIONS], Section 2.4), as it would to the GET without
@@ -412,13 +323,13 @@ Table of Contents
 
    A client resumes with Parents, and sends no Version header.  The
    state at a version never changes, so a subscription to it would have
-   nothing to send after its catch-up.  If a subscription request has a
-   Version header anyway, the server responds as it would to the same
-   GET without Subscribe, and grants no subscription.  Future
-   specifications can define a subscription at a version, for instance
-   to send more of a version's state as the server receives it.
+   nothing to send once the client is up to date.  If a subscription
+   request has a Version header anyway, the server responds as it would
+   to the same GET without Subscribe, and grants no subscription.
+   Future specifications can define a subscription at a version, for
+   instance to send more of a version's state as the server receives it.
 
-
+
 2.4.  Ending a subscription
 
    A client can end a subscription at any time, as Section 2.2 describes
@@ -441,7 +352,7 @@ Table of Contents
 
 
    Each of those clients resubscribes after 30 seconds, with Parents set
-   to its current version, and its catch-up brings it what it missed.  A
+   to its current version, and the server sends it what it missed.  A
    server can refuse a new subscription in the same way, with a 503
    (Service Unavailable) or a 429 (Too Many Requests) response and a
    Retry-After header.
@@ -454,7 +365,7 @@ Table of Contents
    first send a 403 (Forbidden) sub-response with
    "Responds-To: container-request".
 
-
+
 2.5.  Interaction with If-None-Match
 
    A cache can add an If-None-Match or If-Modified-Since header to a
@@ -464,82 +375,54 @@ Table of Contents
    it would respond to a match with a 304 (Not Modified), and the client
    would get no subscription.
 
-   So if a server grants a subscription, it MUST ignore the request's
-   If-None-Match and If-Modified-Since headers, and send the catch-up as
-   if they were absent.  An extension to HTTP can change how a server
-   evaluates preconditions in this way (Section 13.2.1 of [RFC9110]).
-   The cache that added the header gets the 209, and passes it on to its
-   client, as it would any full response to a validation request
-   (Section 4.3.3 of [RFC9111]).  A future specification may give these
-   headers a meaning on a subscription.
+   If a server grants a subscription, it MUST ignore the request's
+   If-None-Match and If-Modified-Since headers, and respond as if they
+   were absent, so that the client gets its subscription.  An extension
+   to HTTP can change how a server evaluates preconditions in this way
+   (Section 13.2.1 of [RFC9110]).  The cache that added the header gets
+   the 209, and passes it on to its client, as it would any full
+   response to a validation request (Section 4.3.3 of [RFC9111]).  A
+   future specification may give these headers a meaning on a
+   subscription.
+
+
+3.  Origin connection status
+
+   A subscription can reach the origin server through a chain of hops,
+   as when a reader subscribes through the paper's CDN, and the CDN
+   subscribes to the origin server.  Each client in the chain often
+   needs to know whether every hop between it and the origin server is
+   connected.  For example, the reader's page can tell the reader
+   whether the results are current, and the CDN can decide whether to
+   serve its copy without asking the origin server
+   [SUBSCRIPTIONS-CACHING].  A client learns whether its own hop is
+   connected from heartbeats (Section 3.2), and whether every hop beyond
+   it is connected from the origin status that its server sends (Section
+   3.3).
 
 
-3.  Cache behavior during subscriptions
+3.1.  Catching up, and staying connected
 
-
-3.1.  Continuous validation
-
-   Consider the paper's CDN, which stores /election, and responds to
-   readers' reloads with its copy.  Ordinarily, it validates its copy
-   from time to time, by asking the origin server whether the copy is
-   still current (Section 4.3 of [RFC9111]).  With a subscription, it
-   can stop asking.  The origin server has promised to send each change
-   as it happens.  So once the CDN is caught up, and while its
-   connection is alive, it knows that its copy is current until the next
-   response arrives.  A validation request would bring back nothing new,
-   so the CDN's copy is validated at every moment.  A subscription is a
-   validation that keeps going.
-
-   A subscription's timeline runs like this:
-
-
-           [ catch-up ]                    unvalidated
-
-         105, Origin-Status: up       --\
-                                        |
-           [ updates ]                  |  continuously
-                                        |
-           [ heartbeats ]               |  validating
-                                        |
-         105, Origin-Status: down     --/
-
-           [ catch-up ]                    unvalidated
-
-         105, Origin-Status: up       --\
-                                        |
-         ...                            |
-
-
-   The catch-up comes first, and brings the client up to the server's
-   current version.  The server can send a Current-Version header
-   ([VERSIONS], Section 2.5) in the multiresponse's header section, so
-   that the client can tell when the catch-up is complete.
+   First, the server brings the client up to date (Section 2).  The
+   server can send a Current-Version header ([VERSIONS], Section 2.5) in
+   the multiresponse's header section, so that the client can tell when
+   it is caught up.
 
    Then the server sends an origin status of "up" (Section 3.3).  With
    it, the server says that the client is caught up, that every hop
    between the client and the origin server is connected, and that each
-   later change will arrive as it happens.  From that moment until the
-   server sends an origin status of "down", or the subscription ends,
-   the subscription is continuously validating.  The client's copy is
-   validated at every moment, and so is each response that arrives.
-   After a down, the server fills in what the client missed with a new
-   catch-up, and sends another up once the client is caught up again.
+   later update will reach the client immediately.  This holds until the
+   server sends an origin status of "down", the heartbeats stop, or the
+   subscription ends.  After a down, the server sends what the client
+   missed, and another up once the client is caught up again.  If no up
+   ever comes, the responses still arrive, but the client never learns
+   that it is caught up and connected (Section 4).
 
-   Validation starts exactly at the up, and covers the state that the
-   catch-up left the client in.  No response in a catch-up is validated
-   as it arrives.  If no up ever comes, the responses still arrive, but
-   nothing is validated (Section 4).
-
-
-   Validation also needs heartbeats.  Without them, a client can't tell
-   a connection that has died from one that is quiet, and could take its
-   copy for validated long after the changes stopped coming.  So a
-   server sends 105 (Origin Status) only on a subscription for which it
-   has agreed to send heartbeats (Section 3.2).
-
-   A cache can use a validated copy to satisfy ordinary GETs and
-   conditional requests, without asking the origin server, as
-   [SUBSCRIPTIONS-CACHING] describes.
+   A server sends 105 (Origin Status) only on a subscription for which
+   it has agreed to send heartbeats (Section 3.2).  Without heartbeats,
+   a client can't tell a connection that has died from one that is
+   quiet, and could believe that it is connected long after the changes
+   stopped coming.
 
 
 3.2.  Heartbeats
@@ -573,7 +456,7 @@ Table of Contents
    an HTTP/2 PING frame, a client learns only that the connection is
    alive, and an application can't see the frame through fetch()
    [FETCH].
-
+
    Each hop has its own heartbeats.  Each server, whether the origin
    server or a cache, sends heartbeats to its own client, at the
    interval that client agreed to, and a cache picks its own interval
@@ -581,13 +464,12 @@ Table of Contents
    multiresponse byte for byte, it forwards the heartbeats with the
    rest.
 
-
    A client waits a little longer than the interval, to allow for
    network delay: for instance, 1.2 times the interval, plus 3 seconds.
    If neither a heartbeat nor a response arrives in that time, the
    client treats the connection as dead, and the subscription as ended.
-   Validation stops then.  If the client is a cache, it sends an origin
-   status of "down" to its own subscribers.  Then the client
+   If the client is a cache, it sends an origin status of "down" to its
+   own subscribers.  Then the client
    resubscribes, with Parents set to its current version.
 
 
@@ -654,7 +536,7 @@ Table of Contents
    since every hop was last known to be connected.  When a cache sends a
    down because it received one, the cache adds the time it held the
    down to the age it received, as caches compute the Age header
-   (Section 5.1 of [RFC9111]).  So hops whose clocks disagree still
+   (Section 5.1 of [RFC9111]), so that hops whose clocks disagree still
    agree on the age.  The age is a parameter, since the Age header
    already gives a response's own age.
 
@@ -664,10 +546,12 @@ Table of Contents
      - The origin server sends an up as soon as the client is caught up.
 
      - A cache sends an up to a client once that client holds the
-       cache's current version, and the cache's own subscription
-       upstream is continuously validating.  It sends a down to each
-       client as soon as its own subscription stops validating: when it
-       receives a down, when its heartbeats stop, or when it ends.
+       cache's current version, and the cache's own upstream
+       subscription is up: the cache has received an up on it, and no
+       down since, and its heartbeats still arrive.  It sends a down to
+       each client as soon as that stops being true: when it receives a
+       down, when its heartbeats stop, or when its upstream subscription
+       ends.
 
      - If a proxy relays the multiresponse byte for byte, it passes the
        105s on with the rest.
@@ -676,7 +560,7 @@ Table of Contents
    105s it receives, since they respond to its own request
    ([MULTIRESPONSE], Section 2.4).  A server sends 105s only on a
    subscription with heartbeats (Section 3.1).
-
+
    A 1xx status code suits origin status.  RFC 9110 defines the 1xx
    class for communicating "connection status or request progress"
    (Section 15.2 of [RFC9110]).  A 1xx response has no content, and a
@@ -686,7 +570,7 @@ Table of Contents
    ignores the 105, as it can any 1xx that it doesn't expect.  A future
    specification may give it a meaning there.
 
-
+
 4.  Interaction with legacy intermediaries
 
    The client, the origin server, and any intermediaries between them
@@ -705,32 +589,30 @@ Table of Contents
        the heartbeats and 105s with the rest, so its client still gets
        the origin status.  When its connection upstream breaks, it ends
        the response, and when the connection stalls, the heartbeats
-       stop.  Either way, its client stops validating.
+       stop.  Either way, its client learns that the connection is
+       lost.
 
      - If a cache doesn't know subscriptions, it still honors
        "Vary: Subscribe" (Section 2.1), so it doesn't respond to a
        subscription request with a response it stored for an ordinary
        GET.  The 209 has "Cache-Control: no-store", so the cache doesn't
        store it, and can't replay the subscription later, old ups and
-       all.  And the server ignores any If-None-Match or
+       all.  The server also ignores any If-None-Match or
        If-Modified-Since header that the cache adds to a subscription
        request (Section 2.5).
 
      - If a cache builds its own multiresponse but doesn't know origin
        status, it doesn't forward the 105s it receives ([MULTIRESPONSE],
-       Section 2.4), so it passes on no up, and its clients' copies are
-       not validated.  That is safe, since its clients still get every
-       change.
+       Section 2.4), so it passes on no up.  Its clients still get every
+       change, but never learn that they are caught up and connected.
 
-     - If an origin server sends no up, its responses still arrive as
-       each change happens, and caches can still serve one subscription
-       to many clients, but nothing is validated.  But the site that
-       runs the origin server can tell its CDN, by configuration, that
-       the origin server sends each change as it happens.  Then the CDN
-       sends origin status itself: an up while its connection to the
-       origin server holds, and a down when that connection is lost.
-       The CDN then sends a down when it loses its connection to the
-       origin server.
+     - If an origin server sends no up, its clients still receive each
+       update, and caches can still serve one subscription to many
+       clients, but no client ever receives an up.  The site that runs
+       the origin server can tell its CDN, by configuration, that the
+       origin server sends each update immediately.  Then the CDN sends
+       origin status itself: an up while its connection to the origin
+       server holds, and a down when that connection is lost.
 
 
 5.  Implementation Status
@@ -773,17 +655,18 @@ Table of Contents
 6.  Security Considerations
 
    A server holds a connection, and memory, for each subscription, for
-   as long as the subscription lasts.  So a server can limit how many
-   subscriptions it holds for each client, end any subscription at any
-   time (Section 2.4), refuse new ones with a 503 (Service Unavailable)
-   or 429 (Too Many Requests) response, and respond to a request for
-   heartbeats with a longer interval than the client asked for (Section
-   3.2).  If a cache serves one subscription to many clients, the origin
-   server holds just that one [SUBSCRIPTIONS-CACHING].
+   as long as the subscription lasts.  To bound these costs, a server
+   can limit how many subscriptions it holds for each client, end any
+   subscription at any time (Section 2.4), refuse new ones with a 503
+   (Service Unavailable) or 429 (Too Many Requests) response, and
+   respond to a request for heartbeats with a longer interval than the
+   client asked for (Section 3.2).  If a cache serves one subscription
+   to many clients, the origin server holds just that one
+   [SUBSCRIPTIONS-CACHING].
 
    A server keeps sending a subscription's responses long after it
-   authorized the request.  So the server MUST NOT send more responses
-   once the request's authorization expires or is revoked (Section 2.4).
+   authorized the request, so it MUST NOT send more once the request's
+   authorization expires or is revoked (Section 2.4).
 
    Each response responds to an implied request with the same target URI
    and credentials as the client's own request ([MULTIRESPONSE], Section
@@ -793,7 +676,7 @@ Table of Contents
    A client trusts the origin status that its server sends, as it trusts
    that server's responses.  With a Proxy-Status header on a down, a
    server can reveal the hops inside its operator's network, and the
-   errors between them.  So the security considerations of [RFC9209]
+   errors between them.  The security considerations of [RFC9209]
    apply, and an operator can leave the header out.
 
 
@@ -876,12 +759,6 @@ Table of Contents
               braid.org, "braid-emacs",
               <https://github.com/braid-org/braid-emacs>.
 
-   [BRAID-HTTP]
-              Toomim, M., Little, G., Walker, R., Bellomy, B., and J.
-              Gentle, "Braid-HTTP: State Synchronization for HTTP",
-              draft-toomim-httpbis-braid-http-06, work in progress,
-              November 2026.
-
    [BRAID-HTTP-JS]
               braid.org, "braid-http",
               <https://github.com/braid-org/braid-http>.
@@ -919,12 +796,6 @@ Table of Contents
               September 2026, <https://braid.org/meeting-144>.
 
 
-   [MERGE-TYPES]
-              Toomim, M., Milutinovic, M., and B. Bellomy, "Consistent
-              Merge Types for HTTP",
-              draft-toomim-httpbis-braid-merge-types-01, work in
-              progress, November 2026.
-
    [NGINX]    NGINX, "Module ngx_http_proxy_module: proxy_read_timeout",
               <https://nginx.org/r/proxy_read_timeout>.
 
@@ -932,6 +803,10 @@ Table of Contents
               Toomim, M., "Poll and Push Modes for HTTP Subscriptions",
               draft-toomim-httpbis-braid-poll-and-push-01, work in
               progress, November 2026.
+
+   [REST]     Fielding, R., "Architectural Styles and the Design of
+              Network-based Software Architectures", Doctoral
+              dissertation, University of California, Irvine, 2000.
 
    [RFC6455]  Fette, I. and A. Melnikov, "The WebSocket Protocol", RFC
               6455, December 2011.
@@ -948,14 +823,14 @@ Table of Contents
    [RFC9209]  Nottingham, M. and P. Sikora, "The Proxy-Status HTTP
               Response Header Field", RFC 9209, June 2022.
 
+   [SSE]      WHATWG, "HTML Standard: Server-sent events",
+              <https://html.spec.whatwg.org/multipage/
+              server-sent-events.html>.
+
    [SUBSCRIPTIONS-CACHING]
               Toomim, M., "Caching for HTTP Subscriptions",
               draft-toomim-httpbis-braid-subscriptions-caching-01, work
               in progress, November 2026.
-
-   [UPDATES]  Toomim, M., "Replayable Updates for HTTP",
-              draft-toomim-httpbis-braid-updates-01, work in progress,
-              November 2026.
 
    [VERSIONS] Toomim, M., "Resource Versioning for HTTP",
               draft-toomim-httpbis-braid-versions-01, work in progress,

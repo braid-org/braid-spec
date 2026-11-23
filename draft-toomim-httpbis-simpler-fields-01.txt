@@ -85,8 +85,8 @@ Table of Contents
 
    Structured Field Values [RFC9651] define a common syntax for HTTP
    fields: Lists, Dictionaries, and Items, with parameters, built from a
-   small set of types.  So a new field needs no grammar of its own, and
-   implementations can reuse a well-tested parser to read it.
+   small set of types.  With them, a new field needs no grammar of its
+   own, and implementations can reuse a well-tested parser to read it.
 
    However, a general parser is a sizable dependency.  The
    structured-headers package for JavaScript [STRUCTURED-HEADERS], for
@@ -98,8 +98,8 @@ Table of Contents
 
    Strings make Structured Fields hard to parse that way.  A String can
    contain an escaped quote or backslash, and the field's own
-   delimiters: commas, semicolons, and parentheses.  So a regular
-   expression has to track escapes to find where a String ends.
+   delimiters: commas, semicolons, and parentheses.  To find where a
+   String ends, a regular expression has to track escapes.
 
    This document defines a profile of Structured Fields that removes
    these difficulties.  We call it Simpler Fields.  Here are two Simpler
@@ -111,7 +111,7 @@ Table of Contents
 
 
    In a Simpler Field, a String contains no quotes, backslashes, commas,
-   semicolons, or parentheses.  So a regular expression can find every
+   semicolons, or parentheses.  A regular expression can find every
    String with /"[^"]*"/, and can split the field at its commas and
    semicolons without looking inside its Strings.  The sender
    percent-encodes each String, and the recipient decodes it, so the
@@ -119,7 +119,7 @@ Table of Contents
 
    Simpler Fields make both kinds of parser possible.  A client can
    parse the one field it needs with a short regular expression of its
-   own.  And since every Simpler Field value is also a valid Structured
+   own.  Since every Simpler Field value is also a valid Structured
    Field value, an implementation that handles many fields can use a
    general Structured Fields parser, and add just the decoding step.
 
@@ -168,7 +168,7 @@ Table of Contents
    each Structured Field value has exactly one serialization.
 
    When a recipient joins field lines, it joins them with a comma and a
-   single space, as Section 5.3 of [RFC9110] recommends.  So the joined
+   single space, as Section 5.3 of [RFC9110] recommends, so the joined
    value is canonical too.  A regular expression can match the canonical
    spacing exactly, or be lenient and accept other spacing, such as with
    " ?".
@@ -198,8 +198,8 @@ Table of Contents
    The last of these matters, because ignoring an unknown parameter can
    be unsafe.  Suppose a member's parameters together identify a
    request.  If a recipient skipped one it didn't know, it would
-   identify a different request.  So the definition of such a field
-   states that a recipient ignores the whole member.
+   identify a different request.  To prevent this, the definition of
+   such a field states that a recipient ignores the whole member.
 
 
 3.  Parsing a Simpler Field with a regular expression
@@ -249,7 +249,7 @@ Table of Contents
    Every String takes one decoding step after parsing.
 
    A general Structured Fields serializer escapes quotes and backslashes
-   with a backslash.  So a sender percent-encodes its Strings before
+   with a backslash.  A sender percent-encodes its Strings before
    passing them to such a serializer, which then finds nothing to
    escape.
 

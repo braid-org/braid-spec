@@ -155,9 +155,9 @@ Table of Contents
    application should merge parallel debits by adding their amounts
    together.
 
-   So each application has different needs for how its data should
-   merge.  And it is useful to reuse a Merge Type across multiple types
-   of data.
+   Each application has different needs for how its data should merge,
+   and it is also useful to reuse a Merge Type across multiple types of
+   data.
 
 
 1.2.  A Merge Type is specified as a function
@@ -172,7 +172,7 @@ Table of Contents
 
 
    A Merge Type MUST be a deterministic function.  Given the same edit
-   history, it always returns the same merged state.  So peers that have
+   history, it always returns the same merged state, so peers that have
    received the same edits reach the same state.  Along with a guarantee
    that every edit reaches every peer, this gives strong eventual
    consistency [CRDT].

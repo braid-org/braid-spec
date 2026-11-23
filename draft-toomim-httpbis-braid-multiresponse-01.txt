@@ -153,9 +153,8 @@ Table of Contents
    from the resource itself.  A new status code also makes client
    polyfills easy.  If a client doesn't know 209, it treats it as a 200
    (Section 15 of [RFC9110]), and passes the response body to its
-   application, where a polyfill library can parse it into
-   sub-responses.  So a library can add multiresponses on top of the
-   fetch() APIs that browsers and servers already have.
+   application, where a polyfill library, built on the fetch() APIs that
+   browsers and servers already have, can parse it into sub-responses.
 
 
 1.1.  Terminology
@@ -199,11 +198,12 @@ Table of Contents
 
    If a client doesn't know the 209, it treats it as a 200, and gives
    the sub-responses to its application as if they were the resource.
-   So a server MUST NOT send a 209 Multiresponse unless the request says
-   that the client can read it: with an Accept header that lists
-   application/http-history, or with a header that another specification
-   defines for this.  A request for a span of history says it
-   [VERSIONS], and so does a subscription [SUBSCRIPTIONS].
+   To prevent this, a server MUST NOT send a 209 Multiresponse
+   unless the request says that the client can read it: with an Accept
+   header that lists application/http-history, or with a header that
+   another specification defines for this.  A request for a span of
+   history says it [VERSIONS], and so does a subscription
+   [SUBSCRIPTIONS].
 
 
 2.2.  Each sub-response responds to a request
@@ -239,9 +239,10 @@ Table of Contents
    Caches store a multiresponse only in pieces, as its sub-responses.
    But if a cache doesn't know the 209, it may still store the whole
    response, when the response has explicit freshness information
-   (Section 3 of [RFC9111]).  So every 209 Multiresponse MUST include
-   "Cache-Control: no-store".  A cache can still build a multiresponse
-   of its own, out of responses it has stored.
+   (Section 3 of [RFC9111]).  To keep such a cache from storing it,
+   every 209 Multiresponse MUST include "Cache-Control: no-store".  A
+   cache can still build a multiresponse of its own, out of responses it
+   has stored.
 
    A cache MAY store each sub-response as though it had received it in
    response to its implied request, and then treat it like any other
@@ -259,7 +260,7 @@ Table of Contents
    own multiresponse for its client, out of the responses it gets from
    upstream.  When the upstream server sends it
    "Responds-To: container-request", that sub-response responds to the
-   cache's own request to the upstream server.  So the cache MUST NOT
+   cache's own request to the upstream server, so the cache MUST NOT
    forward it to its client.  It responds to its client's request with
    sub-responses of its own.
 
@@ -270,10 +271,9 @@ Table of Contents
 
    A multiresponse can stay open for a long time, as a subscription's
    does [SUBSCRIPTIONS].  If an intermediary buffers it, its client gets
-   no sub-responses until the multiresponse ends.  So if a server keeps
-   a multiresponse open, it SHOULD send "Incremental: ?1" [RFC10036],
-   which asks each intermediary to forward the sub-responses as they
-   arrive.
+   no sub-responses until the multiresponse ends.  A server that keeps a
+   multiresponse open SHOULD send "Incremental: ?1" [RFC10036], which
+   asks each intermediary to forward the sub-responses as they arrive.
 
 
 3.  The application/http-history Media Type
@@ -347,8 +347,8 @@ Table of Contents
    when a resource changes, and to which version, as a server that
    alerts phones does.  The client can't send a HEAD request for these,
    because a response to a HEAD has no content (Section 9.3.2 of
-   [RFC9110]), so it can't hold any sub-responses.  So the client sends
-   a GET, with the Method-Override header:
+   [RFC9110]), so it can't hold any sub-responses.  Instead, the client
+   sends a GET, with the Method-Override header:
 
 
       Request:
@@ -380,16 +380,16 @@ Table of Contents
                                                           |
 
 
-   With "Method-Override: HEAD", each implied request is a HEAD.  So
-   each sub-response has the header section that the response to a GET
-   would have, and ends at the empty line after it (Section 3.1).  Its
+   With "Method-Override: HEAD", each implied request is a HEAD, so each
+   sub-response has the header section that the response to a GET would
+   have, and ends at the empty line after it (Section 3.1).  Its
    Content-Length gives the length that its content would have, as in
    any response to a HEAD (Section 8.6 of [RFC9110]).  The multiresponse
    itself responds to the GET, so its content holds the sub-responses.
 
    On a subscription, each update then arrives as just its header
-   section, as it happens.  The subscriber can use them as an index of
-   the resource's history, and GET the versions it needs.
+   section.  The subscriber can use them as an index of the resource's
+   history, and GET the versions it needs.
 
    Method-Override is a Structured Field Item [RFC9651], whose value is
    a Token that names a method.  This document defines one value,
@@ -465,9 +465,9 @@ Table of Contents
    responds to requests for them.
 
    If Method-Override could name any method, a GET could act as a
-   DELETE, past any filter that allows GETs.  So this document defines
-   only HEAD, which is safe, as GET is (Section 9.2.1 of [RFC9110]),
-   and Method-Override changes only the implied requests.
+   DELETE, past any filter that allows GETs.  That is why this document
+   defines only HEAD, which is safe, as GET is (Section 9.2.1 of
+   [RFC9110]), and Method-Override changes only the implied requests.
 
 
 8.  IANA Considerations

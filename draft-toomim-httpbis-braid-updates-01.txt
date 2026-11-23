@@ -81,6 +81,7 @@ Table of Contents
    1.  Introduction ...................................................4
    1.1.  Terminology ..................................................5
    2.  Updates have symmetric requests and responses ..................6
+   2.1.  A request can carry the fields of its equivalent response ....6
    3.  A Snapshot is a PUT request or 200 response ....................7
    4.  Patch formats specify deterministic changes ....................8
    4.1.  Patch-Type allows any patch format, in both directions .......8
@@ -111,7 +112,7 @@ Table of Contents
 
    These messages lack two properties that synchronization needs.  Some
    are not symmetric: a client can send a server a PATCH, but a server
-   cannot send a PATCH to a client.  And some are not reproducible: a
+   cannot send a PATCH to a client.  Some are not reproducible: a
    POST can change state in any way, but each server defines what its
    POSTs do, so no other peer can apply one and get the same result.
 
@@ -153,10 +154,10 @@ Table of Contents
 
    We call each of these symmetric, reproducible messages an "update".
    The request and the response mean the same thing: replace this range
-   of the text at version "1" with "everyone", to make version "2".  So
-   the update is symmetric: a client can send it to a server, and a
-   server can send it to a client.  And it is reproducible: if any
-   client, server, or intermediary applies it to "Hello world", it gets
+   of the text at version "1" with "everyone", to make version "2".  The
+   update is symmetric: a client can send it to a server, and a server
+   can send it to a client.  It is also reproducible: if any client,
+   server, or intermediary applies it to "Hello world", it gets
    "Hello everyone".
 
 
@@ -236,8 +237,8 @@ Table of Contents
    that version ([VERSIONS], Section 2.3.5), or a subscription
    [SUBSCRIPTIONS].  A response is an update only when it responds to a
    GET, whether a client sent the GET, or the GET is a sub-response's
-   implied request [MULTIRESPONSE].  So a 200 or 204 that acknowledges a
-   client's PUT is not an update.
+   implied request [MULTIRESPONSE].  A 200 or 204 that acknowledges a
+   client's PUT is therefore not an update.
 
    An update's Version header says which version it creates, and its
    Parents header says which version it applies to [VERSIONS].  If an
@@ -246,9 +247,9 @@ Table of Contents
    Section 2.2).
 
    A request or response is an update only if a naive peer can apply it.
-   So a POST is not an update, since its server defines what it does.
-   Neither is a 3xx, which changes no state, or a 404, which does not
-   say whether the resource was deleted or never existed.
+   A POST, for instance, is not an update, since its server defines what
+   it does.  Neither is a 3xx, which changes no state, or a 404, which
+   does not say whether the resource was deleted or never existed.
 
    A client says which patches it can apply.  It lists the patch formats
    it accepts in an Accept-Patch header [RFC5789], and the range units
@@ -257,6 +258,55 @@ Table of Contents
    NOT respond with a patch in a format, or a range unit, that the
    request does not list.  When the request lists none that fits, the
    server responds with a snapshot.
+
+
+2.1.  A request can carry the fields of its equivalent response
+
+   Each update has an equivalent request and response, and a recipient
+   can turn one into the other.  For instance, a subscription gateway
+   turns each change that an origin server pushes to it, as a request,
+   into a response for its own subscribers ([POLL-AND-PUSH], Section 3).
+   The request and the response share the update's content, its
+   representation fields, such as Content-Type, Content-Range, and
+   Patch-Type, and its Version and Parents headers.  The fields that
+   only a request carries, such as Host and Authorization, have no place
+   in the response.
+
+   Some response fields mean something else in a request, or nothing.
+   In a request, Cache-Control says how the sender wants caches to
+   respond to the request (Section 5.2.1 of [RFC9111]).  An update sent
+   as a request carries these fields of its equivalent response with the
+   prefix "Response-":
+
+         Response-Cache-Control
+         Response-Expires
+         Response-ETag
+         Response-Last-Modified
+
+   For example, a server pushes the change to version "3" of the chat
+   to a gateway, with the Cache-Control that it would put on the same
+   change in a response:
+
+
+      Request:
+
+         PUT /push/chat
+         Version: ("3")
+         Parents: ("2")
+         Response-Cache-Control: no-cache
+         Content-Type: text/plain
+         Content-Length: 11
+
+         Hi everyone
+
+
+   When a recipient turns the request into its equivalent response, it
+   gives the response each of these fields, without the prefix.  Each
+   one has the syntax of the field it names.  A request can carry a Date
+   header as it is (Section 6.6.1 of [RFC9110]), and the response keeps
+   it.  A recipient honors these fields only from a sender that it
+   trusts to set the resource's caching, as a gateway trusts an origin
+   server that it has verified ([POLL-AND-PUSH], Section 3.5).
 
 
 3.  A Snapshot is a PUT request or 200 response
@@ -299,10 +349,9 @@ Table of Contents
 
    A patch changes part of the state, and its patch format specifies
    how.  A patch computes the next snapshot from the prior snapshot, and
-   from nothing else.  So a patch MUST NOT depend on anything but the
-   prior snapshot, and its patch format has no merging, no locking, and
-   no preconditions.  When peers make updates in parallel, Merge Types
-   [MERGE-TYPES] specify how to merge them.
+   MUST NOT depend on anything else, so its patch format has no merging,
+   no locking, and no preconditions.  When peers make updates in
+   parallel, Merge Types [MERGE-TYPES] specify how to merge them.
 
    For example, JSON Patch [RFC6902] has a "test" operation, which makes
    the whole patch fail if a value does not match.  That is a
@@ -359,16 +408,16 @@ Table of Contents
    state at its Parents, in the patch format of its Patch-Type, or, with
    a Patches header, several patches (Section 4.3).  If a client does
    not know 210, it treats the response as a 200 (Section 15 of
-   [RFC9110]), and takes the patch for the resource itself.  So a server
-   sends a 210 only in response to a request whose Accept-Patch lists
-   that patch format (Section 2).
+   [RFC9110]), and takes the patch for the resource itself.  To prevent
+   this, a server sends a 210 only in response to a request whose
+   Accept-Patch lists that patch format (Section 2).
 
    A 210 is not heuristically cacheable.  A server SHOULD send it with
    "Cache-Control: must-understand, no-store", so that only a cache that
    understands 210 stores it (Section 5.2.2.3 of [RFC9111]).
 
-   An ETag identifies a representation, and the content of a 210 is a
-   patch.  So the ETag of a 210 identifies the representation that
+   An ETag identifies a representation, but the content of a 210 is a
+   patch, so the ETag of a 210 identifies the representation that
    results from applying the patch.
 
    With delta encoding [RFC3229], a server can send a patch in a 226 (IM
@@ -388,7 +437,7 @@ Table of Contents
 
    A range patch replaces one range of the prior snapshot with its
    content.  The content can be longer or shorter than the range, or
-   empty: an empty range inserts, and empty content deletes.  So range
+   empty: an empty range inserts, and empty content deletes.  Range
    patches are enough for most changes, since any edit to text or bytes
    is one or more replaced ranges.
 
@@ -445,8 +494,8 @@ Table of Contents
 
 
    The range starts at the code point at its start position, and ends
-   just before its end position.  So "[6:11]" covers the five code
-   points from 6 to 10, and "[6:6]" covers none, to insert text at
+   just before its end position.  For example, "[6:11]" covers the five
+   code points from 6 to 10, and "[6:6]" covers none, to insert text at
    position 6.  A position that starts with "-" counts back from the end
    of the text: "-0" is the end itself, so "[-0:-0]" appends text, and
    "[-1:-0]" covers the last code point.  If the end is before the
@@ -491,7 +540,7 @@ Table of Contents
    patches in a 210 (Patch), with a Patches header.
 
    Every patch applies to the prior snapshot, in parallel, without
-   knowledge of the others.  So in this example, the second range,
+   knowledge of the others.  In this example, the second range,
    "[3:11]", is a range of "Hi everyone", even though the first patch
    makes the text longer, and the update makes "Hello world".  The
    patches in one update MUST NOT change the same part of the state.  A
@@ -555,8 +604,7 @@ Table of Contents
 
    A peer can send updates one at a time, in requests and responses.  A
    server can also send many in one multiresponse [MULTIRESPONSE], for a
-   span of history, or in a subscription [SUBSCRIPTIONS], as each one
-   happens.
+   span of history, or in a subscription [SUBSCRIPTIONS].
 
 
 7.  Implementation Status
@@ -591,8 +639,8 @@ Table of Contents
    Patch-Type and Patches, and store the patch as the whole resource.
    It might do the same with a Content-Range that it does not support,
    although Section 14.5 of [RFC9110] tells it to respond with a 400
-   (Bad Request).  So a client sends patches only to servers that it
-   knows implement this document.
+   (Bad Request).  A client therefore sends patches only to servers
+   that it knows implement this document.
 
    Each patch format has its own security considerations, which apply to
    its patches when they are updates.
@@ -639,6 +687,22 @@ Table of Contents
       Status:           permanent
       Structured Type:  Item
       Reference:        Section 4.3 of this document
+
+      Field Name:       Response-Cache-Control
+      Status:           permanent
+      Reference:        Section 2.1 of this document
+
+      Field Name:       Response-Expires
+      Status:           permanent
+      Reference:        Section 2.1 of this document
+
+      Field Name:       Response-ETag
+      Status:           permanent
+      Reference:        Section 2.1 of this document
+
+      Field Name:       Response-Last-Modified
+      Status:           permanent
+      Reference:        Section 2.1 of this document
 
 
 9.3.  HTTP Range Unit
@@ -731,6 +795,11 @@ Table of Contents
    [MULTIRESPONSE]
               Toomim, M., "Multiresponses for HTTP",
               draft-toomim-httpbis-braid-multiresponse-01, work in
+              progress, November 2026.
+
+   [POLL-AND-PUSH]
+              Toomim, M., "Poll and Push Modes for HTTP Subscriptions",
+              draft-toomim-httpbis-braid-poll-and-push-01, work in
               progress, November 2026.
 
    [RFC3229]  Mogul, J., Krishnamurthy, B., Douglis, F., Feldmann, A.,
