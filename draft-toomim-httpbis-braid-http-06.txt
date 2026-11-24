@@ -85,10 +85,10 @@ Table of Contents
    1.2.  We extend HTTP with versions, updates, and subscriptions .....4
    2.  The extensions are modular and composable ......................6
    3.  The extensions combine to support replay, resume, and merge ....7
-   4.  The same extensions serve CDNs, feeds, chats, and editors ......8
-   5.  The extensions support many existing systems ...................9
-   5.1.  Subscriptions express both push and pull .....................9
-   5.2.  Versions express both linear and branching histories .........9
+   4.  Use cases: CDNs, feeds, chats, and editors .....................8
+   5.  Existing systems ...............................................9
+   5.1.  Subscriptions: push and pull .................................9
+   5.2.  Versions: linear and branching histories .....................9
    6.  Related work ...................................................9
    6.1.  SSE and WebSocket ............................................9
    6.2.  Transfer-Encoding: chunked ..................................10
@@ -305,7 +305,7 @@ Table of Contents
       clients send to servers.
 
 
-4.  The same extensions serve CDNs, feeds, chats, and editors
+4.  Use cases: CDNs, feeds, chats, and editors
 
    CDN performance:  With a subscription, the origin updates the CDN's
       cache in half a round trip, where a purge and a refetch take 1.5
@@ -341,14 +341,14 @@ Table of Contents
       [TIME-MACHINES] gives the theory.
 
 
-5.  The extensions support many existing systems
+5.  Existing systems
 
    The extensions are general HTTP machinery.  They can express the ways
    that existing systems deliver changes, and the ways that they name
    points in time.
 
 
-5.1.  Subscriptions express both push and pull
+5.1.  Subscriptions: push and pull
 
    A server can stream a subscription's updates in one response, deliver
    them one at a time to a client that polls, or push them to another
@@ -360,7 +360,7 @@ Table of Contents
    them from a publisher to its subscribers.
 
 
-5.2.  Versions express both linear and branching histories
+5.2.  Versions: linear and branching histories
 
    A version is a set of events in a DAG [VERSIONS], and a Version Type
    can say how to read the events.  With these, versions can express:

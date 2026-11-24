@@ -81,16 +81,16 @@ Table of Contents
    1.  Introduction ...................................................4
    1.1.  Terminology ..................................................5
    2.  Updates have symmetric requests and responses ..................6
-   2.1.  A request can carry the fields of its equivalent response ....6
+   2.1.  Response fields in requests ..................................6
    3.  A Snapshot is a PUT request or 200 response ....................7
-   4.  Patch formats specify deterministic changes ....................8
-   4.1.  Patch-Type allows any patch format, in both directions .......8
-   4.2.  Range patches are enough for most changes ...................10
+   4.  Patches ........................................................8
+   4.1.  Patch-Type and 210 (Patch) ...................................8
+   4.2.  Range patches ...............................................10
    4.2.1.  This document extends the syntax of Content-Range .........10
    4.2.2.  This document defines the text range unit .................11
-   4.3.  An update can contain several patches .......................11
-   5.  A deletion is a DELETE request, or a 410 response .............12
-   6.  Peers replay updates to reproduce the same state ..............13
+   4.3.  Several patches in one update ...............................11
+   5.  Deletions: DELETE and 410 (Gone) ..............................12
+   6.  Replaying updates .............................................13
    7.  Implementation Status .........................................13
    8.  Security Considerations .......................................14
    9.  IANA Considerations ...........................................14
@@ -260,7 +260,7 @@ Table of Contents
    server responds with a snapshot.
 
 
-2.1.  A request can carry the fields of its equivalent response
+2.1.  Response fields in requests
 
    Each update has an equivalent request and response, and a recipient
    can turn one into the other.  For instance, a subscription gateway
@@ -345,7 +345,7 @@ Table of Contents
    whatever state it had before.  The next patch then applies to it.
 
 
-4.  Patch formats specify deterministic changes
+4.  Patches
 
    A patch changes part of the state, and its patch format specifies
    how.  A patch computes the next snapshot from the prior snapshot, and
@@ -367,7 +367,7 @@ Table of Contents
    raises an error.
 
 
-4.1.  Patch-Type allows any patch format, in both directions
+4.1.  Patch-Type and 210 (Patch)
 
    With Patch-Type, a specification can define any patch format, and
    peers can send its patches in either direction.  A client sends a
@@ -433,7 +433,7 @@ Table of Contents
    an error (Section 4).
 
 
-4.2.  Range patches are enough for most changes
+4.2.  Range patches
 
    A range patch replaces one range of the prior snapshot with its
    content.  The content can be longer or shorter than the range, or
@@ -503,7 +503,7 @@ Table of Contents
    cannot apply (Section 4).
 
 
-4.3.  An update can contain several patches
+4.3.  Several patches in one update
 
    An update can contain several patches.  Its Patches header says how
    many, and its content is that many patches, one after another, each
@@ -552,7 +552,7 @@ Table of Contents
    ignores parameters that it does not know.
 
 
-5.  A deletion is a DELETE request, or a 410 response
+5.  Deletions: DELETE and 410 (Gone)
 
    A deletion removes the resource.  A client sends one in a DELETE:
 
@@ -583,7 +583,7 @@ Table of Contents
    with 410.  A later snapshot can create the resource again.
 
 
-6.  Peers replay updates to reproduce the same state
+6.  Replaying updates
 
    A peer replays a sequence of updates by applying each one to the
    state at its Parents.  If the updates have no versions, the peer

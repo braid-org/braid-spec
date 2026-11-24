@@ -69,10 +69,10 @@ Table of Contents
    1.1.  Terminology ..................................................5
    1.2.  Conventions ..................................................5
    2.  The 209 Multiresponse Status Code ..............................6
-   2.1.  Clients can ask for a multiresponse ..........................6
-   2.2.  Each sub-response responds to a request ......................6
+   2.1.  Asking for a multiresponse ...................................6
+   2.2.  Implied requests .............................................6
    2.3.  Caches store a multiresponse in pieces .......................7
-   2.4.  Intermediaries can modify multiresponses, or not .............7
+   2.4.  Relaying and rebuilding multiresponses .......................7
    3.  The application/http-history Media Type ........................8
    3.1.  Syntax .......................................................8
    4.  The Responds-To Header .........................................9
@@ -194,7 +194,7 @@ Table of Contents
    3).
 
 
-2.1.  Clients can ask for a multiresponse
+2.1.  Asking for a multiresponse
 
    If a client doesn't know the 209, it treats it as a 200, and gives
    the sub-responses to its application as if they were the resource.
@@ -206,16 +206,17 @@ Table of Contents
    [SUBSCRIPTIONS].
 
 
-2.2.  Each sub-response responds to a request
+2.2.  Implied requests
 
    Each sub-response responds to an implied request: a request the
    client could have sent, to get just that response.  Each
    specification that uses multiresponses defines its own implied
    requests, as variations of the client's own request.  For a span of
    history, [VERSIONS] replaces the request's Parents and Version
-   headers with those of each response, and [SUBSCRIPTIONS] defines them
-   for a subscription.  A sub-response with a Responds-To header
-   (Section 4) responds to the request that the header names.
+   headers with those of each response, and Section 2.5 of
+   [SUBSCRIPTIONS] defines them for a subscription.  A sub-response with
+   a Responds-To header (Section 4) responds to the request that the
+   header names.
 
    An implied request MUST have the same target URI, and the same
    credentials, as the client's own request.  To respond to a request
@@ -253,7 +254,7 @@ Table of Contents
    would any unexpected 1xx response (Section 15.2 of [RFC9110]).
 
 
-2.4.  Intermediaries can modify multiresponses, or not
+2.4.  Relaying and rebuilding multiresponses
 
    When a proxy relays a multiresponse byte for byte, it passes these
    sub-responses on with the rest.  But consider a cache that builds its
