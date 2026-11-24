@@ -444,7 +444,9 @@ Table of Contents
 
    The webhook mode does not support HEAD, because Updates ([UPDATES],
    Section 2) does not yet define a request that maps to a HEAD
-   response.  A server ignores a webhook mode in a HEAD request.
+   response.  If a HEAD lists webhook in its Subscribe header, the
+   server ignores that mode, and grants another mode that the client
+   lists, or none.
 
 
 3.2.  The gateway re-sends its subscription request

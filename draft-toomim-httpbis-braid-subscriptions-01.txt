@@ -1,6 +1,6 @@
 Internet-Draft                                                 M. Toomim
-Expires: 26 May 2027                                   Invisible College
-Intended status: Proposed Standard                      22 November 2026
+Expires: 28 May 2027                                   Invisible College
+Intended status: Proposed Standard                      24 November 2026
 
 
 
@@ -16,7 +16,7 @@ Intended status: Proposed Standard                      22 November 2026
 Abstract
 
    This document defines the Subscribe header for HTTP requests and
-   responses.  A server receiving a request with the Subscribe header
+   responses.  A server receiving a request with "Subscribe: stream"
    will respond with the current state, and then leave the response
    open, to stream future updates through, until the subscription ends.
    Each update is itself an HTTP response, which can be cached and
@@ -26,8 +26,8 @@ Abstract
    single origin server connection can serve any number of clients.  At
    each hop in the tree, the connection state can be up or down.  To
    enable any client or intermediary to know the state of its upstream
-   connection chain, this document also defines a method for heartbeats,
-   and origin-status messages, from which a node's origin-connection
+   connection chain, this document also defines a set of heartbeats and
+   origin-status messages, from which a subscription's online/offline
    status can be inferred.
 
    This document is one of the Braid-HTTP extensions, which add features
@@ -59,7 +59,7 @@ Status of this Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 26 May 2027.
+   This Internet-Draft will expire on 28 May 2027.
 
 
 Copyright Notice
@@ -80,47 +80,63 @@ Copyright Notice
 
 Table of Contents
 
-   1.  Introduction ...................................................3
-   1.1.  Conventions ..................................................3
-   2.  HTTP Subscriptions .............................................4
-   2.1.  The Subscribe Header .........................................4
-   2.2.  The "Subscribe: stream" mode .................................6
-   2.3.  Resuming a subscription with Parents .........................7
-   2.4.  Ending a subscription ........................................8
-   2.5.  Interaction with If-None-Match ...............................9
-   3.  Origin connection status .......................................9
-   3.1.  Catching up, and staying connected ..........................10
-   3.2.  Heartbeats ..................................................10
-   3.3.  Status 105 and the Origin-Status Header .....................11
-   4.  Interaction with legacy intermediaries ........................13
-   5.  Implementation Status .........................................14
-   6.  Security Considerations .......................................15
-   7.  IANA Considerations ...........................................15
-   7.1.  Status Code Registration ....................................15
-   7.2.  Field Registration ..........................................16
-   8.  References ....................................................16
-   8.1.  Normative References ........................................16
-   8.2.  Informative References ......................................17
+   1.  Introduction ...................................................4
+   1.1.  Conventions ..................................................4
+   2.  HTTP Subscriptions .............................................5
+   2.1.  The Subscribe Header .........................................6
+   2.2.  The "Subscribe: stream" mode .................................7
+   2.3.  Resuming a subscription with Parents .........................8
+   2.4.  Ending a subscription ........................................9
+   2.5.  Interaction with If-None-Match ..............................10
+   3.  Origin connection status ......................................10
+   3.1.  Catching up, and staying connected ..........................11
+   3.2.  Heartbeats ..................................................11
+   3.3.  Status 105 and the Origin-Status Header .....................12
+   4.  Interaction with legacy intermediaries ........................14
+   5.  Implementation Status .........................................15
+   6.  Security Considerations .......................................16
+   7.  IANA Considerations ...........................................16
+   7.1.  Status Code Registration ....................................16
+   7.2.  Field Registration ..........................................17
+   8.  References ....................................................17
+   8.1.  Normative References ........................................17
+   8.2.  Informative References ......................................18
 
-
+
 1.  Introduction
 
-   An HTTP client can GET the current state of a resource, but if the
-   resource changes, it has no way to get the updates other than to GET
-   it again.  Consequently, applications that need updates either poll
-   at some frequency, which wastes resources at high frequencies, but
-   incurs large update delays at low frequencies, or switch to another
-   protocol, such as WebSocket [RFC6455] or SSE [SSE].  Those protocols
-   lose the advantages of HTTP and REST [REST], such as caching and a
-   uniform interface, and add a second round trip from browser to server
-   before the page can load its data.
+   HTTP allows a client to GET the current state of a resource, but does
+   not yet provide a way for a client to learn when the resource
+   changes.  This sufficed when resources were mostly static, and often
+   written by hand, but today's web is increasingly dynamic, and
+   applications need to synchronize with resources as they update.
 
-   This document adds subscriptions to HTTP.  A client subscribes to a
-   resource by adding a Subscribe header to a GET request.  The server
-   responds with the current state of the resource, and then, each time
-   the resource changes, sends the response that the client would get if
-   it polled at that moment.  This response can be read, stored, and
-   fanned out to clients by caches and intermediaries.
+   Applications today have two options.  (1) They can poll the resource
+   with repeat GETs at some interval, or (2) they can switch to a
+   different protocol, such as WebSocket [RFC6455] or SSE [SSE].
+   However, polling is wasteful at short intervals, and incurs delays at
+   large intervals.  Alternative protocols lose the advantageous
+   semantics of HTTP and REST [REST], such as caching, media types, and
+   a uniform interface of method semantics, and incur a second round
+   trip from browser to server before a page can load its data.
+
+   This document adds "subscriptions" to HTTP.  A client subscribes to a
+   request by adding a "Subscribe" header to it.  The server responds
+   immediately with the current state of the resource, along with a
+   promise to push additional responses as the resource changes.  Each
+   response is sent as if the resource were polled at that moment, and
+   is a legitimate HTTP response that can be read, stored, and fanned
+   out to clients by caches and intermediaries.
+
+   Section 2 defines subscriptions and specifies their behavior.
+   Section 3 specifies how a client or intermediary can know if its
+   current subscription is connected and caught up with the origin.
+
+   This document defines the "stream" mode for subscriptions, which
+   pushes updates over a long-lived connection.  Servers and paths that
+   can't hold a response open can use the long-poll or webhook mode
+   [POLL-AND-PUSH].  [SUBSCRIPTIONS-CACHING] specifies how caches store
+   and serve subscriptions.
 
 
 1.1.  Conventions
@@ -167,7 +183,7 @@ Table of Contents
    a server doesn't know a meaning for Subscribe on a request's method,
    it ignores the header.
 
-
+
 2.1.  The Subscribe Header
 
    A client requests a subscription by adding a "Subscribe" header to a
@@ -184,7 +200,7 @@ Table of Contents
 
    This document defines the stream mode.  The long-poll and webhook
    modes are defined in [POLL-AND-PUSH].
-
+
    The value of the Subscribe header is parsed as a Structured Field
    [RFC9651] List of Tokens, each with optional parameters.  For a
    client to accept multiple modes, it lists them in order of its
